@@ -122,7 +122,7 @@ The code should be complete and ready to run in a StackBlitz WebContainer enviro
 REQUIRED PROJECT CONFIGURATION FORMAT:
 You MUST wrap your entire response in the correct configuration format:
 
-1. Start with the project configuration block:
+1. Always start with the project configuration block:
 /** PROJECT_CONFIG */
 {
   "title": "your title",
@@ -138,9 +138,20 @@ You MUST wrap your entire response in the correct configuration format:
     }
   }
 }
-/** END_PROJECT_CONFIG */
+/** END_PROJECT_CONFIG */     
 
-2. Include all necessary files in the "files" object. Don't use separate code blocks.
+Example :  
+
+2. Include all necessary files in the "files" object. Don't use separate code blocks.    Never output more than one PROJECT_CONFIG block and also ensure you never output this basic project block  /** PROJECT_CONFIG */
+{
+  "description": "A simple todo list application built with Vite and JavaScript",
+  "framework": "Vite",
+  "dependencies": {
+    "vite": "^4.0.0"
+  },
+  "template": "javascript"
+}
+/** END_PROJECT_CONFIG */  instead output only the full valid one
 
 SPECIAL CAPABILITIES FOR PROJECT INTERACTION:
 When the project is loaded in the sandbox, you can interact with the project programmatically using these functions:
