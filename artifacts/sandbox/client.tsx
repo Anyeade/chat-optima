@@ -126,6 +126,7 @@ interface SandboxContentProps {
 // Parse content into project structure
 const parseContent = (content: string): SandboxProject | null => {
   try {
+    console.log('Sandbox parseContent received:', content); // DEBUG LOG
     // Check for file operations in the content
     const fileOperationsMatch = content.match(/\/\*\*\s*FILE_OPERATIONS\s*\*\/[\s\S]+?\/\*\*\s*END_FILE_OPERATIONS\s*\*\//);
     if (fileOperationsMatch && fileOperationsMatch[1]) {
