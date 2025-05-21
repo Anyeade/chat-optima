@@ -2,6 +2,7 @@ import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { streamObject } from 'ai';
 import { z } from 'zod';
+import { htmlPrompt } from '@/lib/ai/prompts';
 
 export const htmlDocumentHandler = createDocumentHandler<'html'>({
   kind: 'html',
@@ -10,7 +11,7 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
-      system: 'Create an HTML document with internal CSS and JavaScript that matches the user\'s request. Use modern HTML5 features and best practices.',
+      system: htmlPrompt,
       prompt: title,
       schema: z.object({
         html: z.string(),
