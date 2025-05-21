@@ -110,6 +110,12 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
   const submitForm = useCallback(() => {
+    // Check if the input exceeds the character limit (15000)
+    if (input.length > 15000) {
+      toast.error('Your message exceeds the maximum character limit of 15,000. Please shorten your message and try again.');
+      return;
+    }
+    
     window.history.replaceState({}, '', `/chat/${chatId}`);
 
     handleSubmit(undefined, {
@@ -124,6 +130,7 @@ function PureMultimodalInput({
       textareaRef.current?.focus();
     }
   }, [
+    input,
     attachments,
     handleSubmit,
     setAttachments,
@@ -295,7 +302,14 @@ function PureMultimodalInput({
         <AttachmentsButton fileInputRef={fileInputRef} status={status} />
       </div>
 
-      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end">
+      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end items-center gap-2">
+        {input.length > 0 && (
+          <span 
+            className={`text-xs ${input.length > 15000 ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}
+          >
+            {input.length}/15000
+          </span>
+        )}
         {status === 'submitted' ? (
           <StopButton stop={stop} setMessages={setMessages} />
         ) : (

@@ -8,6 +8,7 @@ import {
   UndoIcon,
   RedoIcon,
   EyeIcon,
+  DownloadIcon,
 } from '@/components/icons';
 
 interface SVGArtifactMetadata {
@@ -99,6 +100,35 @@ export const svgArtifact = new Artifact<'svg', SVGArtifactMetadata>({
         handleVersionChange('next');
       },
       isDisabled: ({ isCurrentVersion }) => isCurrentVersion,
+    },
+    {
+      icon: <DownloadIcon size={18} />,
+      description: 'Download as SVG',
+      onClick: ({ content }) => {
+        try {
+          // Create blob from SVG content
+          const blob = new Blob([content], { type: 'image/svg+xml' });
+          
+          // Create download link
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `diagram-${new Date().getTime()}.svg`;
+          document.body.appendChild(a);
+          a.click();
+          
+          // Cleanup
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 100);
+          
+          toast.success('SVG downloaded successfully!');
+        } catch (error) {
+          console.error('Error downloading SVG:', error);
+          toast.error('Failed to download SVG');
+        }
+      },
     },
     {
       icon: <CopyIcon size={18} />,

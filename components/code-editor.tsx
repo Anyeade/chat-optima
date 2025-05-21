@@ -5,6 +5,9 @@ import { EditorState, Transaction } from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
 import { html } from '@codemirror/lang-html';
 import { markdown } from '@codemirror/lang-markdown';
+import { javascript } from '@codemirror/lang-javascript';
+import { php } from '@codemirror/lang-php';
+import { css } from '@codemirror/lang-css';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { basicSetup } from 'codemirror';
 import { LanguageSupport } from '@codemirror/language';
@@ -12,6 +15,11 @@ import React, { memo, useEffect, useRef } from 'react';
 import { Suggestion } from '@/lib/db/schema';
 import { languages, tokenize } from 'prismjs';
 import 'prismjs/components/prism-mermaid';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-php';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-ruby';
 
 type EditorProps = {
   content: string;
@@ -73,6 +81,24 @@ const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSup
     case 'html':
     case 'svg':
       return html();
+    case 'javascript':
+    case 'js':
+      return javascript();
+    case 'typescript':
+    case 'ts':
+      return javascript({ typescript: true });
+    case 'jsx':
+      return javascript({ jsx: true });
+    case 'tsx':
+      return javascript({ jsx: true, typescript: true });
+    case 'php':
+      return php();
+    case 'css':
+      return css();
+    case 'ruby':
+    case 'rb':
+      // For Ruby, we use Prism.js highlighting via custom highlighter
+      return new LanguageSupport(markdown().language, [createPrismHighlighter('ruby')]);
     case 'mermaid':
       if (!languages.mermaid) {
         // If Mermaid grammar is not loaded, define a simple one
@@ -91,19 +117,38 @@ const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSup
     case 'python':
       return python();
     default:
-      return python(); // Default to Python
+      // Attempt to determine language from content or fallback to Python
+      return python();
   }
 };
 
 function PureCodeEditor({ content, onSaveContent, status, language }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
+  
+  // Detect language from code content if not specified
+  const detectLanguage = (code: string): string | undefined => {
+    if (language) return language;
+    
+    // Check for common language identifiers in the code
+    if (code.includes('<?php')) return 'php';
+    if (code.includes('def ') && code.includes(':') && !code.includes('{')) return 'python';
+    if (code.includes('function') && code.includes('{')) return 'javascript';
+    if (code.includes('interface') || code.includes('class') && code.includes('extends')) return 'typescript';
+    if (code.includes('body {') || code.includes('@media')) return 'css';
+    if (code.includes('<!DOCTYPE html>') || code.includes('<html>')) return 'html';
+    if (code.includes('require ') && code.includes('end')) return 'ruby';
+    
+    // Default to python if can't detect
+    return 'python';
+  };
 
   useEffect(() => {
     if (containerRef.current && !editorRef.current) {
+      const detectedLang = detectLanguage(content);
       const startState = EditorState.create({
         doc: content,
-        extensions: [basicSetup, getLanguageExtension(language), oneDark],
+        extensions: [basicSetup, getLanguageExtension(detectedLang), oneDark],
       });
 
       editorRef.current = new EditorView({

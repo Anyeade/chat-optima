@@ -5,6 +5,7 @@ import { Editor } from '@/components/text-editor';
 import {
   ClockRewind,
   CopyIcon,
+  DownloadIcon,
   MessageIcon,
   PenIcon,
   RedoIcon,
@@ -13,6 +14,11 @@ import {
 import { Suggestion } from '@/lib/db/schema';
 import { toast } from 'sonner';
 import { getSuggestions } from '../actions';
+
+// Added for DOCX conversion
+import { Document, Packer, Paragraph, TextRun } from 'docx';
+// Added for PDF conversion
+import { jsPDF } from 'jspdf';
 
 interface TextArtifactMetadata {
   suggestions: Array<Suggestion>;
@@ -112,6 +118,80 @@ export const textArtifact = new Artifact<'text', TextArtifactMetadata>({
         }
 
         return false;
+      },
+    },
+    // Download document options
+    {
+      icon: <DownloadIcon size={18} />,
+      description: 'Download as DOCX',
+      onClick: async ({ content }) => {
+        try {
+          // Create a new document
+          const doc = new Document({
+            sections: [{
+              properties: {},
+              children: content.split('\n').map(line => 
+                new Paragraph({
+                  children: [new TextRun(line)]
+                })
+              ),
+            }],
+          });
+          
+          // Generate and save the document
+          const buffer = await Packer.toBuffer(doc);
+          
+          // Create a blob from the buffer
+          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+          
+          // Create a download link
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(blob);
+          link.download = 'document.docx';
+          
+          // Trigger the download
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          
+          toast.success('Downloaded as DOCX');
+        } catch (error) {
+          console.error('Error generating DOCX:', error);
+          toast.error('Failed to generate DOCX');
+        }
+      },
+    },
+    {
+      icon: <DownloadIcon size={18} />,
+      description: 'Download as PDF',
+      onClick: ({ content }) => {
+        try {
+          // Create a PDF document
+          const pdf = new jsPDF();
+          
+          // Split content by newlines and add to PDF
+          const lines = content.split('\n');
+          let y = 10;
+          
+          // Add each line
+          for (const line of lines) {
+            if (y > 280) { // Check if we need a new page
+              pdf.addPage();
+              y = 10;
+            }
+            
+            pdf.text(line, 10, y);
+            y += 7; // Increment Y position for next line
+          }
+          
+          // Save the PDF
+          pdf.save('document.pdf');
+          
+          toast.success('Downloaded as PDF');
+        } catch (error) {
+          console.error('Error generating PDF:', error);
+          toast.error('Failed to generate PDF');
+        }
       },
     },
     {

@@ -1,6 +1,7 @@
 import { Artifact } from '@/components/create-artifact';
 import {
   CopyIcon,
+  DownloadIcon,
   LineChartIcon,
   RedoIcon,
   SparklesIcon,
@@ -9,6 +10,8 @@ import {
 import { SpreadsheetEditor } from '@/components/sheet-editor';
 import { parse, unparse } from 'papaparse';
 import { toast } from 'sonner';
+// For Excel export
+import * as XLSX from 'xlsx';
 
 type Metadata = any;
 
@@ -70,6 +73,37 @@ export const sheetArtifact = new Artifact<'sheet', Metadata>({
         }
 
         return false;
+      },
+    },
+    {
+      icon: <DownloadIcon size={18} />,
+      description: 'Download as Excel',
+      onClick: ({ content }) => {
+        try {
+          // Parse CSV content
+          const parsed = parse<string[]>(content, { skipEmptyLines: true });
+
+          const nonEmptyRows = parsed.data.filter((row) =>
+            row.some((cell) => cell.trim() !== ''),
+          );
+
+          // Create a new workbook
+          const wb = XLSX.utils.book_new();
+
+          // Convert data to worksheet
+          const ws = XLSX.utils.aoa_to_sheet(nonEmptyRows);
+
+          // Add worksheet to workbook
+          XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
+
+          // Generate Excel file and trigger download
+          XLSX.writeFile(wb, 'spreadsheet.xlsx');
+
+          toast.success('Downloaded as Excel file!');
+        } catch (error) {
+          console.error('Error downloading Excel:', error);
+          toast.error('Failed to download Excel file');
+        }
       },
     },
     {
