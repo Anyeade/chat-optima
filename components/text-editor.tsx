@@ -5,6 +5,15 @@ import { inputRules } from 'prosemirror-inputrules';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import React, { memo, useEffect, useRef } from 'react';
+import {
+  mathPlugin,
+  makeBlockMathInputRule,
+  makeInlineMathInputRule,
+  REGEX_INLINE_MATH_DOLLARS,
+  REGEX_BLOCK_MATH_DOLLARS,
+} from '@benrbray/prosemirror-math';
+import '@benrbray/prosemirror-math/dist/prosemirror-math.css';
+import 'katex/dist/katex.min.css';
 
 import type { Suggestion } from '@/lib/db/schema';
 import {
@@ -43,6 +52,15 @@ function PureEditor({
 
   useEffect(() => {
     if (containerRef.current && !editorRef.current) {
+      // Math input rules
+      const inlineMathInputRule = makeInlineMathInputRule(
+        REGEX_INLINE_MATH_DOLLARS,
+        documentSchema.nodes.math_inline
+      );
+      const blockMathInputRule = makeBlockMathInputRule(
+        REGEX_BLOCK_MATH_DOLLARS,
+        documentSchema.nodes.math_display
+      );
       const state = EditorState.create({
         doc: buildDocumentFromContent(content),
         plugins: [
@@ -55,9 +73,12 @@ function PureEditor({
               headingRule(4),
               headingRule(5),
               headingRule(6),
+              inlineMathInputRule,
+              blockMathInputRule,
             ],
           }),
           suggestionsPlugin,
+          mathPlugin,
         ],
       });
 
