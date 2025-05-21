@@ -12,23 +12,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    */
   guest: {
     maxMessagesPerDay: 20,
-    availableChatModelIds: [
-      'chat-model', 
-      'chat-model-reasoning',
-      // Google Gemini Models
-      'gemini-2.5-flash-preview-04-17',
-      'gemini-2.5-pro-preview-05-06',
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-lite-preview-02-05',
-      'gemini-1.5-pro-001',
-      'gemini-1.5-pro-002',
-      'gemini-1.5-flash-001',
-      'gemini-1.5-flash-002',
-      // Groq Models
-      'llama-4-scout-17b-16e-instruct',
-      'qwen-qwq-32b',
-      'deepseek-r1-distill-llama-70b'
-    ],
+    availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
   },
 
   /*
@@ -37,7 +21,8 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
   regular: {
     maxMessagesPerDay: 100,
     availableChatModelIds: [
-      'chat-model', 
+      // Main models
+      'chat-model',
       'chat-model-reasoning',
       // Google Gemini Models
       'gemini-2.5-flash-preview-04-17',
@@ -56,7 +41,13 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       // Groq Models
       'llama-4-scout-17b-16e-instruct',
       'qwen-qwq-32b',
-      'deepseek-r1-distill-llama-70b'
+      'deepseek-r1-distill-llama-70b',
+      // Mistral Models
+      'pixtral-12b-2409',
+      // Cohere Models
+      'command-r-plus',
+      'command-r',
+      'command-light',
     ],
   },
 
