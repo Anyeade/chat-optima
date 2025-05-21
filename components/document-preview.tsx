@@ -21,7 +21,6 @@ import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
-import { InlineMath, BlockMath } from 'react-katex';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -235,35 +234,6 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
   return true;
 });
 
-function RenderWithMath({ content }: { content: string }) {
-  // Split by math markers
-  const regex = /(\[\[math-inline\]\](.*?)\[\[\/math-inline\]\]|\[\[math-block\]\](.*?)\[\[\/math-block\]\])/gs;
-  let lastIndex = 0;
-  const elements = [];
-  let match;
-  let key = 0;
-
-  while ((match = regex.exec(content)) !== null) {
-    // Add text before the match
-    if (match.index > lastIndex) {
-      elements.push(<span key={key++}>{content.slice(lastIndex, match.index)}</span>);
-    }
-    if (match[2] !== undefined) {
-      // Inline math
-      elements.push(<InlineMath key={key++} math={match[2]} />);
-    } else if (match[3] !== undefined) {
-      // Block math
-      elements.push(<BlockMath key={key++} math={match[3]} />);
-    }
-    lastIndex = regex.lastIndex;
-  }
-  // Add any remaining text
-  if (lastIndex < content.length) {
-    elements.push(<span key={key++}>{content.slice(lastIndex)}</span>);
-  }
-  return <>{elements}</>;
-}
-
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
@@ -287,13 +257,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
   return (
     <div className={containerClassName}>
       {document.kind === 'text' ? (
-        artifact.status === 'idle' ? (
-          <div className="prose dark:prose-invert">
-            <RenderWithMath content={document.content ?? ''} />
-          </div>
-        ) : (
-          <Editor {...commonProps} onSaveContent={() => {}} />
-        )
+        <Editor {...commonProps} onSaveContent={() => {}} />
       ) : document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full">
           <div className="absolute inset-0">
