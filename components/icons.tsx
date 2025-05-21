@@ -780,6 +780,24 @@ export const CopyIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
+export const CheckIcon = ({ size = 16, className = "" }: { size?: number, className?: string }) => (
+  <svg
+    height={size}
+    width={size}
+    viewBox="0 0 16 16"
+    strokeLinejoin="round"
+    style={{ color: 'currentcolor' }}
+    className={className}
+  >
+    <path
+      fillRule="evenodd"
+      clipRule="evenodd"
+      d="M15 8C15 11.866 11.866 15 8 15C4.13401 15 1 11.866 1 8C1 4.13401 4.13401 1 8 1C11.866 1 15 4.13401 15 8ZM10.9706 6.03033L7.75 9.25095L6.03033 7.53128L4.96967 8.59194L7.75 11.3723L12.0312 7.09099L10.9706 6.03033Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
 export const ThumbUpIcon = ({ size = 16 }: { size?: number }) => (
   <svg
     height={size}

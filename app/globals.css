@@ -200,3 +200,62 @@
 .token.function {
     @apply text-blue-600 dark:text-blue-400;
 }
+
+.token.comment {
+    @apply text-zinc-500 dark:text-zinc-400 italic;
+}
+
+.token.boolean,
+.token.number {
+    @apply text-orange-500 dark:text-orange-300;
+}
+
+.token.selector,
+.token.important,
+.token.regex {
+    @apply text-red-500 dark:text-red-300;
+}
+
+.token.builtin,
+.token.important,
+.token.variable {
+    @apply text-purple-600 dark:text-purple-300;
+}
+
+.token.tag,
+.token.deleted {
+    @apply text-red-600 dark:text-red-400;
+}
+
+.token.inserted {
+    @apply text-green-600 dark:text-green-400;
+}
+
+/* KaTeX Math Styling */
+.katex-display {
+    @apply overflow-x-auto overflow-y-hidden py-2;
+}
+
+.katex {
+    @apply text-current font-normal;
+}
+
+/* Additional KaTeX styling for better display */
+.katex-block {
+    @apply overflow-auto py-2 my-2;
+    max-width: 100%;
+}
+
+.math-inline {
+    @apply mx-1;
+}
+
+/* Add hover styles for the copy button in code blocks */
+.code-block-copy-button {
+    @apply opacity-0 group-hover:opacity-100 transition-opacity duration-200;
+}
+
+/* Language label in the code block */
+.code-block-language-label {
+    @apply bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded;
+}
