@@ -127,12 +127,11 @@ interface SandboxContentProps {
 const parseContent = (content: string): SandboxProject | null => {
   try {
     // Check for file operations in the content
-    const fileOperationsMatch = content.match(/\/\*\*\s*FILE_OPERATIONS\s*\*\/([\s\S]+?)\/\*\*\s*END_FILE_OPERATIONS\s*\*\//);
+    const fileOperationsMatch = content.match(/\/\*\*\s*FILE_OPERATIONS\s*\*\/[\s\S]+?\/\*\*\s*END_FILE_OPERATIONS\s*\*\//);
     if (fileOperationsMatch && fileOperationsMatch[1]) {
       try {
         const fileOperations = JSON.parse(fileOperationsMatch[1].trim());
         if (Array.isArray(fileOperations) && window.AISandboxInterface) {
-          // Queue file operations to be executed after project is loaded
           setTimeout(async () => {
             try {
               if (window.AISandboxInterface) {
@@ -160,14 +159,24 @@ const parseContent = (content: string): SandboxProject | null => {
       }
     }
     
-    // Try to find JSON project configuration in content
-    const projectConfigMatch = content.match(/\/\*\*\s*PROJECT_CONFIG\s*\*\/([\s\S]+?)\/\*\*\s*END_PROJECT_CONFIG\s*\*\//);
-    
-    if (projectConfigMatch && projectConfigMatch[1]) {
-      try {
-        return JSON.parse(projectConfigMatch[1].trim());
-      } catch (e) {
-        console.error("Failed to parse project config JSON", e);
+    // Find all PROJECT_CONFIG blocks
+    const projectConfigMatches = [...content.matchAll(/\/\*\*\s*PROJECT_CONFIG\s*\*\/[\s\S]+?\/\*\*\s*END_PROJECT_CONFIG\s*\*\//g)];
+    if (projectConfigMatches.length > 0) {
+      // Try parsing from the last block (most likely to be complete)
+      for (let i = projectConfigMatches.length - 1; i >= 0; i--) {
+        try {
+          // Extract the inner JSON
+          const match = /\/\*\*\s*PROJECT_CONFIG\s*\*\/[\s\S]+?(\{[\s\S]+?\})[\s\S]*?\/\*\*\s*END_PROJECT_CONFIG\s*\*\//.exec(projectConfigMatches[i][0]);
+          if (match && match[1]) {
+            const project = JSON.parse(match[1].trim());
+            // Validate required fields
+            if (project && project.files && project.template) {
+              return project;
+            }
+          }
+        } catch (e) {
+          // Ignore parse errors, try previous block
+        }
       }
     }
     

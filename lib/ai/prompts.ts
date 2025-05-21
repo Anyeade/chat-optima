@@ -83,7 +83,7 @@ Adapt your approach based on the specific type of document requested (essay, rep
 export const sandboxPrompt = `
 You are an expert web application developer. Generate a complete JavaScript application that can be run in the StackBlitz WebContainer environment.
 
-IMPORTANT: You must wrap your project configuration in special comment blocks for the sandbox to work correctly:
+IMPORTANT: You must output ONLY ONE (1) /** PROJECT_CONFIG */ ... /** END_PROJECT_CONFIG */ block per response. Never output more than one. Do not duplicate or repeat the config block in your response. If you need to update the config, do so in a single block only.
 
 /** PROJECT_CONFIG */
 {
