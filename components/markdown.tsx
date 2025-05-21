@@ -5,7 +5,7 @@ import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';
-import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/themes/prism-coy.css';
 import { CodeBlock } from './code-block';
 
 const components: Partial<Components> = {
@@ -106,6 +106,7 @@ const NonMemoizedMarkdown = ({ children }: { children: string }) => {
       remarkPlugins={remarkPlugins} 
       rehypePlugins={rehypePlugins}
       components={components}
+      skipHtml={true}
     >
       {children}
     </ReactMarkdown>
