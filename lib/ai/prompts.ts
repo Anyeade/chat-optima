@@ -218,39 +218,169 @@ You are a highly skilled AI assistant specializing in front-end web design. Your
 
 **Instructions:**
 
-1. **Understand the Design:** Carefully analyze the user's description of the desired design. Pay close attention to elements, layout, colors, typography, and any interactive behaviors.
+1. **Understand the Design:** Carefully analyze the user's description of the desired design. Pay close attention to elements, layout, colors, typography, and any interactive behaviors.  Don't forget  to always wrap everything inside the html element tag. 
 2. **Generate HTML:** Create valid, semantic HTML code that accurately represents the design. Use appropriate HTML elements (e.g., \`<div>\`, \`<p>\`, \`<h1>\`, \`<button>\`) and attributes.
-3. **Generate Tailwind CSS Classes:** Apply Tailwind CSS utility classes directly to the HTML elements to style them. Use the appropriate Tailwind classes for layout, colors, typography, spacing, and responsiveness.
+3. **Generate Tailwind CSS Classes:** Apply Tailwind CSS utility classes directly to the HTML elements to style them use custom css to spice up the design . Use the appropriate Tailwind classes for layout, colors, typography, spacing, and responsivenes.
 4. **Prioritize UX:** Ensure the generated code adheres to UX best practices, such as clear visual hierarchy, accessibility, and responsiveness across different devices.
 5. **Code Quality:** Write clean, well-formatted, and maintainable code. Use comments to explain complex logic, especially when using less common Tailwind classes.
 6. **Mobile Responsiveness:** Ensure the design works well on both mobile and desktop using Tailwind's responsive prefixes.
 7. **Dark Mode Support:** When appropriate, include dark mode variants using Tailwind's dark: prefix.
-
+**Example user prompt**
 **Example Output:**
 
 \`\`\`html
-<div class="max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden md:max-w-2xl dark:bg-gray-800">
-  <div class="md:flex">
-    <div class="md:shrink-0">
-      <!-- Image placeholder -->
-      <div class="h-48 w-full bg-gray-300 md:h-full md:w-48"></div>
-    </div>
-    <div class="p-8">
-      <div class="uppercase tracking-wide text-sm text-indigo-500 font-semibold dark:text-indigo-400">
-        Category
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Optima Trio AI – Build Smarter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background: #f7f7f7 url('https://cdn.jsdelivr.net/gh/ethanthatonekid/fireworks-js@latest/fireworks.css') center/cover no-repeat fixed;
+      backdrop-filter: blur(3px);
+    }
+  </style>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/fireworks-js@2.1.0/dist/fireworks.js"></script>
+  <script>
+    window.addEventListener("DOMContentLoaded", () => {
+      const container = document.body;
+      const fireworks = new Fireworks(container, {
+        autoresize: true,
+        opacity: 0.4,
+        acceleration: 1.03,
+        friction: 0.97,
+        gravity: 1.2,
+        particles: 80,
+        traceLength: 3,
+        traceSpeed: 2,
+        explosion: 5,
+        intensity: 25,
+        flickering: 50,
+        lineStyle: "round",
+        hue: { min: 0, max: 360 },
+        delay: { min: 15, max: 30 },
+        rocketsPoint: { min: 0, max: 100 },
+        lineWidth: { explosion: { min: 1, max: 3 }, trace: { min: 0.5, max: 1 } },
+        brightness: { min: 50, max: 80 },
+        decay: { min: 0.015, max: 0.03 },
+        mouse: { click: true, move: false, max: 2 },
+        sound: { enable: false }
+      });
+      fireworks.start();
+    });
+  </script>
+</head>
+<body class="bg-gray-50 text-gray-900">
+
+  <!-- Navigation -->
+  <nav class="bg-white shadow">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 items-center">
+        <a href="#" class="text-xl font-bold text-gray-900">Optima Trio AI</a>
+        <div class="space-x-4">
+          <a href="#features" class="text-gray-600 hover:text-gray-900">Features</a>
+          <a href="#pricing" class="text-gray-600 hover:text-gray-900">Pricing</a>
+          <a href="#contact" class="text-gray-600 hover:text-gray-900">Contact</a>
+        </div>
       </div>
-      <a href="#" class="block mt-1 text-lg leading-tight font-medium text-black hover:underline dark:text-white">
-        Title of the card that links somewhere
-      </a>
-      <p class="mt-2 text-gray-500 dark:text-gray-400">
-        Description text that provides more details about this item.
-      </p>
-      <button class="mt-4 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-indigo-500 dark:hover:bg-indigo-600">
-        Action Button
-      </button>
     </div>
-  </div>
-</div>
+  </nav>
+
+  <!-- Hero Header -->
+  <header class="bg-gray-900 text-white text-center py-20 px-6">
+    <h1 class="text-4xl font-bold mb-4">Optima Trio AI</h1>
+    <p class="text-lg mb-6">Your all-in-one AI coding assistant to build full-stack apps with ease.</p>
+    <a href="#pricing" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold px-6 py-3 rounded-lg transition">
+      Get Started for Free
+    </a>
+  </header>
+
+  <!-- Features -->
+  <section id="features" class="py-16 px-6 max-w-6xl mx-auto">
+    <h2 class="text-3xl font-semibold text-center mb-12">Features</h2>
+    <div class="grid md:grid-cols-3 gap-8">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-xl font-bold mb-2">Multi-Model Support</h3>
+        <p>Integrate OpenAI, Claude, Gemini, and local models like Ollama effortlessly.</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-xl font-bold mb-2">Code Automation</h3>
+        <p>Generate, refactor, and deploy code across front-end and back-end projects in seconds.</p>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <h3 class="text-xl font-bold mb-2">In-Editor Assistant</h3>
+        <p>Works inside VS Code, providing instant suggestions, chat, and terminal automation.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing -->
+  <section id="pricing" class="bg-white py-16 px-6">
+    <h2 class="text-3xl font-semibold text-center mb-12">Pricing Plans</h2>
+    <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+      <div class="border rounded-lg p-6 text-center">
+        <h3 class="text-xl font-bold mb-2">Free</h3>
+        <p class="text-gray-600 mb-4">XAF 0/month</p>
+        <ul class="mb-6 text-sm text-gray-700 space-y-2">
+          <li>Limited AI model access</li>
+          <li>Basic chat assistant</li>
+          <li>1 project workspace</li>
+        </ul>
+        <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Start Free</button>
+      </div>
+      <div class="border rounded-lg p-6 text-center bg-blue-50">
+        <h3 class="text-xl font-bold mb-2">Pro</h3>
+        <p class="text-gray-600 mb-4">XAF 5,000/month</p>
+        <ul class="mb-6 text-sm text-gray-700 space-y-2">
+          <li>Unlimited AI model usage</li>
+          <li>Advanced terminal automation</li>
+          <li>5 workspaces</li>
+        </ul>
+        <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Upgrade</button>
+      </div>
+      <div class="border rounded-lg p-6 text-center">
+        <h3 class="text-xl font-bold mb-2">Enterprise</h3>
+        <p class="text-gray-600 mb-4">Custom Pricing</p>
+        <ul class="mb-6 text-sm text-gray-700 space-y-2">
+          <li>Private model hosting</li>
+          <li>Unlimited team collaboration</li>
+          <li>Custom features & support</li>
+        </ul>
+        <button class="bg-gray-800 text-white px-4 py-2 rounded hover:bg-gray-900">Contact Sales</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact" class="bg-gray-900 text-white py-12 mt-16">
+    <div class="max-w-6xl mx-auto px-6 grid md:grid-cols-3 gap-8 text-sm">
+      <div>
+        <h4 class="text-lg font-semibold mb-2">Optima Trio AI</h4>
+        <p>Build faster with smarter tools. Tailored for developers and teams.</p>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold mb-2">Quick Links</h4>
+        <ul class="space-y-2">
+          <li><a href="#features" class="hover:underline">Features</a></li>
+          <li><a href="#pricing" class="hover:underline">Pricing</a></li>
+          <li><a href="#contact" class="hover:underline">Contact</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-lg font-semibold mb-2">Follow Us</h4>
+        <p>Social media icons coming soon.</p>
+      </div>
+    </div>
+    <div class="text-center text-gray-400 mt-8 text-xs">
+      &copy; 2025 Optima Trio AI. All rights reserved.
+    </div>
+  </footer>
+
+</body>
+</html>
+
 \`\`\`
 `;
 
