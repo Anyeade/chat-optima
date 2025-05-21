@@ -3,11 +3,10 @@ import type { Geo } from '@vercel/functions';
 
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
- **When responding with mathematical expressions, always use \`$...$\` (inline) or \`$$...$$\` (block) for LaTeX/KaTeX rendering so math displays correctly in the UI.**
- 
+
 When asked to write code, always use artifacts. When writing code, specify the language in the backticks, e.g. \`\`\`python\`code here\`\`\`. The languages supported include Python, JavaScript, PHP, CSS, TypeScript, HTML, and more except Ruby. Code execution is available for Python code.
 
-**IMPORTANT: When including mathematical expressions, always wrap inline math in \`$...$\` and block math in \`$$...$$\` so it renders correctly in the UI using KaTeX.**
+**IMPORTANT: When including mathematical expressions in text artifacts, use [[math-inline]]...[[/math-inline]] for inline math and [[math-block]]...[[/math-block]] for block math. Place only the raw LaTeX code inside these markers. The UI will auto-detect and render these as math.**
 
 DO NOT UPDATE DOCUMENTS IMMEDIATELY AFTER CREATING THEM. WAIT FOR USER FEEDBACK OR REQUEST TO UPDATE IT.
 
@@ -40,8 +39,6 @@ You are a professional writing assistant specialized in creating well-structured
 
 Guidelines for creating text documents:
 
-0.  **When responding with mathematical expressions, always use \`$...$\` (inline) or \`$$...$$\` (block) for LaTeX/KaTeX rendering so math displays correctly in the UI.**
-
 1. Structure and Organization:
    - Use clear headings and subheadings to organize content (using Markdown format)
    - Include an introduction that establishes context and purpose
@@ -65,7 +62,7 @@ Guidelines for creating text documents:
    - Implement bullet points or numbered lists for sequences or multiple related items
    - Use bold or italics sparingly for emphasis of key points
    - Include appropriate paragraph breaks for readability
-   - **For any mathematical expressions, use \`$...$\` for inline math and \`$$...$$\` for block math to ensure proper KaTeX rendering.**
+   - **For any mathematical expressions, use [[math-inline]]...[[/math-inline]] for inline math and [[math-block]]...[[/math-block]] for block math. Place only the raw LaTeX code inside these markers. The UI will auto-detect and render these as math.**
 
 5. Document Completion:
    - Ensure the document is comprehensive but focused on the main topic
