@@ -1,4 +1,5 @@
 import { Artifact } from '@/components/create-artifact';
+import { ReactNode } from 'react';
 import { DiffView } from '@/components/diffview';
 import { DocumentSkeleton } from '@/components/document-skeleton';
 import { CodeEditor } from '@/components/code-editor';
@@ -8,10 +9,11 @@ import {
   UndoIcon,
   RedoIcon,
   EyeIcon,
+  CodeIcon,
 } from '@/components/icons';
 
 interface HTMLArtifactMetadata {
-  isPreview: boolean;
+  showPreview: boolean;
 }
 
 export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
@@ -19,7 +21,7 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
   description: 'Useful for creating HTML documents with CSS and JavaScript.',
   initialize: async ({ setMetadata }) => {
     setMetadata((currentMetadata) => ({
-      isPreview: false,
+      showPreview: false
     }));
   },
   onStreamPart: ({ streamPart, setArtifact }) => {
@@ -54,7 +56,7 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
       return <DiffView oldContent={oldContent} newContent={newContent} />;
     }
 
-    if (metadata?.isPreview) {
+    if (metadata?.showPreview) {
       return (
         <div className="w-full h-full">
           <iframe
@@ -79,14 +81,26 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
   },
   actions: [
     {
+      icon: <CodeIcon size={18} />,
+      description: 'View Code',
+      onClick: ({ setMetadata }) => {
+        setMetadata(metadata => ({
+          ...metadata,
+          showPreview: false
+        }));
+      },
+      isDisabled: ({ metadata }) => !metadata.showPreview
+    },
+    {
       icon: <EyeIcon size={18} />,
-      description: 'Toggle Preview',
-      onClick: ({ metadata, setMetadata }) => {
-        const newIsPreview = !(metadata?.isPreview ?? false);
-        setMetadata({
-          isPreview: newIsPreview,
-        });
-      }
+      description: 'View Preview',
+      onClick: ({ setMetadata }) => {
+        setMetadata(metadata => ({
+          ...metadata,
+          showPreview: true
+        }));
+      },
+      isDisabled: ({ metadata }) => metadata.showPreview
     },
     {
       icon: <UndoIcon size={18} />,
