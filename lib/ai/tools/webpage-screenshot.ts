@@ -37,16 +37,17 @@ export const webpageScreenshot = tool({
       }
       const base64Data = btoa(binary);
 
-      // Return formatted result with both data URL and metadata
+      // Return as an image attachment
       return {
-        success: true,
-        timestamp: new Date().toISOString(),
-        url: url,
-        width: width,
-        imageDataUrl: `data:image/jpeg;base64,${base64Data}`,
+        type: 'image',
+        src: `data:image/jpeg;base64,${base64Data}`,
+        title: `Screenshot of ${url}`,
         metadata: {
-          size: imageData.byteLength,
-          type: 'image/jpeg',
+          width: width,
+          url: url,
+          timestamp: new Date().toISOString(),
+          mimeType: 'image/jpeg',
+          size: imageData.byteLength
         }
       };
     } catch (error) {
