@@ -26,7 +26,7 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
         await auth.init({ clientId: CLIENT_ID, scope: '' });
         webcontainer = await WebContainer.boot();
         // Parse files from content
-        let files: Record<string, string> = {};
+        let files: Record<string, string | { content: string }> = {};
         try {
           const parsed = JSON.parse(content);
           files = parsed.files || {};
@@ -37,8 +37,14 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
         }
         // Build FileSystemTree
         const tree: any = {};
-        Object.entries(files).forEach(([name, contents]) => {
-          tree[name] = { file: { contents } };
+        Object.entries(files).forEach(([name, value]) => {
+          if (typeof value === 'string') {
+            tree[name] = { file: { contents: value } };
+          } else if (value && typeof value === 'object' && typeof value.content === 'string') {
+            tree[name] = { file: { contents: (value as { content: string }).content } };
+          } else {
+            // skip invalid file entry
+          }
         });
         await webcontainer.mount(tree);
         // Install dependencies
