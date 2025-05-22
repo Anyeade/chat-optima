@@ -2,7 +2,7 @@ import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { streamObject } from 'ai';
 import { z } from 'zod';
-import { htmlPrompt } from '@/lib/ai/prompts';
+import { htmlPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 
 export const htmlDocumentHandler = createDocumentHandler<'html'>({
   kind: 'html',
@@ -39,13 +39,12 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
     return draftContent;
   },
   onUpdateDocument: async ({ document, description, dataStream }) => {
-    let draftContent = '';
+    // Initialize with existing content or empty string to ensure we always have valid HTML
+    let draftContent = document.content || '';
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
-      system: `Update the existing HTML document. Preserve existing structure and content where appropriate.
-Current HTML:
-${document.content}`,
+      system: updateDocumentPrompt(document.content, 'html'),
       prompt: description,
       schema: z.object({
         html: z.string(),
@@ -60,12 +59,13 @@ ${document.content}`,
         const { html } = object;
 
         if (html) {
+          const formattedHtml = html.trim();
           dataStream.writeData({
             type: 'html-delta',
-            content: html,
+            content: formattedHtml,
           });
 
-          draftContent = html;
+          draftContent = formattedHtml;
         }
       }
     }
