@@ -10,14 +10,22 @@ let authInitialized = false;
 let webcontainerInstance: WebContainer | null = null;
 
 // Expecting content to be a JSON string: { files: { 'index.js': '...', ... }, ... }
-const SandboxContent = ({ content, isLoading }: { content: string; isLoading: boolean }) => {
+const SandboxContent = ({ content, isLoading, status }: { content: string; isLoading: boolean; status: string }) => {
   const [output, setOutput] = useState<string>('');
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [buffer, setBuffer] = useState<string>('');
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Accumulate content as it streams
   useEffect(() => {
+    setBuffer(content);
+  }, [content]);
+
+  // Only parse when status is 'idle' (stream finished)
+  useEffect(() => {
+    if (status !== 'idle') return;
     let unmounted = false;
     setOutput('');
     setPreviewUrl(null);
@@ -32,24 +40,19 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
           authInitialized = true;
           console.log('Sandbox: Auth initialized');
         }
-        // Only boot if not already booted
         if (!webcontainerInstance) {
           webcontainerInstance = await WebContainer.boot();
           console.log('Sandbox: WebContainer booted');
         }
-        // Parse files from content
         let files: Record<string, string | { content: string }> = {};
         try {
-          // Debug log
-          console.log('Sandbox: Raw AI content:', content);
-          // Remove code block markers if present
-          let cleanContent = content.trim();
+          console.log('Sandbox: Raw AI content:', buffer);
+          let cleanContent = buffer.trim();
           if (cleanContent.startsWith('```json')) {
             cleanContent = cleanContent.replace(/^```json/, '').replace(/```$/, '').trim();
           } else if (cleanContent.startsWith('```')) {
             cleanContent = cleanContent.replace(/^```/, '').replace(/```$/, '').trim();
           }
-          // Use robust JSON extraction for files
           const parsed = extractFirstFilesJsonObject(cleanContent);
           console.log('Sandbox: Parsed AI content:', parsed);
           if (!parsed.files || typeof parsed.files !== 'object') {
@@ -63,23 +66,18 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
           console.log('Sandbox: Error parsing AI content', e);
           return;
         }
-        // Build FileSystemTree
         const tree: any = {};
         Object.entries(files).forEach(([name, value]) => {
           if (typeof value === 'string') {
             tree[name] = { file: { contents: value } };
           } else if (value && typeof value === 'object' && typeof value.content === 'string') {
             tree[name] = { file: { contents: (value as { content: string }).content } };
-          } else {
-            // skip invalid file entry
           }
         });
         console.log('Sandbox: FileSystemTree:', tree);
-        // Mount files
         console.log('Sandbox: Mounting files...');
         await webcontainerInstance.mount(tree);
         console.log('Sandbox: Files mounted');
-        // Install dependencies
         console.log('Sandbox: Installing dependencies...');
         const install = await webcontainerInstance.spawn('npm', ['install']);
         install.output.pipeTo(new WritableStream({
@@ -89,7 +87,6 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
         }));
         await install.exit;
         console.log('Sandbox: Dependencies installed');
-        // Start dev server
         console.log('Sandbox: Starting dev server...');
         const server = await webcontainerInstance.spawn('npm', ['run', 'dev']);
         server.output.pipeTo(new WritableStream({
@@ -113,9 +110,8 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
     run();
     return () => {
       unmounted = true;
-      // Optionally: webcontainerInstance?.teardown();
     };
-  }, [content]);
+  }, [status, buffer]);
 
   if (isLoading || loading) {
     return <DocumentSkeleton artifactKind="sandbox" />;
@@ -152,7 +148,7 @@ export const sandboxArtifact = new Artifact<'sandbox', {}>({
       }));
     }
   },
-  content: ({ content, isLoading }) => <SandboxContent content={content} isLoading={isLoading} />,
+  content: ({ content, isLoading, status }) => <SandboxContent content={content} isLoading={isLoading} status={status} />,
   actions: [],
   toolbar: [],
 });
