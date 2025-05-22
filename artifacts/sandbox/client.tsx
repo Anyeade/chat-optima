@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Artifact } from '@/components/create-artifact';
 import { DocumentSkeleton } from '@/components/document-skeleton';
 import { WebContainer, auth } from '@webcontainer/api';
-import { extractFirstJsonObject } from '@/lib/utils';
+import { extractFirstFilesJsonObject } from '@/lib/utils';
 
 const CLIENT_ID = 'wc_api_hansade2005_b1004f8ae7e02690531ba4f46afb9a52';
 
@@ -49,8 +49,8 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
           } else if (cleanContent.startsWith('```')) {
             cleanContent = cleanContent.replace(/^```/, '').replace(/```$/, '').trim();
           }
-          // Use robust JSON extraction
-          const parsed = extractFirstJsonObject(cleanContent);
+          // Use robust JSON extraction for files
+          const parsed = extractFirstFilesJsonObject(cleanContent);
           console.log('Sandbox: Parsed AI content:', parsed);
           if (!parsed.files || typeof parsed.files !== 'object') {
             throw new Error('Missing or invalid files property');

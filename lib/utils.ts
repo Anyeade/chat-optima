@@ -91,42 +91,53 @@ export function sanitizeText(text: string) {
 }
 
 /**
- * Extracts the first valid JSON object from a string.
+ * Extracts the first valid JSON object from a string that contains a 'files' key.
  * Ignores any text/comments before or after the JSON.
- * Throws if no valid JSON object is found.
+ * Throws if no valid JSON object with 'files' is found.
  */
-export function extractFirstJsonObject(str: string): any {
-  let start = str.indexOf('{');
-  if (start === -1) throw new Error('No JSON object found');
-  let open = 0;
-  let inString = false;
-  let escape = false;
-  let end = -1;
-  for (let i = start; i < str.length; i++) {
-    const char = str[i];
-    if (inString) {
-      if (escape) {
-        escape = false;
-      } else if (char === '\\') {
-        escape = true;
-      } else if (char === '"') {
-        inString = false;
-      }
-    } else {
-      if (char === '"') {
-        inString = true;
-      } else if (char === '{') {
-        open++;
-      } else if (char === '}') {
-        open--;
-        if (open === 0) {
-          end = i + 1;
-          break;
+export function extractFirstFilesJsonObject(str: string): any {
+  let start = 0;
+  while ((start = str.indexOf('{', start)) !== -1) {
+    let open = 0;
+    let inString = false;
+    let escape = false;
+    let end = -1;
+    for (let i = start; i < str.length; i++) {
+      const char = str[i];
+      if (inString) {
+        if (escape) {
+          escape = false;
+        } else if (char === '\\') {
+          escape = true;
+        } else if (char === '"') {
+          inString = false;
+        }
+      } else {
+        if (char === '"') {
+          inString = true;
+        } else if (char === '{') {
+          open++;
+        } else if (char === '}') {
+          open--;
+          if (open === 0) {
+            end = i + 1;
+            break;
+          }
         }
       }
     }
+    if (end !== -1) {
+      const jsonStr = str.slice(start, end);
+      try {
+        const obj = JSON.parse(jsonStr);
+        if (obj && typeof obj === 'object' && obj.files && typeof obj.files === 'object') {
+          return obj;
+        }
+      } catch (e) {
+        // ignore parse errors, try next
+      }
+    }
+    start = start + 1;
   }
-  if (end === -1) throw new Error('No complete JSON object found');
-  const jsonStr = str.slice(start, end);
-  return JSON.parse(jsonStr);
+  throw new Error('No complete JSON object with a files key found');
 }
