@@ -89,7 +89,7 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
           showPreview: false
         }));
       },
-      isDisabled: ({ metadata }) => !metadata?.showPreview
+      isDisabled: ({ metadata }) => !(metadata?.showPreview ?? false)
     },
     {
       icon: <EyeIcon size={18} />,
@@ -100,7 +100,7 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
           showPreview: true
         }));
       },
-      isDisabled: ({ metadata }) => metadata?.showPreview ?? false
+      isDisabled: ({ metadata }) => !!(metadata?.showPreview ?? false)
     },
     {
       icon: <UndoIcon size={18} />,
