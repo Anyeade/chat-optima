@@ -6,6 +6,7 @@ import { WebContainer, auth } from '@webcontainer/api';
 const CLIENT_ID = 'wc_api_hansade2005_b1004f8ae7e02690531ba4f46afb9a52';
 
 let authInitialized = false;
+let webcontainerInstance: WebContainer | null = null;
 
 // Expecting content to be a JSON string: { files: { 'index.js': '...', ... }, ... }
 const SandboxContent = ({ content, isLoading }: { content: string; isLoading: boolean }) => {
@@ -16,7 +17,6 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
   useEffect(() => {
-    let webcontainer: WebContainer | null = null;
     let unmounted = false;
     setOutput('');
     setPreviewUrl(null);
@@ -29,7 +29,10 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
           await auth.init({ clientId: CLIENT_ID, scope: '' });
           authInitialized = true;
         }
-        webcontainer = await WebContainer.boot();
+        // Only boot if not already booted
+        if (!webcontainerInstance) {
+          webcontainerInstance = await WebContainer.boot();
+        }
         // Parse files from content
         let files: Record<string, string | { content: string }> = {};
         try {
@@ -51,9 +54,9 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
             // skip invalid file entry
           }
         });
-        await webcontainer.mount(tree);
+        await webcontainerInstance.mount(tree);
         // Install dependencies
-        const install = await webcontainer.spawn('npm', ['install']);
+        const install = await webcontainerInstance.spawn('npm', ['install']);
         install.output.pipeTo(new WritableStream({
           write(data) {
             if (!unmounted) setOutput(prev => prev + data);
@@ -61,13 +64,13 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
         }));
         await install.exit;
         // Start dev server
-        const server = await webcontainer.spawn('npm', ['run', 'dev']);
+        const server = await webcontainerInstance.spawn('npm', ['run', 'dev']);
         server.output.pipeTo(new WritableStream({
           write(data) {
             if (!unmounted) setOutput(prev => prev + data);
           }
         }));
-        webcontainer.on('server-ready', (port, url) => {
+        webcontainerInstance.on('server-ready', (port, url) => {
           if (!unmounted) {
             setPreviewUrl(url);
             setLoading(false);
@@ -81,7 +84,7 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
     run();
     return () => {
       unmounted = true;
-      // Optionally: webcontainer?.teardown();
+      // Optionally: webcontainerInstance?.teardown();
     };
   }, [content]);
 
