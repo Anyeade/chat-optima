@@ -89,3 +89,44 @@ export function getTrailingMessageId({
 export function sanitizeText(text: string) {
   return text.replace('<has_function_call>', '');
 }
+
+/**
+ * Extracts the first valid JSON object from a string.
+ * Ignores any text/comments before or after the JSON.
+ * Throws if no valid JSON object is found.
+ */
+export function extractFirstJsonObject(str: string): any {
+  let start = str.indexOf('{');
+  if (start === -1) throw new Error('No JSON object found');
+  let open = 0;
+  let inString = false;
+  let escape = false;
+  let end = -1;
+  for (let i = start; i < str.length; i++) {
+    const char = str[i];
+    if (inString) {
+      if (escape) {
+        escape = false;
+      } else if (char === '\\') {
+        escape = true;
+      } else if (char === '"') {
+        inString = false;
+      }
+    } else {
+      if (char === '"') {
+        inString = true;
+      } else if (char === '{') {
+        open++;
+      } else if (char === '}') {
+        open--;
+        if (open === 0) {
+          end = i + 1;
+          break;
+        }
+      }
+    }
+  }
+  if (end === -1) throw new Error('No complete JSON object found');
+  const jsonStr = str.slice(start, end);
+  return JSON.parse(jsonStr);
+}
