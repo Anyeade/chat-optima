@@ -17,6 +17,9 @@ export const webpageScreenshot = tool({
     try {
       console.log(`Starting webpage screenshot capture for: ${url}`);
       
+      // Return message and image data together
+      const message = `I am analyzing the webpage at ${url} to provide insights based on its visual content.`;
+      
       // Construct the API URL
       const fetchUrl = `https://api.thumbnail.ws/api/${API_KEY}/thumbnail/get?url=${encodeURIComponent(url)}&width=${width}`;
 
@@ -37,17 +40,19 @@ export const webpageScreenshot = tool({
       }
       const base64Data = btoa(binary);
 
-      // Return as an image attachment
+      // Return analysis message and image data
       return {
-        type: 'image',
-        src: `data:image/jpeg;base64,${base64Data}`,
-        title: `Screenshot of ${url}`,
-        metadata: {
-          width: width,
-          url: url,
-          timestamp: new Date().toISOString(),
-          mimeType: 'image/jpeg',
-          size: imageData.byteLength
+        message,
+        image: {
+          type: 'image_analysis',
+          data: `data:image/jpeg;base64,${base64Data}`,
+          analysis_context: {
+            source_url: url,
+            capture_width: width,
+            timestamp: new Date().toISOString(),
+            mime_type: 'image/jpeg',
+            size: imageData.byteLength
+          }
         }
       };
     } catch (error) {

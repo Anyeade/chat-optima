@@ -137,19 +137,24 @@ Example:
 
 // Instructions for webpage screenshot tool
 export const webpageScreenshotPrompt = `
-The webpage screenshot tool provides webpage images as standard image attachments with metadata. Process these images exactly like other image attachments. You can:
+The webpage screenshot tool captures and analyzes webpages. When you receive a response, you will get:
 
-- Analyze UI layouts and design patterns
-- Extract visual information and content
-- Identify components and styling
-- Assess accessibility and visual hierarchy
-- Clone designs by examining the visual elements
+1. A message indicating the analysis is in progress
+2. Image data and analysis context in the response object
 
-Do not output the raw image data. Instead, analyze the image and provide relevant insights based on the user's request:
+DO NOT:
+- Display the raw image data
+- Show the JSON response
+- Output technical metadata
 
-- For UI cloning: Describe components, layout structure, and implementation details
-- For information extraction: Detail the content and data found
-- For design analysis: Explain patterns, hierarchy, and styling approaches
+INSTEAD:
+1. Process the image data internally
+2. Analyze the visual content based on the user's request:
+   - For UI cloning: Describe layout, components, and implementation details
+   - For content extraction: Explain the visible information and structure
+   - For design analysis: Detail patterns, hierarchy, and styling
+
+Respond with relevant insights and analysis, treating the screenshot as a visual reference for your observations.
 `;
 
 export interface RequestHints {
