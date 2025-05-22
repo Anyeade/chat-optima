@@ -5,6 +5,8 @@ import { WebContainer, auth } from '@webcontainer/api';
 
 const CLIENT_ID = 'wc_api_hansade2005_b1004f8ae7e02690531ba4f46afb9a52';
 
+let authInitialized = false;
+
 // Expecting content to be a JSON string: { files: { 'index.js': '...', ... }, ... }
 const SandboxContent = ({ content, isLoading }: { content: string; isLoading: boolean }) => {
   const [output, setOutput] = useState<string>('');
@@ -23,7 +25,10 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
 
     const run = async () => {
       try {
-        await auth.init({ clientId: CLIENT_ID, scope: '' });
+        if (!authInitialized) {
+          await auth.init({ clientId: CLIENT_ID, scope: '' });
+          authInitialized = true;
+        }
         webcontainer = await WebContainer.boot();
         // Parse files from content
         let files: Record<string, string | { content: string }> = {};
