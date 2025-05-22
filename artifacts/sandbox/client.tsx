@@ -25,22 +25,40 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
 
     const run = async () => {
       try {
+        console.log('Sandbox: Starting run()');
         if (!authInitialized) {
           await auth.init({ clientId: CLIENT_ID, scope: '' });
           authInitialized = true;
+          console.log('Sandbox: Auth initialized');
         }
         // Only boot if not already booted
         if (!webcontainerInstance) {
           webcontainerInstance = await WebContainer.boot();
+          console.log('Sandbox: WebContainer booted');
         }
         // Parse files from content
         let files: Record<string, string | { content: string }> = {};
         try {
-          const parsed = JSON.parse(content);
-          files = parsed.files || {};
+          // Debug log
+          console.log('Sandbox: Raw AI content:', content);
+          // Remove code block markers if present
+          let cleanContent = content.trim();
+          if (cleanContent.startsWith('```json')) {
+            cleanContent = cleanContent.replace(/^```json/, '').replace(/```$/, '').trim();
+          } else if (cleanContent.startsWith('```')) {
+            cleanContent = cleanContent.replace(/^```/, '').replace(/```$/, '').trim();
+          }
+          const parsed = JSON.parse(cleanContent);
+          console.log('Sandbox: Parsed AI content:', parsed);
+          if (!parsed.files || typeof parsed.files !== 'object') {
+            throw new Error('Missing or invalid files property');
+          }
+          files = parsed.files;
+          console.log('Sandbox: Files object:', files);
         } catch (e) {
           setError('Invalid project file format.');
           setLoading(false);
+          console.log('Sandbox: Error parsing AI content', e);
           return;
         }
         // Build FileSystemTree
@@ -54,8 +72,13 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
             // skip invalid file entry
           }
         });
+        console.log('Sandbox: FileSystemTree:', tree);
+        // Mount files
+        console.log('Sandbox: Mounting files...');
         await webcontainerInstance.mount(tree);
+        console.log('Sandbox: Files mounted');
         // Install dependencies
+        console.log('Sandbox: Installing dependencies...');
         const install = await webcontainerInstance.spawn('npm', ['install']);
         install.output.pipeTo(new WritableStream({
           write(data) {
@@ -63,7 +86,9 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
           }
         }));
         await install.exit;
+        console.log('Sandbox: Dependencies installed');
         // Start dev server
+        console.log('Sandbox: Starting dev server...');
         const server = await webcontainerInstance.spawn('npm', ['run', 'dev']);
         server.output.pipeTo(new WritableStream({
           write(data) {
@@ -74,11 +99,13 @@ const SandboxContent = ({ content, isLoading }: { content: string; isLoading: bo
           if (!unmounted) {
             setPreviewUrl(url);
             setLoading(false);
+            console.log('Sandbox: Dev server ready at', url);
           }
         });
       } catch (e: any) {
         setError(e?.message || 'Failed to start WebContainer.');
         setLoading(false);
+        console.log('Sandbox: Error in run()', e);
       }
     };
     run();
