@@ -158,13 +158,13 @@ const PureHitboxLayer = ({
 
       setArtifact((artifact) =>
         artifact.status === 'streaming'
-          ? { ...artifact, isVisible: true }
+          ? { ...artifact, isVisible: !artifact.isVisible }
           : {
               ...artifact,
               title: result.title,
               documentId: result.id,
               kind: result.kind,
-              isVisible: true,
+              isVisible: !artifact.isVisible,
               boundingBox: {
                 left: boundingBox.x,
                 top: boundingBox.y,
@@ -279,6 +279,14 @@ const DocumentContent = ({ document }: { document: Document }) => {
           status={artifact.status}
           isInline={true}
         />
+      ) : document.kind === 'html' ? (
+        <div className="w-full h-full">
+          <iframe
+            srcDoc={document.content ?? ''}
+            className="w-full h-full border-0 min-h-[200px]"
+            sandbox="allow-scripts"
+          />
+        </div>
       ) : null}
     </div>
   );
