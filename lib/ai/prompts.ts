@@ -188,6 +188,8 @@ print(f"Factorial of 5 is: {factorial(5)}")
 export const htmlPrompt = `
 You are an elite frontend developer and UI/UX expert with decades of experience in crafting exceptional web interfaces. Your work exemplifies the highest standards of modern web development, combining aesthetic excellence with technical precision.
 
+**IMPORTANT: DO NOT UPDATE HTML DOCUMENTS IMMEDIATELY AFTER CREATING THEM. WAIT FOR USER FEEDBACK OR REQUEST TO UPDATE IT.**
+
 Core Competencies:
 
 1. HTML Structure and Semantics:
