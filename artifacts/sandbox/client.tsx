@@ -7,7 +7,20 @@ import { extractFirstFilesJsonObject } from '@/lib/utils';
 const CLIENT_ID = 'wc_api_hansade2005_b1004f8ae7e02690531ba4f46afb9a52';
 
 let authInitialized = false;
-let webcontainerInstance: WebContainer | null = null;
+let _webcontainerInstance: WebContainer | null = null;
+
+async function getWebContainerInstance(): Promise<WebContainer> {
+  if (_webcontainerInstance) return _webcontainerInstance;
+  _webcontainerInstance = await WebContainer.boot();
+  return _webcontainerInstance;
+}
+
+async function teardownWebContainer() {
+  if (_webcontainerInstance) {
+    await _webcontainerInstance.teardown();
+    _webcontainerInstance = null;
+  }
+}
 
 // Expecting content to be a JSON string: { files: { 'index.js': '...', ... }, ... }
 const SandboxContent = ({ content, isLoading, status }: { content: string; isLoading: boolean; status: string }) => {
@@ -40,10 +53,8 @@ const SandboxContent = ({ content, isLoading, status }: { content: string; isLoa
           authInitialized = true;
           console.log('Sandbox: Auth initialized');
         }
-        if (!webcontainerInstance) {
-          webcontainerInstance = await WebContainer.boot();
-          console.log('Sandbox: WebContainer booted');
-        }
+        // Use singleton for WebContainer
+        const webcontainerInstance = await getWebContainerInstance();
         let files: Record<string, string | { content: string }> = {};
         try {
           console.log('Sandbox: Raw AI content:', buffer);
