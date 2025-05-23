@@ -8,26 +8,16 @@ const ANYAPI_KEY = 'qlh3lj31a5onoqdu7arq9opupumimjo8uisbq6f3ga8pumabumj7n';
  * Web scraping tool that uses anyapi.io to extract content from websites
  */
 export const webScraper = tool({
-  description: 'Scrape content from a website with optional CSS selectors',
+  description: 'Scrape content from a website',
   parameters: z.object({
-    url: z.string().url().describe('The URL of the website to scrape. Must be a valid URL with http:// or https:// prefix.'),
-    selector: z.string().optional().describe('Optional CSS selector to target specific elements on the page (e.g., "h1", ".content", "#main-article").'),
-    attribute: z.string().optional().describe('Optional attribute to extract from the selected elements (e.g., "href", "src"). If not provided, will return text content.')
+    url: z.string().url().describe('The URL of the website to scrape. Must be a valid URL with http:// or https:// prefix.')
   }),
-  execute: async ({ url, selector, attribute }) => {
+  execute: async ({ url }) => {
     try {
-      console.log(`Scraping content from: ${url}${selector ? ` using selector: ${selector}` : ' (full page)'}`);
+      console.log(`Scraping content from: ${url}`);
       
       // Construct the API URL with proper encoding
-      let apiUrl = `https://anyapi.io/api/v1/scrape?url=${encodeURIComponent(url)}&apiKey=${ANYAPI_KEY}`;
-      
-      // Add selector and attribute parameters only if provided
-      if (selector) {
-        apiUrl += `&selector=${encodeURIComponent(selector)}`;
-        if (attribute) {
-          apiUrl += `&attribute=${encodeURIComponent(attribute)}`;
-        }
-      }
+      const apiUrl = `https://anyapi.io/api/v1/scrape?url=${encodeURIComponent(url)}&apiKey=${ANYAPI_KEY}`;
       // Make the request to the API
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -38,20 +28,16 @@ export const webScraper = tool({
       
       if (!response.ok) {
         throw new Error(`Scraping failed with status: ${response.status}`);
-      }
-      
-      // Parse the response
+      }      // Parse the response
+      // Based on the curl example, we know the API returns JSON with a content property
       const data = await response.json();
       
-      // Format the results with detailed structure
       const formattedResults = {
         url,
         timestamp: new Date().toISOString(),
-        selector,
-        attribute: attribute || 'textContent',
-        results: data.results || [],
-        count: data.results ? data.results.length : 0,
-        instructionsForAI: "The data below was scraped from the specified website using the provided CSS selector. Analyze and summarize this content for the user."
+        // Store the full HTML content internally but don't expose in UI
+        _html: data.content,
+        instructionsForAI: "Full HTML content has been scraped from the website and is available for processing."
       };
       
       return {

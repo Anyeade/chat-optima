@@ -6,10 +6,6 @@ interface WebScraperProps {
   scrapedResults: {
     url: string;
     timestamp: string;
-    selector: string;
-    attribute?: string;
-    results: string[];
-    count: number;
   };
 }
 
@@ -17,11 +13,7 @@ export function WebScraper({ scrapedResults }: WebScraperProps) {
   // Add null checks and default values
   const { 
     url = '', 
-    timestamp = new Date().toISOString(), 
-    selector = '', 
-    attribute = 'textContent',
-    results = [],
-    count = 0
+    timestamp = new Date().toISOString()
   } = scrapedResults || {};
 
   return (
