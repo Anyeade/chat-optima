@@ -12,6 +12,7 @@ import { MessageActions } from './message-actions';
 import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
 import { WebSearch } from './web-search';
+import { WebpageScreenshot } from './webpage-screenshot';
 import equal from 'fast-deep-equal';
 import { cn, sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -215,6 +216,11 @@ const PurePreviewMessage = ({
                         />
                       ) : toolName === 'webSearch' ? (
                         <WebSearch searchResults={result} />
+                      ) : toolName === 'webpageScreenshot' ? (
+                        <>
+                          {console.log("Webpage screenshot tool result:", result)}
+                          <WebpageScreenshot result={result} />
+                        </>
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>
                       )}
