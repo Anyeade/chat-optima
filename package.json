@@ -16,7 +16,11 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "export PLAYWRIGHT=True && pnpm exec playwright test"
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
+    "test:vitest": "vitest run",
+    "test:smart-update": "vitest artifacts/html/tests/smart-update.test.ts --run",
+    "test:unit": "vitest artifacts/**/*.test.ts --run",
+    "test:simplified": "vitest artifacts/html/tests/simplified-smart-update.test.ts --run"
   },
   "dependencies": {
     "@ai-sdk/cohere": "^1.2.10",
@@ -114,6 +118,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "usehooks-ts": "^3.1.0",
+    "vitest": "^3.1.4",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
   },

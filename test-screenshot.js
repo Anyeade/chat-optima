@@ -1,8 +1,8 @@
 // Simple test script for webpage screenshot
 const puppeteer = require('puppeteer');
-const fs = require('fs');
-const path = require('path');
-const os = require('os');
+const fs = require('node:fs');
+const path = require('node:path');
+const os = require('node:os');
 
 async function captureScreenshot(url) {
   try {

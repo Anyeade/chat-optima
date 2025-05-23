@@ -1,4 +1,4 @@
-import { NextApiRequest, NextApiResponse } from 'next';
+import type { NextApiRequest, NextApiResponse } from 'next';
 import { getUser, updateUserPassword } from '@/lib/db/queries';
 import { sendResetPasswordEmail } from '@/lib/email';
 import { generateToken, verifyToken } from '@/lib/token';

@@ -1,10 +1,9 @@
 import { sign, verify } from 'jsonwebtoken';
-import type { SignOptions } from 'jsonwebtoken';
 
 const SECRET_KEY = process.env.JWT_SECRET || 'default_secret';
 
 export function generateToken(payload: object, expiresIn: string | number) {
-  const options = { expiresIn: typeof expiresIn === 'string' ? parseInt(expiresIn, 10) : expiresIn };
+  const options = { expiresIn: typeof expiresIn === 'string' ? Number.parseInt(expiresIn, 10) : expiresIn };
   return sign(payload, SECRET_KEY, options);
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { EditorView, ViewPlugin, Decoration, DecorationSet } from '@codemirror/view';
+import { EditorView, ViewPlugin, Decoration, type DecorationSet } from '@codemirror/view';
 import { EditorState, Transaction } from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
 import { html } from '@codemirror/lang-html';
@@ -12,7 +12,7 @@ import { oneDark } from '@codemirror/theme-one-dark';
 import { basicSetup } from 'codemirror';
 import { LanguageSupport } from '@codemirror/language';
 import React, { memo, useEffect, useRef } from 'react';
-import { Suggestion } from '@/lib/db/schema';
+import type { Suggestion } from '@/lib/db/schema';
 import { languages, tokenize } from 'prismjs';
 import 'prismjs/components/prism-mermaid';
 import 'prismjs/components/prism-javascript';

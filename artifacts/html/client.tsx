@@ -1,5 +1,4 @@
 import { Artifact } from '@/components/create-artifact';
-import { ReactNode } from 'react';
 import { DiffView } from '@/components/diffview';
 import { DocumentSkeleton } from '@/components/document-skeleton';
 import { CodeEditor } from '@/components/code-editor';
@@ -10,10 +9,12 @@ import {
   RedoIcon,
   EyeIcon,
   CodeIcon,
+  SparklesIcon
 } from '@/components/icons';
 
 interface HTMLArtifactMetadata {
   showPreview: boolean;
+  showSmartUpdateInfo: boolean;
 }
 
 export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
@@ -21,16 +22,34 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
   description: 'Useful for creating HTML documents with CSS and JavaScript.',
   initialize: async ({ setMetadata }) => {
     setMetadata((currentMetadata) => ({
-      showPreview: false
+      showPreview: false,
+      showSmartUpdateInfo: false
     }));
   },
-  onStreamPart: ({ streamPart, setArtifact }) => {
+  onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
     if (streamPart.type === 'html-delta') {
       setArtifact((draftArtifact) => ({
         ...draftArtifact,
         content: streamPart.content as string,
         isVisible: true,
         status: 'streaming',
+      }));
+    }
+    
+    if (streamPart.type === 'html-smart-update') {
+      // Show info when smart updates are happening
+      setMetadata((metadata) => ({
+        ...metadata,
+        showSmartUpdateInfo: true
+      }));
+    }
+    
+    if (streamPart.type === 'finish') {
+      // Reset the smart update info flag when streaming is complete
+      // This ensures it doesn't persist for future non-smart updates
+      setMetadata((metadata) => ({
+        ...metadata,
+        showSmartUpdateInfo: false
       }));
     }
   },
@@ -58,7 +77,16 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
 
     if (metadata?.showPreview) {
       return (
-        <div className="w-full h-full">
+        <div className="w-full h-full flex flex-col">
+          {metadata?.showSmartUpdateInfo && (
+            <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-3 m-3 flex items-center">
+              <span className="mr-2"><SparklesIcon size={18} /></span>
+              <div>
+                <p className="font-medium">Smart Update Active</p>
+                <p className="text-sm">Making targeted changes without rewriting the entire document for better performance and efficiency.</p>
+              </div>
+            </div>
+          )}
           <iframe
             srcDoc={content}
             className="w-full h-full border-0"
@@ -69,7 +97,16 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
     }
 
     return (
-      <div className="p-4 w-full">
+      <div className="p-4 w-full flex flex-col">
+        {metadata?.showSmartUpdateInfo && (
+        <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-3 mb-3 flex items-center">
+          <span className="mr-2"><SparklesIcon size={18} /></span>
+          <div>
+            <p className="font-medium">Smart Update Active</p>
+            <p className="text-sm">Making targeted changes without rewriting the entire document for better performance and efficiency.</p>
+          </div>
+        </div>
+      )}
         <CodeEditor
           content={content}
           language="html"
@@ -131,5 +168,21 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
       },
     },
   ],
-  toolbar: [],
+  toolbar: [
+    {
+      icon: <SparklesIcon size={18} />,
+      description: 'Use Smart Update',
+      onClick: ({ appendMessage, setMetadata }) => {
+        setMetadata((metadata: any) => ({
+          ...metadata,
+          showSmartUpdateInfo: true
+        }));
+        
+        appendMessage({
+          role: 'user',
+          content: "When updating HTML documents, you can use the smart update feature by adding 'smart update' to your instruction. This feature makes targeted changes to specific parts of the HTML without rewriting the entire document.\n\nExamples:\n- 'Smart update: change the navigation bar background color to blue'\n- 'Smart update: add a new list item to the features section'\n- 'Smart update: remove the contact form'\n\nSmart updates are faster and more efficient, especially for large HTML documents or when making small changes."
+        });
+      }
+    }
+  ],
 });

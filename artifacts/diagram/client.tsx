@@ -54,7 +54,7 @@ function MermaidPreview({ content }: { content: string }) {
     const render = async () => {
       try {
         // Use a random ID to prevent conflicts with multiple diagrams
-        const id = 'diagram-' + Math.random().toString(36).substr(2, 9);
+        const id = `diagram-${Math.random().toString(36).substr(2, 9)}`;
         const { svg } = await mermaid.render(id, content);
         if (containerRef.current) {
           containerRef.current.innerHTML = svg;

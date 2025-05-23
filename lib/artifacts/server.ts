@@ -6,11 +6,11 @@ import { htmlDocumentHandler } from '@/artifacts/html/server';
 import { svgDocumentHandler } from '@/artifacts/svg/server';
 import { diagramDocumentHandler } from '@/artifacts/diagram/server';
 import { sandboxDocumentHandler } from '@/artifacts/sandbox/server';
-import { ArtifactKind } from '@/components/artifact';
-import { DataStreamWriter } from 'ai';
-import { Document } from '../db/schema';
+import type { ArtifactKind } from '@/components/artifact';
+import type { DataStreamWriter } from 'ai';
+import type { Document } from '../db/schema';
 import { saveDocument } from '../db/queries';
-import { Session } from 'next-auth';
+import type { Session } from 'next-auth';
 
 export interface SaveDocumentProps {
   id: string;

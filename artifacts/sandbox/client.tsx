@@ -128,7 +128,7 @@ const parseContent = (content: string): SandboxProject | null => {
   try {
     // Check for file operations in the content
     const fileOperationsMatch = content.match(/\/\*\*\s*FILE_OPERATIONS\s*\*\/([\s\S]+?)\/\*\*\s*END_FILE_OPERATIONS\s*\*\//);
-    if (fileOperationsMatch && fileOperationsMatch[1]) {
+    if (fileOperationsMatch?.[1]) {
       try {
         const fileOperations = JSON.parse(fileOperationsMatch[1].trim());
         if (Array.isArray(fileOperations) && window.AISandboxInterface) {
@@ -163,7 +163,7 @@ const parseContent = (content: string): SandboxProject | null => {
     // Try to find JSON project configuration in content
     const projectConfigMatch = content.match(/\/\*\*\s*PROJECT_CONFIG\s*\*\/([\s\S]+?)\/\*\*\s*END_PROJECT_CONFIG\s*\*\//);
     
-    if (projectConfigMatch && projectConfigMatch[1]) {
+    if (projectConfigMatch?.[1]) {
       try {
         return JSON.parse(projectConfigMatch[1].trim());
       } catch (e) {
@@ -176,7 +176,7 @@ const parseContent = (content: string): SandboxProject | null => {
     
     // Extract HTML content (assuming first HTML block is index.html)
     const htmlMatch = content.match(/```html([\s\S]+?)```/);
-    if (htmlMatch && htmlMatch[1]) {
+    if (htmlMatch?.[1]) {
       files['index.html'] = htmlMatch[1].trim();
     } else {
       files['index.html'] = '<div id="app"></div>';
@@ -184,7 +184,7 @@ const parseContent = (content: string): SandboxProject | null => {
     
     // Extract CSS content
     const cssMatch = content.match(/```css([\s\S]+?)```/);
-    if (cssMatch && cssMatch[1]) {
+    if (cssMatch?.[1]) {
       files['styles.css'] = cssMatch[1].trim();
     } else {
       files['styles.css'] = 'body { font-family: system-ui, sans-serif; }';
@@ -192,7 +192,7 @@ const parseContent = (content: string): SandboxProject | null => {
     
     // Extract JS content
     const jsMatch = content.match(/```js(?:cript)?([\s\S]+?)```/);
-    if (jsMatch && jsMatch[1]) {
+    if (jsMatch?.[1]) {
       files['index.js'] = jsMatch[1].trim();
     } else {
       files['index.js'] = 'import "./styles.css";\ndocument.getElementById("app").innerHTML = "<h1>Hello World</h1>";';
@@ -311,7 +311,7 @@ const SandboxContent = ({
     try {
       // Get the current index.html content
       const files = await metadata.vm.getFsSnapshot();
-      let indexHtml = files['index.html'] || '';
+      const indexHtml = files['index.html'] || '';
       
       // Check if communication script is already injected
       if (indexHtml.includes('ai-sandbox-communicator.js')) return;
@@ -621,7 +621,7 @@ window.sendMessageToAI = function(type, data) {
     
     return () => {
       // Clean up when component unmounts
-      delete (window as any).AISandboxInterface;
+      (window as any).AISandboxInterface = undefined;
     };
   }, [metadata.vm, metadata.isEmbedded]);
   
@@ -969,7 +969,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
       },
     },
     {
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect><rect x="9" y="9" width="6" height="6"></rect></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="4" width="16" height="16" rx="2" ry="2" /><rect x="9" y="9" width="6" height="6" /></svg>,
       description: 'Toggle Editor Mode',
       onClick: async ({ metadata, setMetadata }) => {
         if (metadata.vm) {
@@ -989,7 +989,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
       },
     },
     {
-      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3z"></path><path d="M14 3h7v7h-7z"></path><path d="M14 14h7v7h-7z"></path><path d="M3 14h7v7H3z"></path></svg>,
+      icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3h7v7H3z" /><path d="M14 3h7v7h-7z" /><path d="M14 14h7v7h-7z" /><path d="M3 14h7v7H3z" /></svg>,
       description: 'Split View',
       onClick: async ({ metadata, setMetadata }) => {
         if (metadata.vm) {
@@ -1029,7 +1029,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
   ],  toolbar: [
     {
       description: 'Add a new file to sandbox',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="12" y1="18" x2="12" y2="12" /><line x1="9" y1="15" x2="15" y2="15" /></svg>,
       onClick: async ({ appendMessage }) => {
         appendMessage({
           role: 'user',
@@ -1039,7 +1039,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Modify existing files',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9" /><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" /></svg>,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',
@@ -1049,7 +1049,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Fix errors in the code',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',
@@ -1093,7 +1093,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Add npm package',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H8a2 2 0 00-2 2v4"></path><path d="M16 12V9.5a1.5 1.5 0 00-3 0V12"></path><path d="M4 12h16v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6z"></path></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 12V8H8a2 2 0 00-2 2v4" /><path d="M16 12V9.5a1.5 1.5 0 00-3 0V12" /><path d="M4 12h16v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6z" /></svg>,
       onClick: async ({ appendMessage, metadata }) => {
         try {
           if (metadata.vm && window.AISandboxInterface) {
@@ -1129,7 +1129,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Build a specific component',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="3" height="9"></rect><rect x="14" y="7" width="3" height="5"></rect></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><rect x="7" y="7" width="3" height="9" /><rect x="14" y="7" width="3" height="5" /></svg>,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',
@@ -1139,7 +1139,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Reset project',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"></path></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" /></svg>,
       onClick: async ({ appendMessage, metadata, setMetadata }) => {
         try {
           if (window.AISandboxInterface) {
@@ -1189,7 +1189,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Change project template',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2"></polygon><line x1="12" y1="22" x2="12" y2="15.5"></line><polyline points="22 8.5 12 15.5 2 8.5"></polyline></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 22 8.5 22 15.5 12 22 2 15.5 2 8.5 12 2" /><line x1="12" y1="22" x2="12" y2="15.5" /><polyline points="22 8.5 12 15.5 2 8.5" /></svg>,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',
@@ -1199,7 +1199,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Add API integration',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 15v-6l7 3-7 3z"></path><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z"></path></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 15v-6l7 3-7 3z" /><path d="M22 12c0 5.5-4.5 10-10 10S2 17.5 2 12 6.5 2 12 2s10 4.5 10 10z" /></svg>,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',
@@ -1209,7 +1209,7 @@ export const sandboxArtifact = new Artifact<'sandbox', SandboxArtifactMetadata>(
     },
     {
       description: 'Add interactivity',
-      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>,
+      icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" /></svg>,
       onClick: ({ appendMessage }) => {
         appendMessage({
           role: 'user',

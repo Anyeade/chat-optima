@@ -1,8 +1,5 @@
 'use client';
-
-import { cn } from '@/lib/utils';
 import { SearchIcon } from './icons';
-import { Markdown } from './markdown';
 
 interface WebSearchProps {
   searchResults: {
