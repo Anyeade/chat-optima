@@ -1,9 +1,10 @@
-// Alternative implementation using only fetch-based approach
+// Alternative implementation using screenshotmachine-nodejs package
 import { tool } from 'ai';
 import { z } from 'zod';
+import screenshotmachine from 'screenshotmachine';
 
 /**
- * Webpage screenshot tool that uses a reliable public API service
+ * Webpage screenshot tool that uses Screenshot Machine API service
  */
 export const webpageScreenshotApi = tool({
   description: 'Capture a screenshot of a website to show the user its visual content and layout',
@@ -13,27 +14,43 @@ export const webpageScreenshotApi = tool({
       .describe('The width of the screenshot in pixels. Defaults to 1024x768.'),
     fullPage: z.boolean().default(true)
       .describe('Whether to capture the full page or just the visible area.')
-  }),
-  execute: async ({ url, width, fullPage }) => {
+  }),  execute: async ({ url, width, fullPage }) => {
     try {
       console.log(`Capturing screenshot for: ${url} at width ${width}px`);
       
-      // Use a reliable public screenshot API
-      // Note: For production, consider using a paid service with better reliability
-      const screenshotUrl = `https://api.screenshotmachine.com/?key=f82442&url=${encodeURIComponent(url)}&dimension=${width}x0&device=desktop&format=png&cacheLimit=0${fullPage ? '&fullpage=1' : ''}`;
+      // Screenshot Machine API configuration
+      const customerKey = 'f82442'; // Your customer key
+      const secretPhrase = ''; // Leave empty if not needed
       
-      // Create a FormData object to upload the image
+      // Configure screenshot options according to the API documentation
+      const options = {
+        url: url,
+        dimension: `${width}x${fullPage ? 'full' : '768'}`, // Width x height (use 'full' for full page)
+        device: 'desktop',
+        format: 'png',
+        cacheLimit: '0', // Don't use cache
+        delay: '200', // Wait 200ms after page load before capturing
+        zoom: '100'
+      };
+      
+      // Generate the API URL using the library
+      const apiUrl = screenshotmachine.generateScreenshotApiUrl(customerKey, secretPhrase, options);
+        // Create a FormData object to upload the image
       const formData = new FormData();
       
-      // Fetch the screenshot image
-      const imageResponse = await fetch(screenshotUrl);
+      // Use the library to get the screenshot and create a blob
+      const imageBuffer = await new Promise<Buffer>((resolve, reject) => {
+        const chunks: Buffer[] = [];
+        
+        screenshotmachine.readScreenshot(apiUrl)
+          .on('data', (chunk) => chunks.push(Buffer.from(chunk)))
+          .on('end', () => resolve(Buffer.concat(chunks)))
+          .on('error', (err) => reject(err));
+      });
       
-      if (!imageResponse.ok) {
-        throw new Error(`Screenshot capture failed with status: ${imageResponse.status}`);
-      }
+      // Create a blob from the buffer
+      const imageBlob = new Blob([imageBuffer], { type: 'image/png' });
       
-      // Get the image as a Blob
-      const imageBlob = await imageResponse.blob();
       formData.append('file', imageBlob, `screenshot-${Date.now()}.png`);
       
       // Upload the image to the server
@@ -55,7 +72,7 @@ export const webpageScreenshotApi = tool({
         screenshotUrl: uploadData.url,
         width,
         pageType: 'webpage',
-        captureMethod: 'api-service',
+        captureMethod: 'screenshot-machine',
         instructionsForAI: "This screenshot shows the visual layout and content of the webpage. Describe what you see to the user including layout, design elements, content, and overall structure."
       };
       

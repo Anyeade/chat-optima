@@ -5,6 +5,7 @@ import { streamObject } from 'ai';
 import { z } from 'zod';
 import { htmlPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import type { Document } from '@/lib/db/schema';
+import { JSDOM } from 'jsdom';
 
 // Define a schema for HTML smart updates
 /**
@@ -14,10 +15,17 @@ import type { Document } from '@/lib/db/schema';
  * instead of completely rewriting them. This allows for more efficient updates, especially
  * for large HTML documents or when making small changes.
  * 
- * The schema supports three types of operations:
- * 1. 'replace' - Find and replace specific content (requires 'search' and 'replace' fields)
- * 2. 'add' - Add new content (requires 'position', 'target', and 'content' fields)
- * 3. 'remove' - Remove specific content (requires 'search' field)
+ * The schema supports two approaches for updates:
+ * 1. String-based operations (traditional):
+ *    - 'replace' - Find and replace specific content (requires 'search' and 'replace' fields)
+ *    - 'add' - Add new content (requires 'position', 'target', and 'content' fields)
+ *    - 'remove' - Remove specific content (requires 'search' field)
+ * 
+ * 2. DOM-based operations (advanced):
+ *    - 'replace' with 'selector' - Replace content of elements matching a CSS selector
+ *    - 'add' with 'selector' - Add content relative to elements matching a CSS selector
+ *    - 'remove' with 'selector' - Remove elements matching a CSS selector
+ *    - These operations use a full HTML parser for more precise changes
  */
 const htmlSmartUpdateSchema = z.object({
   updates: z.array(z.object({
@@ -27,6 +35,8 @@ const htmlSmartUpdateSchema = z.object({
     position: z.enum(['start', 'end', 'before', 'after']).optional(),
     target: z.string().optional(),
     content: z.string().optional(),
+    selector: z.string().optional(), // CSS selector for precise targeting
+    useParser: z.boolean().optional(), // Flag to use advanced HTML parsing
   })),
 });
 
@@ -70,8 +80,7 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
     }
 
     return draftContent;
-  },
-  onUpdateDocument: async ({ document, description, dataStream }) => {    // Initialize with existing content or empty string to ensure we always have valid HTML
+  },  onUpdateDocument: async ({ document, description, dataStream }) => {    // Initialize with existing content or empty string to ensure we always have valid HTML
     let draftContent = document.content || '';
 
     // Check if this is a smart update request by looking for specific keywords in the description
@@ -80,9 +89,29 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
                           description.toLowerCase().includes('search and replace') ||
                           description.toLowerCase().includes('specific change') ||
                           description.toLowerCase().includes('targeted update');
-
-    if (isSmartUpdate) {
+    
+    // Also detect common HTML element updates that benefit from smart updates
+    const lowerDesc = description.toLowerCase();
+    const commonHtmlOperations = [
+      'add footer', 'update footer', 'change footer', 'modify footer', 'remove footer',
+      'add header', 'update header', 'change header', 'modify header', 'remove header',
+      'add navigation', 'update navigation', 'change navigation', 'modify navigation', 'remove navigation',
+      'add section', 'update section', 'change section', 'modify section', 'remove section'
+    ];
+    
+    const isCommonHtmlOperation = commonHtmlOperations.some(op => lowerDesc.includes(op));
+    
+    if (isSmartUpdate || isCommonHtmlOperation) {
       console.log('Using smart update for HTML document');
+      if (isCommonHtmlOperation && !isSmartUpdate) {
+        // Send a note to the client that we're using smart update for this common operation
+        dataStream.writeData({
+          type: 'html-smart-update',
+          content: JSON.stringify({
+            info: "Using smart update for better precision with HTML structure changes"
+          })
+        });
+      }
       return await smartUpdateDocument({ document, description, dataStream });
     }
 
@@ -144,11 +173,23 @@ async function smartUpdateDocument(params: SmartUpdateParams): Promise<string> {
   const smartUpdatePrompt = `
 You are a precise HTML editor that performs targeted updates without rewriting the entire document.
 Given the HTML content below and the user's update request, generate a JSON response that contains
-an array of specific update operations. Each operation should be one of:
+an array of specific update operations. You should prefer using DOM-based operations with CSS selectors
+for most HTML structure changes, as they are more precise and reliable.
 
+DOM-based operations (PREFERRED for most structural HTML changes):
+1. 'replace' with 'selector' - Replace content of elements matching a CSS selector (requires 'selector' and 'replace' fields)
+2. 'add' with 'selector' - Add content relative to elements matching a CSS selector (requires 'selector', 'position', and 'content' fields)
+3. 'remove' with 'selector' - Remove elements matching a CSS selector (requires only 'selector' field)
+
+String-based operations (use only for simple text changes or when DOM operations won't work):
 1. 'replace' - Find and replace specific content (requires 'search' and 'replace' fields)
 2. 'add' - Add new content (requires 'position', 'target', and 'content' fields)
 3. 'remove' - Remove specific content (requires 'search' field)
+
+For common HTML elements, ALWAYS use DOM-based operations. For example:
+- To add/modify a footer: Use a selector like "footer" or ".footer"
+- To change headings: Use selectors like "h1", "h2", etc.
+- To modify specific sections: Use class or id selectors like "#main-content" or ".navigation"
 
 The operations will be applied in sequence.
 
@@ -162,18 +203,32 @@ Respond ONLY with JSON in the following format:
   "updates": [
     {
       "type": "replace",
-      "search": "exact string to find",
-      "replace": "new string to insert"
+      "selector": "footer",
+      "replace": "<p>New footer content</p>",
+      "useParser": true
     },
     {
       "type": "add",
-      "position": "before|after|start|end",
-      "target": "element or content to target",
-      "content": "content to add"
+      "selector": "body",
+      "position": "end",
+      "content": "<div class='new-section'>New content here</div>",
+      "useParser": true
     },
     {
       "type": "remove",
-      "search": "exact string to remove"
+      "selector": ".unused-element",
+      "useParser": true
+    },
+    {
+      "type": "replace",
+      "search": "exact text to find",
+      "replace": "new text to insert"
+    }
+    },
+    {
+      "type": "remove",
+      "selector": "CSS selector",
+      "useParser": true
     }
   ]
 }
@@ -208,17 +263,18 @@ Make changes as minimal and precise as possible. Include enough context in searc
             type: 'html-smart-update',
             content: JSON.stringify(update),
           });
-          
-          // Apply the update to the draft content
+            // Apply the update to the draft content
           try {
-            if (update.type === 'replace' && update.search && update.replace) {
-              // Check if the search string exists in the content
+            // Check if we should use the advanced DOM parser
+            if (update.useParser === true || update.selector) {
+              // Use the DOM-based approach for more precise updates
+              draftContent = performDomOperation(draftContent, update);
+            } else if (update.type === 'replace' && update.search && update.replace) {
+              // Use the traditional string replace approach
               if (draftContent.includes(update.search)) {
                 // For safety, only replace the first occurrence to avoid unexpected changes
-                // Can be modified to replace all occurrences if needed
                 draftContent = draftContent.replace(update.search, update.replace);
               } else {
-                // Log warning if search string not found
                 console.warn(`Smart update warning: Search string not found for replace operation: "${update.search.substring(0, 50)}..."`);
               }
             } else if (update.type === 'add' && update.position && update.target && update.content) {
@@ -284,4 +340,148 @@ Make changes as minimal and precise as possible. Include enough context in searc
   }
 
   return draftContent;
+}
+
+/**
+ * Performs HTML operations using DOM parsing for more precise manipulation
+ * This allows for CSS selector targeting and proper DOM manipulation
+ * 
+ * @param html The HTML content to modify
+ * @param update The update operation to perform
+ * @returns The modified HTML content
+ */
+function performDomOperation(html: string, update: any): string {
+  try {
+    // Create a DOM from the HTML
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    
+    if (update.type === 'replace' && update.selector && update.replace) {
+      // Use CSS selector to find elements
+      const elements = document.querySelectorAll(update.selector);
+      
+      if (elements.length === 0) {
+        // Special handling for common elements that might not exist yet but should be created
+        if (update.selector === 'footer' || 
+            update.selector === '.footer' || 
+            update.selector.includes('#footer')) {
+          // Create a footer if one doesn't exist
+          console.log('Creating a new footer element as it does not exist');
+          const body = document.querySelector('body');
+          if (body) {
+            const footer = document.createElement('footer');
+            footer.innerHTML = update.replace;
+            // Add to end of body
+            body.appendChild(footer);
+            return dom.serialize();
+          }
+        }
+        
+        console.warn(`Smart update warning: No elements found for selector: "${update.selector}"`);
+        return html;
+      }
+      
+      // Replace the innerHTML or outerHTML based on the update
+      for (const element of elements) {
+        if (update.replaceMode === 'outer') {
+          // Replace the entire element
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = update.replace;
+          if (tempDiv.firstChild && element.parentNode) {
+            element.parentNode.replaceChild(tempDiv.firstChild, element);
+          }
+        } else {
+          // Default: replace just the inner content
+          element.innerHTML = update.replace;
+        }
+      }
+    } else if (update.type === 'add' && update.selector && update.position && update.content) {
+      // Find target elements using CSS selector
+      const elements = document.querySelectorAll(update.selector);
+      
+      // If no elements found, handle special cases
+      if (elements.length === 0) {
+        // For body-level elements that need to be created
+        if (update.selector === 'header' || update.selector === 'footer' || 
+            update.selector === 'nav' || update.selector === 'main') {
+          const body = document.querySelector('body');
+          if (body) {
+            // Create the element
+            const newElement = document.createElement(update.selector);
+            newElement.innerHTML = update.content;
+            
+            // Add to body in appropriate position
+            if (update.selector === 'header' || update.selector === 'nav') {
+              // Headers and navs usually go at the top
+              body.insertBefore(newElement, body.firstChild);
+            } else {
+              // Footers and other elements go at the end
+              body.appendChild(newElement);
+            }
+            return dom.serialize();
+          }
+        }
+        
+        console.warn(`Smart update warning: No elements found for selector: "${update.selector}"`);
+        return html;
+      }
+      
+      // Create the new content as DOM nodes
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = update.content;
+      const fragment = document.createDocumentFragment();
+      while (tempDiv.firstChild) {
+        fragment.appendChild(tempDiv.firstChild);
+      }
+      
+      // Apply the addition to all matching elements
+      for (const element of elements) {
+        const clonedContent = fragment.cloneNode(true);
+        
+        switch (update.position) {
+          case 'before':
+            if (element.parentNode) {
+              element.parentNode.insertBefore(clonedContent, element);
+            }
+            break;
+          case 'after':
+            if (element.parentNode) {
+              if (element.nextSibling) {
+                element.parentNode.insertBefore(clonedContent, element.nextSibling);
+              } else {
+                element.parentNode.appendChild(clonedContent);
+              }
+            }
+            break;
+          case 'start':
+            element.insertBefore(clonedContent, element.firstChild);
+            break;
+          case 'end':
+            element.appendChild(clonedContent);
+            break;
+        }
+      }
+    } else if (update.type === 'remove' && update.selector) {
+      // Find and remove elements using CSS selector
+      const elements = document.querySelectorAll(update.selector);
+      
+      if (elements.length === 0) {
+        console.warn(`Smart update warning: No elements found for selector: "${update.selector}"`);
+        return html;
+      }
+      
+      for (const element of elements) {
+        if (element.parentNode) {
+          element.parentNode.removeChild(element);
+        }
+      }
+    }
+    
+    // Return the serialized HTML
+    return dom.serialize();
+  } catch (error) {
+    console.error('Error in DOM operation:', error);
+    // Return original HTML if there was an error
+    return html;
+  }
 }

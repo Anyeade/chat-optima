@@ -27,25 +27,53 @@ vi.mock('../server', () => {
     htmlDocumentHandler: {
       onUpdateDocument: vi.fn().mockImplementation(({ document, description, dataStream }) => {
         // Simple implementation that simulates the real behavior
+        let result = document.content || '';
+        
         if (description.toLowerCase().includes('smart update')) {
-          dataStream.writeData({
-            type: 'html-smart-update',
-            content: JSON.stringify({
-              type: 'replace',
-              search: '<h1>Hello World</h1>',
-              replace: '<h1>Hello Smart Update</h1>'
-            })
-          });
-          
-          let result = document.content || '';
-          result = result.replace('<h1>Hello World</h1>', '<h1>Hello Smart Update</h1>');
-          
-          if (description.includes('add a paragraph')) {
-            result = result.replace('<h1>Hello Smart Update</h1>', '<h1>Hello Smart Update</h1><p>This is a smart update test</p>');
-          }
-          
-          if (description.includes('remove the footer')) {
-            result = result.replace(/<!-- Footer section -->\s*<footer>Old Footer<\/footer>/g, '');
+          // Standard string-based update
+          if (!description.includes('with CSS selector')) {
+            dataStream.writeData({
+              type: 'html-smart-update',
+              content: JSON.stringify({
+                type: 'replace',
+                search: '<h1>Hello World</h1>',
+                replace: '<h1>Hello Smart Update</h1>'
+              })
+            });
+            
+            result = result.replace('<h1>Hello World</h1>', '<h1>Hello Smart Update</h1>');
+            
+            if (description.includes('add a paragraph')) {
+              result = result.replace('<h1>Hello Smart Update</h1>', '<h1>Hello Smart Update</h1><p>This is a smart update test</p>');
+            }
+            
+            if (description.includes('remove the footer')) {
+              result = result.replace(/<!-- Footer section -->\s*<footer>Old Footer<\/footer>/g, '');
+            }
+          } 
+          // DOM-based update with CSS selector
+          else {
+            dataStream.writeData({
+              type: 'html-smart-update',
+              content: JSON.stringify({
+                type: 'replace',
+                selector: 'h1',
+                replace: 'Hello Smart CSS Update',
+                useParser: true
+              })
+            });
+            
+            if (description.includes('replace heading with CSS selector')) {
+              result = result.replace(/<h1>Hello World<\/h1>/, '<h1>Hello Smart CSS Update</h1>');
+            }
+            
+            if (description.includes('add element with CSS selector')) {
+              result = result.replace(/<div class="content">/, '<div class="content"><p>Added via CSS selector</p>');
+            }
+            
+            if (description.includes('remove element with CSS selector')) {
+              result = result.replace(/<footer>Old Footer<\/footer>/, '');
+            }
           }
           
           return Promise.resolve(result);
@@ -257,6 +285,48 @@ describe('HTML Smart Update Feature', () => {
     }));
     expect(result).toContain('<h1>Regular Update</h1>');
   });
+  
+  it('should apply DOM-based operations with CSS selectors', async () => {
+    // Arrange
+    const mockDocument: TestDocument = {
+      id: '123',
+      content: `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <div class="content">
+    <p>Some content here</p>
+  </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
+</body>
+</html>`,
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
+    };
+    const description = 'smart update: replace heading with CSS selector';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(result).toContain('<h1>Hello Smart CSS Update</h1>');
+    expect(mockDataStream.writeData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'html-smart-update',
+        content: expect.stringContaining('selector')
+      })
+    );
+  });
 });
 
 describe('HTML Smart Update Feature', () => {
@@ -375,5 +445,47 @@ describe('HTML Smart Update Feature', () => {
       type: 'html-smart-update',
     }));
     expect(result).toContain('<h1>Regular Update</h1>');
+  });
+  
+  it('should apply DOM-based operations with CSS selectors', async () => {
+    // Arrange
+    const mockDocument: TestDocument = {
+      id: '123',
+      content: `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <div class="content">
+    <p>Some content here</p>
+  </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
+</body>
+</html>`,
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
+    };
+    const description = 'smart update: replace heading with CSS selector';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(result).toContain('<h1>Hello Smart CSS Update</h1>');
+    expect(mockDataStream.writeData).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'html-smart-update',
+        content: expect.stringContaining('selector')
+      })
+    );
   });
 });
