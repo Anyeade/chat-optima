@@ -14,7 +14,14 @@ interface WebpageScreenshotProps {
 }
 
 export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps) {
-  const { url, timestamp, screenshotUrl, width, analysis } = screenshotResults;
+  // Add null checks and default values
+  const { 
+    url = '', 
+    timestamp = new Date().toISOString(), 
+    screenshotUrl = '', 
+    width = 640, 
+    analysis = '' 
+  } = screenshotResults || {};
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl p-4 bg-secondary max-w-[700px]">
@@ -26,9 +33,8 @@ export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps)
           <div className="text-lg font-medium text-secondary-foreground">
             Website Screenshot
           </div>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          {new Date(timestamp).toLocaleString()}
+        </div>        <div className="text-xs text-muted-foreground">
+          {timestamp ? new Date(timestamp).toLocaleString() : 'Unknown date'}
         </div>
       </div>
 
@@ -43,15 +49,15 @@ export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps)
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={screenshotUrl} 
-            alt={`Screenshot of ${url}`} 
-            className={cn(
+            alt={`Screenshot of ${url}`}            className={cn(
               "w-full object-cover",
               {
                 "max-w-[320px]": width === 320,
-                "max-w-[640px]": width === 640,
-                "max-w-[1024px]": width === 1024,
+                "max-w-[640px]": width === 640 || (width > 320 && width < 1024),
+                "max-w-[1024px]": width === 1024 || width > 1024,
+                "max-w-full": !width
               }
-            )}          />
+            )}/>
         </a>
       </div>
       

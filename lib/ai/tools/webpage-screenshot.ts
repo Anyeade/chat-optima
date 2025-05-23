@@ -34,9 +34,8 @@ async function sendImageToGemini(imageBuffer: Buffer) {
     ]
   };
 
-  try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=${GEMINI_API_KEY}`,
+  try {    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${GEMINI_API_KEY}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -72,8 +71,7 @@ export const webpageScreenshot = tool({
       .describe('The height of the screenshot in pixels. If not provided, full page will be captured.'),
     fullPage: z.boolean().default(true)
       .describe('Whether to capture the full page or just the visible area.')
-  }),
-  execute: async ({ url, width, height, fullPage }) => {
+  }),  execute: async ({ url, width, height, fullPage }) => {
     try {
       console.log(`Capturing screenshot for: ${url} at width ${width}px`);
       
@@ -84,13 +82,22 @@ export const webpageScreenshot = tool({
       }
       
       const screenshotPath = path.join(tempDir, `screenshot-${Date.now()}.png`);
-        // Launch browser and navigate to URL
-      const browser = await puppeteer.launch({
-        headless: true, // Use headless mode
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
       
-      try {
+      // Launch browser with more robust configuration
+      console.log('Launching browser...');
+      const browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--no-first-run',
+          '--no-zygote',
+          '--disable-gpu'
+        ]
+      });
+        try {
         const page = await browser.newPage();
         
         // Set viewport
@@ -104,20 +111,24 @@ export const webpageScreenshot = tool({
         await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
         
         // Navigate to the URL with timeout and wait until network is idle
+        console.log(`Navigating to URL: ${url}`);
         await page.goto(url, {
           waitUntil: 'networkidle2',
           timeout: 30000
-        });
-          // Wait a bit for any dynamic content to load
+        });          // Wait a bit for any dynamic content to load
         await new Promise(resolve => setTimeout(resolve, 2000));
-          // Take screenshot
+          
+        // Take screenshot
+        console.log('Taking screenshot...');
         const screenshot = await page.screenshot({
           fullPage: fullPage
         });
         
         // Save screenshot to file
         fs.writeFileSync(screenshotPath, screenshot);
-          // Read the screenshot file
+        console.log(`Screenshot saved to: ${screenshotPath}`);
+          
+        // Read the screenshot file
         const imageBuffer = fs.readFileSync(screenshotPath);
         
         // Send the screenshot to Gemini for analysis
@@ -146,17 +157,16 @@ export const webpageScreenshot = tool({
         fs.unlinkSync(screenshotPath);
         
         // Close the browser
-        await browser.close();
-          // Format the results with detailed structure to help the AI analyze the screenshot
+        await browser.close();      // Format the results with detailed structure to help the AI analyze the screenshot
         const formattedResults = {
           url,
           timestamp: new Date().toISOString(),
-          screenshotUrl: uploadData.url,
+          screenshotUrl: uploadData?.url || '',
           width,
           height: height || 'full-page',
           pageType: 'webpage',
           captureMethod: 'puppeteer',
-          analysis: analysisText,
+          analysis: analysisText || 'No analysis available.',
           instructionsForAI: "The screenshot has been analyzed by Gemini Vision API. Use the analysis provided to describe the webpage to the user.",
           analysisStructure: {
             visualElements: "Described in the Gemini analysis",
