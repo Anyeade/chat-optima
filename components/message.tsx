@@ -13,6 +13,7 @@ import { PreviewAttachment } from './preview-attachment';
 import { Weather } from './weather';
 import { WebSearch } from './web-search';
 import { WebpageScreenshot } from './webpage-screenshot';
+import { WebScraper } from './web-scraper';
 import equal from 'fast-deep-equal';
 import { cn, sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -217,6 +218,8 @@ const PurePreviewMessage = ({
                         <WebSearch searchResults={result} />
                       ) : toolName === 'webpageScreenshot' ? (
                         <WebpageScreenshot screenshotResults={result} />
+                      ) : toolName === 'webScraper' ? (
+                        <WebScraper scrapedResults={result} />
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>
                       )}

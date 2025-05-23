@@ -25,6 +25,7 @@ import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { webSearch } from '@/lib/ai/tools/web-search';
 import { webpageScreenshotApi as webpageScreenshot } from '@/lib/ai/tools/webpage-screenshot-api';
+import { webScraper } from '@/lib/ai/tools/web-scraper';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -159,12 +160,14 @@ export async function POST(request: Request) {
                 'requestSuggestions',
                 'webSearch',
                 'webpageScreenshot',
+                'webScraper',
               ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,          tools: {
             getWeather,
             webSearch,
             webpageScreenshot,
+            webScraper,
             createDocument: createDocument({ session, dataStream }),
             updateDocument: updateDocument({ session, dataStream }),
             requestSuggestions: requestSuggestions({
