@@ -9,15 +9,6 @@ interface WebpageScreenshotProps {
     timestamp: string;
     screenshotUrl: string;
     width: number;
-    pageType?: string;
-    instructionsForAI?: string;
-    analysisStructure?: {
-      visualElements?: string;
-      layout?: string;
-      contentSummary?: string;
-      userExperience?: string;
-      keyFeatures?: string;
-    };
   };
 }
 
