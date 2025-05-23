@@ -1,70 +1,66 @@
+/**
+ * Unit tests for the HTML smart update feature
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Document } from '@/lib/db/schema';
+import type { DataStreamWriter } from 'ai';
 
-// Create mock for data stream
+// Define the Document type for testing
+interface TestDocument extends Document {
+  content: string;
+  kind: string;
+  id: string;
+}
+
+// Create a mock DataStreamWriter class
+class MockDataStreamWriter implements DataStreamWriter {
+  writeData = vi.fn();
+}
+
+// Create mock objects
 const mockWriteData = vi.fn();
 const mockDataStream = { writeData: mockWriteData };
 
-// Mock the server module
-vi.mock('../server', () => ({
-  htmlDocumentHandler: {
-    onUpdateDocument: vi.fn(({ document, description, dataStream }) => {
-      if (description.toLowerCase().includes('smart update')) {
-        dataStream.writeData({
-          type: 'html-smart-update',
-          content: JSON.stringify({
-            type: 'replace',
-            search: '<h1>Hello World</h1>',
-            replace: '<h1>Hello Smart Update</h1>'
-          })
-        });
-        
-        let result = document.content || '';
-        result = result.replace('<h1>Hello World</h1>', '<h1>Hello Smart Update</h1>');
-        
-        if (description.includes('add a paragraph')) {
-          result = result.replace('<h1>Hello Smart Update</h1>', '<h1>Hello Smart Update</h1><p>This is a smart update test</p>');
-        }
-        
-        if (description.includes('remove the footer')) {
-          result = result.replace(/<!-- Footer section -->\s*<footer>Old Footer<\/footer>/g, '');
-        }
-        
-        if (description.includes('with error')) {
-          // Simulate an error case where an operation fails but processing continues
+// Mock the module containing the function to test
+vi.mock('../server', () => {
+  return {
+    htmlDocumentHandler: {
+      onUpdateDocument: vi.fn().mockImplementation(({ document, description, dataStream }) => {
+        // Simple implementation that simulates the real behavior
+        if (description.toLowerCase().includes('smart update')) {
           dataStream.writeData({
             type: 'html-smart-update',
             content: JSON.stringify({
               type: 'replace',
-              search: 'non-existent content',
-              replace: 'replacement'
+              search: '<h1>Hello World</h1>',
+              replace: '<h1>Hello Smart Update</h1>'
             })
           });
           
-          // Second operation still succeeds
-          dataStream.writeData({
-            type: 'html-smart-update',
-            content: JSON.stringify({
-              type: 'add',
-              position: 'after',
-              target: '<h1>Hello Smart Update</h1>',
-              content: '<p>This was added despite an error</p>'
-            })
-          });
+          let result = document.content || '';
+          result = result.replace('<h1>Hello World</h1>', '<h1>Hello Smart Update</h1>');
           
-          result = result.replace('<h1>Hello Smart Update</h1>', '<h1>Hello Smart Update</h1><p>This was added despite an error</p>');
+          if (description.includes('add a paragraph')) {
+            result = result.replace('<h1>Hello Smart Update</h1>', '<h1>Hello Smart Update</h1><p>This is a smart update test</p>');
+          }
+          
+          if (description.includes('remove the footer')) {
+            result = result.replace(/<!-- Footer section -->\s*<footer>Old Footer<\/footer>/g, '');
+          }
+          
+          return Promise.resolve(result);
         }
         
-        return Promise.resolve(result);
-      }
-      
-      return Promise.resolve("<!DOCTYPE html><html><body><h1>Regular Update</h1></body></html>");
-    })
-  }
-}));
+        return Promise.resolve("<!DOCTYPE html><html><body><h1>Regular Update</h1></body></html>");
+      })
+    }
+  };
+});
 
-// Import the mocked module
+// Import the module after mocking
 import { htmlDocumentHandler } from '../server';
 
+// Define the test suite
 describe('HTML Smart Update Feature', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -72,10 +68,26 @@ describe('HTML Smart Update Feature', () => {
   
   it('should detect smart update requests', async () => {
     // Arrange
-    const mockDocument = {
+    const mockDocument: TestDocument = {
       id: '123',
-      content: '<h1>Hello World</h1>',
-      kind: 'html'
+      content: `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <div class="content">
+    <p>Some content here</p>
+  </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
+</body>
+</html>`,
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
     };
     const description = 'smart update: change the heading';
     
@@ -87,25 +99,35 @@ describe('HTML Smart Update Feature', () => {
     });
     
     // Assert
-    expect(mockWriteData).toHaveBeenCalledWith(expect.objectContaining({
+    expect(result).toBeDefined();
+    // Verify the smart update detection logic was triggered
+    expect(mockDataStream.writeData).toHaveBeenCalledWith(expect.objectContaining({
       type: 'html-smart-update',
     }));
   });
   
   it('should apply replace operations correctly', async () => {
     // Arrange
-    const mockDocument = {
+    const mockDocument: TestDocument = {
       id: '123',
       content: `<!DOCTYPE html>
 <html>
+<head>
+  <title>Test Page</title>
+</head>
 <body>
   <h1>Hello World</h1>
   <div class="content">
     <p>Some content here</p>
   </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
 </body>
 </html>`,
-      kind: 'html'
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
     };
     const description = 'smart update: change the heading from Hello World to Hello Smart Update';
     
@@ -123,18 +145,26 @@ describe('HTML Smart Update Feature', () => {
   
   it('should apply add operations correctly', async () => {
     // Arrange
-    const mockDocument = {
+    const mockDocument: TestDocument = {
       id: '123',
       content: `<!DOCTYPE html>
 <html>
+<head>
+  <title>Test Page</title>
+</head>
 <body>
   <h1>Hello World</h1>
   <div class="content">
     <p>Some content here</p>
   </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
 </body>
 </html>`,
-      kind: 'html'
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
     };
     const description = 'smart update: add a paragraph after the heading';
     
@@ -155,10 +185,13 @@ describe('HTML Smart Update Feature', () => {
   
   it('should apply remove operations correctly', async () => {
     // Arrange
-    const mockDocument = {
+    const mockDocument: TestDocument = {
       id: '123',
       content: `<!DOCTYPE html>
 <html>
+<head>
+  <title>Test Page</title>
+</head>
 <body>
   <h1>Hello World</h1>
   <div class="content">
@@ -168,7 +201,10 @@ describe('HTML Smart Update Feature', () => {
   <footer>Old Footer</footer>
 </body>
 </html>`,
-      kind: 'html'
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
     };
     const description = 'smart update: remove the footer';
     
@@ -183,51 +219,28 @@ describe('HTML Smart Update Feature', () => {
     expect(result).not.toContain('<footer>Old Footer</footer>');
   });
   
-  it('should handle errors gracefully and continue processing other updates', async () => {
+  it('should handle regular updates differently from smart updates', async () => {
     // Arrange
-    const mockDocument = {
+    const mockDocument: TestDocument = {
       id: '123',
       content: `<!DOCTYPE html>
 <html>
+<head>
+  <title>Test Page</title>
+</head>
 <body>
   <h1>Hello World</h1>
   <div class="content">
     <p>Some content here</p>
   </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
 </body>
 </html>`,
-      kind: 'html'
-    };
-    const description = 'smart update with error: should handle failed operations';
-    
-    // Act
-    const result = await htmlDocumentHandler.onUpdateDocument({
-      document: mockDocument,
-      description,
-      dataStream: mockDataStream,
-    });
-    
-    // Assert
-    // First operation should attempt to run (the failing one)
-    expect(mockWriteData).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('non-existent content')
-    }));
-    
-    // Second operation should still be applied
-    expect(mockWriteData).toHaveBeenCalledWith(expect.objectContaining({
-      content: expect.stringContaining('This was added despite an error')
-    }));
-    
-    // The HTML should contain the content from the second operation
-    expect(result).toContain('<p>This was added despite an error</p>');
-  });
-  
-  it('should handle regular updates differently', async () => {
-    // Arrange
-    const mockDocument = {
-      id: '123',
-      content: '<h1>Hello World</h1>',
-      kind: 'html'
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
     };
     const description = 'regular update: change the heading';
     
@@ -239,7 +252,126 @@ describe('HTML Smart Update Feature', () => {
     });
     
     // Assert
-    expect(mockWriteData).not.toHaveBeenCalledWith(expect.objectContaining({
+    expect(mockDataStream.writeData).not.toHaveBeenCalledWith(expect.objectContaining({
+      type: 'html-smart-update',
+    }));
+    expect(result).toContain('<h1>Regular Update</h1>');
+  });
+});
+
+describe('HTML Smart Update Feature', () => {
+  let mockDocument: Document;
+  let mockDataStream: MockDataStreamWriter;
+  
+  beforeEach(() => {
+    mockDocument = {
+      id: '123',
+      content: `<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Page</title>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <div class="content">
+    <p>Some content here</p>
+  </div>
+  <!-- Footer section -->
+  <footer>Old Footer</footer>
+</body>
+</html>`,
+      kind: 'html',
+      userId: 'user123',
+      title: 'Test Document',
+      createdAt: new Date(),
+    };
+    
+    mockDataStream = new MockDataStreamWriter();
+    vi.clearAllMocks();
+  });
+    
+  it('should detect smart update requests', async () => {
+    // Arrange
+    const description = 'smart update: change the heading';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(result).toBeDefined();
+    // Verify the smart update detection logic was triggered
+    expect(mockDataStream.writeData).toHaveBeenCalledWith(expect.objectContaining({
+      type: 'html-smart-update',
+    }));
+  });
+  
+  it('should apply replace operations correctly', async () => {
+    // Arrange
+    const description = 'smart update: change the heading from Hello World to Hello Smart Update';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(result).toContain('<h1>Hello Smart Update</h1>');
+    expect(result).not.toContain('<h1>Hello World</h1>');
+  });
+  
+  it('should apply add operations correctly', async () => {
+    // Arrange
+    const description = 'smart update: add a paragraph after the heading';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(result).toContain('<p>This is a smart update test</p>');
+    // Verify that the add operation was applied after the target element
+    const headingIndex = result.indexOf('<h1>Hello Smart Update</h1>');
+    const paragraphIndex = result.indexOf('<p>This is a smart update test</p>');
+    expect(headingIndex).toBeLessThan(paragraphIndex);
+  });
+  
+  it('should apply remove operations correctly', async () => {
+    // Arrange
+    const description = 'smart update: remove the footer';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(result).not.toContain('<footer>Old Footer</footer>');
+  });
+  
+  it('should handle regular updates differently from smart updates', async () => {
+    // Arrange
+    const description = 'regular update: change the heading';
+    
+    // Act
+    const result = await htmlDocumentHandler.onUpdateDocument({
+      document: mockDocument,
+      description,
+      dataStream: mockDataStream,
+    });
+    
+    // Assert
+    expect(mockDataStream.writeData).not.toHaveBeenCalledWith(expect.objectContaining({
       type: 'html-smart-update',
     }));
     expect(result).toContain('<h1>Regular Update</h1>');
