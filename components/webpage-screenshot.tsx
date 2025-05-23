@@ -9,11 +9,12 @@ interface WebpageScreenshotProps {
     timestamp: string;
     screenshotUrl: string;
     width: number;
+    analysis?: string;
   };
 }
 
 export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps) {
-  const { url, timestamp, screenshotUrl, width } = screenshotResults;
+  const { url, timestamp, screenshotUrl, width, analysis } = screenshotResults;
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl p-4 bg-secondary max-w-[700px]">
@@ -50,10 +51,16 @@ export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps)
                 "max-w-[640px]": width === 640,
                 "max-w-[1024px]": width === 1024,
               }
-            )}
-          />
+            )}          />
         </a>
       </div>
+      
+      {analysis && (
+        <div className="text-sm text-secondary-foreground mt-2 p-3 bg-secondary-foreground/5 rounded-md">
+          <div className="font-medium mb-1">AI Analysis:</div>
+          <div className="whitespace-pre-wrap">{analysis}</div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,8 +5,62 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
+// TODO: Move this to environment variables in production
+const GEMINI_API_KEY = 'AIzaSyDSt3zLmaZtmJWnq8z21VFOPUpCYe_A6qA';
+
 /**
- * Webpage screenshot tool that uses Puppeteer to capture screenshots of websites
+ * Sends an image buffer to Gemini API for analysis
+ * @param imageBuffer The image buffer to analyze
+ * @returns A structured analysis of the image from Gemini
+ */
+async function sendImageToGemini(imageBuffer: Buffer) {
+  // Convert buffer to base64
+  const base64 = imageBuffer.toString('base64');
+  
+  const payload = {
+    contents: [
+      {
+        parts: [          { 
+            text: "Analyze this screenshot and describe its visual content in exceptional detail. Include comprehensive information about:\n\n1. LAYOUT: Describe the exact page structure, sections positioning, grids, columns, and spacing\n2. UI ELEMENTS: Identify all buttons, forms, navigation bars, cards, modals, and interactive elements\n3. COLORS: Detail the color palette, primary/secondary colors, background colors, and color contrasts\n4. TYPOGRAPHY: Describe fonts, sizes, heading styles, paragraph text, and text hierarchies\n5. IMAGERY: Analyze all images, icons, logos, and visual media with their purpose and positioning\n6. CONTENT: Summarize the actual text content visible on the page\n7. BRANDING: Identify logo, brand colors, taglines, and brand identity elements\n8. USER EXPERIENCE: Evaluate navigation flow, call-to-actions, and user journey\n9. RESPONSIVENESS: Note any mobile-specific design elements if visible\n\nStructure your response with clear sections and be extremely specific about the exact visual presentation of the webpage."
+          },
+          {
+            inline_data: {
+              mime_type: 'image/png',
+              data: base64
+            }
+          }
+        ]
+      }
+    ]
+  };
+
+  try {
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp-01-21:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      }
+    );
+
+    const data = await res.json();
+    console.log('Gemini Response Received');
+    
+    // Extract the analysis from Gemini response
+    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+      const analysisText = data.candidates[0].content.parts[0].text;
+      return analysisText;
+    }
+    
+    return "Failed to analyze the image content.";
+  } catch (error) {
+    console.error('Gemini API error:', error);
+    return "Error analyzing the image content.";
+  }
+}
+/**
+ * Webpage screenshot tool that uses Puppeteer to capture screenshots and Gemini for analysis
  */
 export const webpageScreenshot = tool({
   description: 'Capture a screenshot of a website to show the user its visual content and layout',
@@ -63,9 +117,13 @@ export const webpageScreenshot = tool({
         
         // Save screenshot to file
         fs.writeFileSync(screenshotPath, screenshot);
-        
-        // Read the screenshot file
+          // Read the screenshot file
         const imageBuffer = fs.readFileSync(screenshotPath);
+        
+        // Send the screenshot to Gemini for analysis
+        console.log('Sending screenshot to Gemini for analysis...');
+        const analysisText = await sendImageToGemini(imageBuffer);
+        console.log('Received analysis from Gemini');
         
         // Create a FormData object to upload the image
         const formData = new FormData();
@@ -89,8 +147,7 @@ export const webpageScreenshot = tool({
         
         // Close the browser
         await browser.close();
-        
-        // Format the results with detailed structure to help the AI analyze the screenshot
+          // Format the results with detailed structure to help the AI analyze the screenshot
         const formattedResults = {
           url,
           timestamp: new Date().toISOString(),
@@ -99,13 +156,14 @@ export const webpageScreenshot = tool({
           height: height || 'full-page',
           pageType: 'webpage',
           captureMethod: 'puppeteer',
-          instructionsForAI: "Analyze this screenshot and describe its visual content including layout, color scheme, main elements, text content, images, and overall design. Consider the user experience, branding elements, and overall impression.",
+          analysis: analysisText,
+          instructionsForAI: "The screenshot has been analyzed by Gemini Vision API. Use the analysis provided to describe the webpage to the user.",
           analysisStructure: {
-            visualElements: "Describe the main visual elements visible in the screenshot",
-            layout: "Describe the page layout and structure",
-            contentSummary: "Summarize the visible text content",
-            userExperience: "Evaluate the user interface and experience",
-            keyFeatures: "Identify key features or functionality shown"
+            visualElements: "Described in the Gemini analysis",
+            layout: "Described in the Gemini analysis",
+            contentSummary: "Described in the Gemini analysis",
+            userExperience: "Described in the Gemini analysis",
+            keyFeatures: "Described in the Gemini analysis"
           }
         };
         
