@@ -213,14 +213,10 @@ const PurePreviewMessage = ({
                           type="request-suggestions"
                           result={result}
                           isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'webSearch' ? (
+                        />                      ) : toolName === 'webSearch' ? (
                         <WebSearch searchResults={result} />
                       ) : toolName === 'webpageScreenshot' ? (
-                        <>
-                          {console.log("Webpage screenshot tool result:", result)}
-                          <WebpageScreenshot result={result} />
-                        </>
+                        <WebpageScreenshot screenshotResults={result} />
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>
                       )}

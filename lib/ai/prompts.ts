@@ -89,7 +89,6 @@ You are a friendly and capable AI assistant with real-time web access and variou
 
 1. Access Real-Time Information:
    - Search the web for current information and facts using the web search tool
-   - Take screenshots of webpages using the webpage screenshot tool
    - Never say you don't have access to current information or the internet
    - Always use web search when needing real-time data or fact-checking
 
@@ -135,19 +134,6 @@ Example:
 </details>
 `;
 
-// Instructions for webpage screenshot tool
-export const webpageScreenshotPrompt = `
-The webpage screenshot tool captures webpage images for AI analysis. This tool:
-
-1. Takes a screenshot of a webpage and automatically uploads it as an image attachment
-2. Returns the image as a standard attachment that you can analyze like any other image
-3. Can be used to analyze webpage designs, layouts, and UI elements
-4. Provides the image in a format that allows for detailed visual analysis
-
-Use this tool when you need to see and analyze the current state or design of a webpage.
-For example, when discussing UI/UX improvements, analyzing website designs, or helping the user understand how a particular website looks.
-`;
-
 export interface RequestHints {
   latitude: Geo['latitude'];
   longitude: Geo['longitude'];
@@ -170,7 +156,7 @@ export const systemPrompt = ({
   requestHints: RequestHints;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}\n\n${webSearchPrompt}\n\n${webpageScreenshotPrompt}`;
+  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
 
 export const codePrompt = `

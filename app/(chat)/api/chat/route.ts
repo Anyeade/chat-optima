@@ -1,4 +1,4 @@
- import {
+import {
   appendClientMessage,
   appendResponseMessages,
   createDataStream,
@@ -152,8 +152,7 @@ export async function POST(request: Request) {
           model: myProvider.languageModel(selectedChatModel),
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,
-          experimental_activeTools: [
+          maxSteps: 5,          experimental_activeTools: [
                 'getWeather',
                 'createDocument',
                 'updateDocument',
@@ -162,8 +161,7 @@ export async function POST(request: Request) {
                 'webpageScreenshot',
               ],
           experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,
-          tools: {
+          experimental_generateMessageId: generateUUID,          tools: {
             getWeather,
             webSearch,
             webpageScreenshot,

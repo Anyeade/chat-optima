@@ -37,6 +37,26 @@ export const UserIcon = () => {
   );
 };
 
+export const ExternalLinkIcon = ({ size = 16 }: { size?: number }) => {
+  return (
+    <svg
+      height={size}
+      width={size}
+      viewBox="0 0 16 16"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+      shapeRendering="geometricPrecision"
+    >
+      <path d="M6.75 8.25L10.25 4.75" />
+      <path d="M8 4.75h2.25V7" />
+      <path d="M14 8.5v4a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 12.5v-9A1.5 1.5 0 013.5 2h4" />
+    </svg>
+  );
+};
+
 export const AttachmentIcon = () => {
   return (
     <svg
