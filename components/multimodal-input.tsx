@@ -53,7 +53,7 @@ function PureMultimodalInput({
   messages: Array<UIMessage>;
   setMessages: UseChatHelpers['setMessages'];
   append: UseChatHelpers['append'];
-  handleSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  handleSubmit: UseChatHelpers['handleSubmit'];
   className?: string;
   selectedVisibilityType: VisibilityType;
 }) {
@@ -106,37 +106,8 @@ function PureMultimodalInput({
     adjustHeight();
   };
 
-  // Handler for textarea input changes
-  const handleInputChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(event.target.value);
-    adjustHeight();
-  };
-
-  // Handler for keyboard events
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
-      event.preventDefault();
-      if (canSend) {
-        submitForm();
-      }
-    }
-  };
-
-  // Check if we can send the message
-  const canSend = input.trim().length > 0 || attachments.length > 0;
-
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
-  
-  const handleFileClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleAttach = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFileChange(e);
-    }
-  };
 
   const submitForm = useCallback(() => {
     // Check if the input exceeds the character limit (15000)
@@ -147,13 +118,9 @@ function PureMultimodalInput({
     
     window.history.replaceState({}, '', `/chat/${chatId}`);
 
-    // Create a form event-like object
-    const formEvent = {
-      preventDefault: () => {},
-      currentTarget: {} as HTMLFormElement,
-    } as React.FormEvent<HTMLFormElement>;
-
-    handleSubmit(formEvent);
+    handleSubmit(undefined, {
+      experimental_attachments: attachments,
+    });
 
     setAttachments([]);
     setLocalStorageInput('');
@@ -199,31 +166,6 @@ function PureMultimodalInput({
     }
   };
 
-  // Helper to process image files and handle uploads
-  const processImageFile = useCallback(
-    async (file: File) => {
-      setUploadQueue(prev => [...prev, file.name]);
-      
-      try {
-        // Show toast notification for pasted image
-        if (file.name.startsWith('pasted-image')) {
-          toast.success('Image pasted and uploading...');
-        }
-        
-        const attachment = await uploadFile(file);
-        if (attachment) {
-          setAttachments(prev => [...prev, attachment]);
-        }
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        toast.error(`Failed to upload ${file.name}`);
-      } finally {
-        setUploadQueue(prev => prev.filter(name => name !== file.name));
-      }
-    },
-    [setAttachments],
-  );
-
   const handleFileChange = useCallback(
     async (event: ChangeEvent<HTMLInputElement>) => {
       const files = Array.from(event.target.files || []);
@@ -258,256 +200,219 @@ function PureMultimodalInput({
     }
   }, [status, scrollToBottom]);
 
-  // State to track drag-and-drop operations
-  const [isDragging, setIsDragging] = useState(false);
-
-  // Drag and drop event handlers
-  const handleDragEnter = useCallback((e: React.DragEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isDragging) setIsDragging(true);
-  }, [isDragging]);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    const items = e.dataTransfer.items;
-    if (!items) return;
-    
-    // Process dropped files
-    for (let i = 0; i < items.length; i++) {
-      const item = items[i];
-      
-      if (item.kind === 'file') {
-        const file = item.getAsFile();
-        if (file && file.type.startsWith('image/')) {
-          processImageFile(file);
-        }
-      }
-    }
-  }, [processImageFile]);
-
-  // Helper function to get permission for clipboard read
-  const requestClipboardPermission = useCallback(async () => {
-    try {
-      // Check if clipboard-read permission is already granted
-      const permissionStatus = await navigator.permissions.query({ 
-        name: 'clipboard-read' as PermissionName 
-      });
-      
-      if (permissionStatus.state === 'granted') {
-        return true;
-      } else if (permissionStatus.state === 'prompt') {
-        // We need to prompt the user by attempting to read the clipboard
-        toast.info('Please allow clipboard access when prompted.');
-        return true;
-      } else {
-        // Permission denied
-        toast.error('Clipboard permission denied. Please enable in browser settings.');
-        return false;
-      }
-    } catch (error) {
-      console.error('Error checking clipboard permissions:', error);
-      return true; // Try anyway in case permissions API is not supported
-    }
-  }, []);
-
-  // Function to check clipboard for images on focus
-  const checkClipboardForImages = useCallback(async () => {
-    const hasPermission = await requestClipboardPermission();
-    if (!hasPermission) return;
-    
-    try {
-      const clipboardItems = await navigator.clipboard.read();
-      
-      for (const item of clipboardItems) {
-        for (const type of item.types) {
-          if (type.startsWith('image/')) {
-            toast.info(
-              'There is an image in your clipboard. Press Ctrl+V or Cmd+V to paste it.'
-            );
-            return; // Only show one notification
-          }
-        }
-      }
-    } catch (err) {
-      // Silently fail as this is just a convenience feature
-      // Most likely the clipboard is empty or contains non-image content
-    }
-  }, [requestClipboardPermission]);
-
-  // Check for clipboard images when the component gets focus
-  useEffect(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    
-    const handleFocus = () => {
-      checkClipboardForImages();
-    };
-    
-    textarea.addEventListener('focus', handleFocus);
-    
-    return () => {
-      textarea.removeEventListener('focus', handleFocus);
-    };
-  }, [checkClipboardForImages]);
-
   return (
-    <div className={cx('w-full flex flex-col', className)}>
-      {attachments.length > 0 && (
-        <div className="mb-2 flex items-center gap-2 flex-wrap touch-manipulation">
-          {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
-          ))}
-        </div>
-      )}
-      
-      <form 
-        className="relative flex w-full items-end gap-1"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (canSend) {
-            submitForm();
-          }
-        }}
-        onDragEnter={handleDragEnter}
-        onDragLeave={handleDragLeave}
-        onDragOver={handleDragOver}
-        onDrop={handleDrop}
-      >
-        {/* File input button with improved touch target */}
-        <div className="relative">
-          <input
-            ref={fileInputRef}
-            multiple
-            disabled={status === 'streaming'}
-            type="file"
-            onChange={handleAttach}
-            className="hidden"
-          />
-          <Button
-            variant="ghost"
-            className="rounded-full p-2 sm:p-3 h-auto touch-manipulation"
-            disabled={status === 'streaming'}
-            onClick={handleFileClick}
-            title="Attach files"
-            aria-label="Attach files"
-            type="button"
-          >
-            <PaperclipIcon size={20} />
-          </Button>
-        </div>
-
-        {/* Textarea with improved behavior on mobile */}
-        <Textarea
-          autoFocus
-          tabIndex={0}
-          value={input}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          placeholder="Send a message"
-          spellCheck={false}
-          className="min-h-10 h-auto rounded-2xl resize-none bg-muted dark:placeholder:text-zinc-500 placeholder:text-zinc-400 focus-visible:border-zinc-200 dark:focus-visible:border-zinc-700 px-3 sm:px-4 py-2 sm:py-3"
-          style={{
-            height: textareaRef.current?.scrollHeight
-              ? `${Math.min(textareaRef.current.scrollHeight, 200)}px`
-              : 'auto',
-          }}
-          ref={textareaRef}
-          rows={Math.min(
-            Math.ceil((input.match(/\n/g)?.length || 0) + 1),
-            5,
-          )}
-          enterKeyHint="send"
-        />
-
-        {/* Submit button with improved touch target */}
-        <Button
-          type="submit"
-          disabled={!canSend}
-          variant="ghost"
-          className="rounded-full p-2 sm:p-3 h-auto absolute right-1 bottom-1 touch-manipulation"
-          title={status === 'streaming' ? 'Stop generating' : 'Send message'}
-          aria-label={status === 'streaming' ? 'Stop generating' : 'Send message'}
-          data-testid="send-button"
-          onClick={status === 'streaming' ? stop : undefined}
-        >
-          {status === 'streaming' ? (
-            <StopIcon size={20} />
-          ) : (
-            <ArrowUpIcon size={20} />
-          )}
-        </Button>
-      </form>
-
+    <div className="relative w-full flex flex-col gap-4">
       <AnimatePresence>
         {!isAtBottom && (
-          <motion.button
-            onClick={() => scrollToBottom()}
+          <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            aria-label="Scroll to bottom"
-            className="z-10 flex items-center justify-center size-10 shadow-lg bg-background border border-zinc-200 dark:border-zinc-700 rounded-full absolute -top-14 right-2"
+            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            className="absolute left-1/2 bottom-28 -translate-x-1/2 z-50"
           >
-            <ArrowDown className="size-4" />
-          </motion.button>
+            <Button
+              data-testid="scroll-to-bottom-button"
+              className="rounded-full"
+              size="icon"
+              variant="outline"
+              onClick={(event) => {
+                event.preventDefault();
+                scrollToBottom();
+              }}
+            >
+              <ArrowDown />
+            </Button>
+          </motion.div>
         )}
       </AnimatePresence>
-    
-      {/* Display character count when approaching or exceeding limit */}
-      {input.length > 10000 && (
-        <div 
-          className={`text-xs mt-1 text-right pr-14 ${
-            input.length > 15000 ? 'text-red-500' : 'text-muted-foreground'
-          }`}
-          data-testid="char-counter"
-        >
-          {input.length}/15000
-        </div>
-      )}
-      
-      {messages.length > 0 && status !== 'streaming' && (
-        <div className="w-full mt-4">
+
+      {messages.length === 0 &&
+        attachments.length === 0 &&
+        uploadQueue.length === 0 && (
           <SuggestedActions
-            chatId={chatId}
             append={append}
+            chatId={chatId}
             selectedVisibilityType={selectedVisibilityType}
           />
+        )}
+
+      <input
+        type="file"
+        className="fixed -top-4 -left-4 size-0.5 opacity-0 pointer-events-none"
+        ref={fileInputRef}
+        multiple
+        onChange={handleFileChange}
+        tabIndex={-1}
+      />
+
+      {(attachments.length > 0 || uploadQueue.length > 0) && (
+        <div
+          data-testid="attachments-preview"
+          className="flex flex-row gap-2 overflow-x-scroll items-end"
+        >
+          {attachments.map((attachment) => (
+            <PreviewAttachment key={attachment.url} attachment={attachment} />
+          ))}
+
+          {uploadQueue.map((filename) => (
+            <PreviewAttachment
+              key={filename}
+              attachment={{
+                url: '',
+                name: filename,
+                contentType: '',
+              }}
+              isUploading={true}
+            />
+          ))}
         </div>
       )}
 
-      {isDragging && (
-        <div className="absolute inset-0 bg-zinc-500/20 dark:bg-zinc-800/30 rounded-lg border-2 border-dashed border-zinc-400 dark:border-zinc-600 flex items-center justify-center">
-          <div className="text-zinc-600 dark:text-zinc-400 font-medium">
-            Drop image here
-          </div>
-        </div>
-      )}
+      <Textarea
+        data-testid="multimodal-input"
+        ref={textareaRef}
+        placeholder="Send a message..."
+        value={input}
+        onChange={handleInput}
+        className={cx(
+          'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
+          className,
+        )}
+        rows={2}
+        autoFocus
+        onKeyDown={(event) => {
+          if (
+            event.key === 'Enter' &&
+            !event.shiftKey &&
+            !event.nativeEvent.isComposing
+          ) {
+            event.preventDefault();
+
+            if (status !== 'ready') {
+              toast.error('Please wait for the model to finish its response!');
+            } else {
+              submitForm();
+            }
+          }
+        }}
+      />
+
+      <div className="absolute bottom-0 p-2 w-fit flex flex-row justify-start">
+        <AttachmentsButton fileInputRef={fileInputRef} status={status} />
+      </div>
+
+      <div className="absolute bottom-0 right-0 p-2 w-fit flex flex-row justify-end items-center gap-2">
+        {input.length > 0 && (
+          <span 
+            className={`text-xs ${input.length > 15000 ? 'text-red-500 font-semibold' : 'text-muted-foreground'}`}
+          >
+            {input.length}/15000
+          </span>
+        )}
+        {status === 'submitted' ? (
+          <StopButton stop={stop} setMessages={setMessages} />
+        ) : (
+          <SendButton
+            input={input}
+            submitForm={submitForm}
+            uploadQueue={uploadQueue}
+          />
+        )}
+      </div>
     </div>
   );
 }
 
-export const MultimodalInput = memo(PureMultimodalInput, (prevProps, nextProps) => {
-if (prevProps.status !== nextProps.status) return false;
-if (prevProps.input !== nextProps.input) return false;
-if (prevProps.className !== nextProps.className) return false;
-if (!equal(prevProps.attachments, nextProps.attachments)) return false;
-if (!equal(prevProps.messages, nextProps.messages)) return false;
+export const MultimodalInput = memo(
+  PureMultimodalInput,
+  (prevProps, nextProps) => {
+    if (prevProps.input !== nextProps.input) return false;
+    if (prevProps.status !== nextProps.status) return false;
+    if (!equal(prevProps.attachments, nextProps.attachments)) return false;
+    if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType)
+      return false;
 
-return true;
+    return true;
+  },
+);
+
+function PureAttachmentsButton({
+  fileInputRef,
+  status,
+}: {
+  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
+  status: UseChatHelpers['status'];
+}) {
+  return (
+    <Button
+      data-testid="attachments-button"
+      className="rounded-md rounded-bl-lg p-[7px] h-fit dark:border-zinc-700 hover:dark:bg-zinc-900 hover:bg-zinc-200"
+      onClick={(event) => {
+        event.preventDefault();
+        fileInputRef.current?.click();
+      }}
+      disabled={status !== 'ready'}
+      variant="ghost"
+    >
+      <PaperclipIcon size={14} />
+    </Button>
+  );
+}
+
+const AttachmentsButton = memo(PureAttachmentsButton);
+
+function PureStopButton({
+  stop,
+  setMessages,
+}: {
+  stop: () => void;
+  setMessages: UseChatHelpers['setMessages'];
+}) {
+  return (
+    <Button
+      data-testid="stop-button"
+      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      onClick={(event) => {
+        event.preventDefault();
+        stop();
+        setMessages((messages) => messages);
+      }}
+    >
+      <StopIcon size={14} />
+    </Button>
+  );
+}
+
+const StopButton = memo(PureStopButton);
+
+function PureSendButton({
+  submitForm,
+  input,
+  uploadQueue,
+}: {
+  submitForm: () => void;
+  input: string;
+  uploadQueue: Array<string>;
+}) {
+  return (
+    <Button
+      data-testid="send-button"
+      className="rounded-full p-1.5 h-fit border dark:border-zinc-600"
+      onClick={(event) => {
+        event.preventDefault();
+        submitForm();
+      }}
+      disabled={input.length === 0 || uploadQueue.length > 0}
+    >
+      <ArrowUpIcon size={14} />
+    </Button>
+  );
+}
+
+const SendButton = memo(PureSendButton, (prevProps, nextProps) => {
+  if (prevProps.uploadQueue.length !== nextProps.uploadQueue.length)
+    return false;
+  if (prevProps.input !== nextProps.input) return false;
+  return true;
 });

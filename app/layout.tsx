@@ -14,11 +14,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false, // Disable pinch zooming
-  viewportFit: 'cover',
+  maximumScale: 1, // Disable auto-zoom on mobile Safari
 };
 
 const geist = Geist({
@@ -53,35 +49,6 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
-const MOBILE_TOUCH_FIX_SCRIPT = `\
-(function() {
-  document.addEventListener('touchmove', function(e) {
-    // Check if we're at the edge of scrolling area
-    var target = e.target;
-    var scrollTop = target.scrollTop;
-    var scrollHeight = target.scrollHeight;
-    var height = target.clientHeight;
-    var scrollLeft = target.scrollLeft;
-    var scrollWidth = target.scrollWidth;
-    var width = target.clientWidth;
-    var atTopEdge = (scrollTop <= 0);
-    var atBottomEdge = (scrollTop + height >= scrollHeight);
-    var atLeftEdge = (scrollLeft <= 0);
-    var atRightEdge = (scrollLeft + width >= scrollWidth);
-
-    if ((atTopEdge && e.touches[0].screenY > 0) || 
-        (atBottomEdge && e.touches[0].screenY < 0) || 
-        (atLeftEdge && e.touches[0].screenX > 0) || 
-        (atRightEdge && e.touches[0].screenX < 0)) {
-      e.preventDefault();
-    }
-  }, { passive: false });
-
-  // Prevent iOS Safari elastic scrolling/bouncing when user scrolls past the top/bottom
-  document.body.style.overscrollBehavior = 'none';
-  document.documentElement.style.overscrollBehavior = 'none';
-})();`;
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -101,11 +68,6 @@ export default async function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: THEME_COLOR_SCRIPT,
-          }}
-        />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: MOBILE_TOUCH_FIX_SCRIPT,
           }}
         />
       </head>

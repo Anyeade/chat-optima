@@ -101,17 +101,7 @@
     }
 
     body {
-        @apply bg-background text-foreground overscroll-none;
-        touch-action: pan-y;
-        -webkit-overflow-scrolling: touch;
-        position: fixed;
-        width: 100%;
-        height: 100%;
-        overflow: hidden;
-    }
-
-    html {
-        overscroll-behavior: none;
+        @apply bg-background text-foreground;
     }
 }
 
@@ -260,28 +250,9 @@
     @apply mx-1;
 }
 
-/* Mobile overscroll fix */
-.mobile-no-bounce {
-    overscroll-behavior: none;
-    touch-action: pan-y;
-    -webkit-overflow-scrolling: touch;
-}
-
-/* Touch handling improvements */
-.touch-manipulation {
-    touch-action: manipulation;
-}
-
 /* Add hover styles for the copy button in code blocks */
 .code-block-copy-button {
     @apply opacity-0 group-hover:opacity-100 transition-opacity duration-200;
-}
-
-/* Make copy button always visible on mobile but slightly transparent */
-@media (max-width: 768px) {
-    .code-block-copy-button {
-        @apply opacity-70;
-    }
 }
 
 /* Language label in the code block */

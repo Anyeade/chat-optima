@@ -16,7 +16,7 @@
     "db:pull": "drizzle-kit pull",
     "db:check": "drizzle-kit check",
     "db:up": "drizzle-kit up",
-    "test": "cross-env PLAYWRIGHT=True pnpm exec playwright test",
+    "test": "export PLAYWRIGHT=True && pnpm exec playwright test",
     "test:vitest": "vitest run",
     "test:smart-update": "vitest artifacts/html/tests/smart-update.test.ts --run",
     "test:unit": "vitest artifacts/**/*.test.ts --run",

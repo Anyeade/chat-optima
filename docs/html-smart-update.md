@@ -1,16 +1,14 @@
 # HTML Smart Update Feature
 
-The HTML Smart Update feature enables AI-powered intelligent editing of HTML documents through targeted updates and suggestions rather than complete document rewrites. This approach preserves document structure while allowing precise modifications exactly where needed.
+The HTML Smart Update feature allows AI to make targeted changes to HTML documents using precise operations rather than rewriting the entire document. This makes the update process more efficient, faster, and more accurate, especially for larger HTML documents.
 
 ## How It Works
 
-When a user requests an update to an HTML document, the system uses AI analysis to:
-1. Determine if the request is for targeted changes or a complete rewrite
-2. Analyze the document structure and existing style patterns
-3. Choose the most appropriate update approach based on the request context
-4. Generate targeted suggestions that can be selectively applied
+When a user requests an update to an HTML document, the system checks:
+1. If the request includes keywords like "smart update" or "search and replace"
+2. If the request involves common HTML elements like headers, footers, navigation, or sections
 
-The system uses advanced AI to determine when smart update mode is appropriate:
+If either condition is met, the system uses the smart update process:
 
 1. The AI analyzes the current HTML document and the requested changes
 2. It generates a series of targeted update operations, preferring DOM-based operations with CSS selectors
@@ -109,61 +107,34 @@ Removes elements matching a CSS selector.
 }
 ```
 
-## Smart Update Types
-
-The system supports multiple types of targeted changes:
-
-1. **Targeted Additions**: Add new HTML elements to specific locations
-2. **Targeted Modifications**: Update existing elements with improved markup
-3. **Improvement Suggestions**: General best-practice suggestions for elements
-4. **Hybrid Approaches**: Combinations of the above when appropriate
-
-Changes are categorized to help users understand their purpose:
-
-- **Accessibility**: Improvements for screen readers and keyboard navigation
-- **Performance**: Optimizations for faster loading and rendering
-- **SEO**: Enhancements for better search engine visibility
-- **Responsive**: Changes for better mobile and multi-device support
-- **Semantic**: Structural improvements using proper HTML5 elements
-- **Style**: Visual and layout improvements
-
 ## Usage
 
-To activate Smart Update Mode:
+To use the smart update feature, include one of the following phrases in your update request:
+- "smart update"
+- "search and replace"
+- "specific change"
+- "targeted update"
 
-1. Click the "HTML Smart Mode" button in the toolbar
-2. Make specific requests like:
-   - "Add a navigation bar with 5 menu items"
-   - "Change the hero section background to blue"
-   - "Make this page more accessible"
-   - "Fix the form layout on mobile devices"
-
-3. Review the generated suggestions by clicking the icons in the code editor
-4. Apply suggestions selectively by clicking "Apply Change" on each suggestion
+Examples:
+- "Smart update: change the navigation bar background color to blue"
+- "Smart update: add a new list item to the features section"
+- "Smart update: remove the contact form"
 
 ## Benefits
 
-- **Preserve Structure**: Keep the existing document structure intact
-- **Targeted Changes**: Make precise changes only where needed
-- **Selective Control**: Review and apply only the changes you want
-- **Intelligent Context**: System understands document patterns and maintains consistency
-- **Improved Quality**: More focused, higher-quality updates compared to full rewrites
 - **Performance**: Faster updates, especially for large HTML documents
-- **Transparency**: Provides clear feedback about the update approach
+- **Efficiency**: Only changes what's needed, not the entire document
+- **Transparency**: Shows the user when smart updates are being used
+- **Precision**: Makes targeted changes with minimal impact on the rest of the document
 
 ## Implementation Details
 
 The feature is implemented across several files:
-- `server.ts`: Contains the AI-powered logic for analysis and smart updates
-- `client.tsx`: Handles UI indicators and suggestion widgets
-- `suggestion.tsx`: Renders interactive suggestion components
+- `server.ts`: Contains the core logic for detecting and applying smart updates
+- `client.tsx`: Handles UI indicators and user interactions
 - `data-stream-handler.tsx`: Manages the event stream between server and client
 
-The smart update system uses:
-1. **AI-Based Analysis**: Determines the appropriate update approach based on request context and document structure
-2. **DOM Parsing**: Uses JSDOM to analyze and manipulate the document structure
-3. **Targeted Suggestions**: Generates specific, focused changes as interactive widgets
-4. **Context-Aware Processing**: Considers existing style patterns and document structure
+The smart update logic uses a schema-based approach to validate operations and applies them sequentially to ensure consistency.
 
 ## Best Practices and Common Issues
 
