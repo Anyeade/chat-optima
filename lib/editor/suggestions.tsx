@@ -14,6 +14,8 @@ import type { ArtifactKind } from '@/components/artifact';
 export interface UISuggestion extends Suggestion {
   selectionStart: number;
   selectionEnd: number;
+  type?: 'targeted-change' | 'improvement-suggestion' | 'general';
+  category?: 'accessibility' | 'performance' | 'seo' | 'responsive' | 'semantic' | 'style' | 'general';
 }
 
 interface Position {

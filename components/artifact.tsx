@@ -264,10 +264,9 @@ function PureArtifact({
 
   return (
     <AnimatePresence>
-      {artifact.isVisible && (
-        <motion.div
+      {artifact.isVisible && (        <motion.div
           data-testid="artifact"
-          className="flex flex-row h-dvh w-dvw fixed top-0 left-0 z-50 bg-transparent"
+          className="flex flex-row h-dvh w-dvw fixed top-0 left-0 z-50 bg-transparent mobile-no-bounce"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { delay: 0.4 } }}
@@ -332,7 +331,7 @@ function PureArtifact({
                   artifactStatus={artifact.status}
                 />
 
-                <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4">
+        <form className="flex flex-row gap-2 relative items-end w-full px-4 pb-4 touch-none">
                   <MultimodalInput
                     chatId={chatId}
                     input={input}
@@ -351,10 +350,8 @@ function PureArtifact({
                 </form>
               </div>
             </motion.div>
-          )}
-
-          <motion.div
-            className="fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-y-scroll md:border-l dark:border-zinc-700 border-zinc-200"
+          )}          <motion.div
+            className="fixed dark:bg-muted bg-background h-dvh flex flex-col overflow-hidden md:border-l dark:border-zinc-700 border-zinc-200 max-w-[100vw]"
             initial={
               isMobile
                 ? {
@@ -381,14 +378,12 @@ function PureArtifact({
                     x: 0,
                     y: 0,
                     height: windowHeight,
-                    width: windowWidth ? windowWidth : 'calc(100dvw)',
+                    width: '100vw',
                     borderRadius: 0,
                     transition: {
                       delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
+                      type: 'tween', 
+                      duration: 0.3,
                     },
                   }
                 : {
@@ -398,25 +393,21 @@ function PureArtifact({
                     height: windowHeight,
                     width: windowWidth
                       ? windowWidth - 400
-                      : 'calc(100dvw-400px)',
-                    borderRadius: 0,
+                      : 'calc(100dvw-400px)',                    borderRadius: 0,
                     transition: {
                       delay: 0,
-                      type: 'spring',
-                      stiffness: 200,
-                      damping: 30,
-                      duration: 5000,
+                      type: 'tween',
+                      duration: 0.3,
                     },
                   }
             }
             exit={{
               opacity: 0,
-              scale: 0.5,
+              scale: 0.9,
               transition: {
                 delay: 0.1,
-                type: 'spring',
-                stiffness: 600,
-                damping: 30,
+                type: 'tween',
+                duration: 0.2,
               },
             }}
           >
@@ -458,7 +449,7 @@ function PureArtifact({
               />
             </div>
 
-            <div className="dark:bg-muted bg-background h-full overflow-y-scroll !max-w-full items-center">
+            <div className="dark:bg-muted bg-background h-full overflow-y-auto overflow-x-hidden max-w-[100vw] items-center">
               <artifactDefinition.content
                 title={artifact.title}
                 content={

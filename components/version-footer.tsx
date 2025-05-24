@@ -36,15 +36,15 @@ export const VersionFooter = ({
 
   return (
     <motion.div
-      className="absolute flex flex-col gap-4 lg:flex-row bottom-0 bg-background p-4 w-full border-t z-50 justify-between"
+      className="absolute flex flex-col gap-3 lg:flex-row bottom-0 bg-background p-2 sm:p-4 w-full border-t z-50 justify-between"
       initial={{ y: isMobile ? 200 : 77 }}
       animate={{ y: 0 }}
       exit={{ y: isMobile ? 200 : 77 }}
       transition={{ type: 'spring', stiffness: 140, damping: 20 }}
     >
       <div>
-        <div>You are viewing a previous version</div>
-        <div className="text-muted-foreground text-sm">
+        <div className="text-sm sm:text-base">You are viewing a previous version</div>
+        <div className="text-muted-foreground text-xs sm:text-sm">
           Restore this version to make edits
         </div>
       </div>

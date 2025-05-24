@@ -19,3 +19,23 @@ export function useIsMobile() {
 
   return !!isMobile;
 }
+
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = React.useState<boolean>(false);
+  
+  React.useEffect(() => {
+    const media = window.matchMedia(query);
+    const updateMatch = () => setMatches(media.matches);
+    
+    // Set initial value
+    updateMatch();
+    
+    // Setup listener
+    media.addEventListener('change', updateMatch);
+    
+    // Cleanup
+    return () => media.removeEventListener('change', updateMatch);
+  }, [query]);
+  
+  return matches;
+}

@@ -18,6 +18,10 @@ export class ChatPage {
     return this.page.getByTestId('multimodal-input');
   }
 
+  public getCharCounter() {
+    return this.page.getByTestId('char-counter');
+  }
+
   public get scrollContainer() {
     return this.page.locator('.overflow-y-scroll');
   }
@@ -201,6 +205,9 @@ export class ChatPage {
       element: lastMessageElement,
       content,
       attachments,
+      async hasAttachments() {
+        return hasAttachments;
+      },
       async edit(newMessage: string) {
         await page.getByTestId('message-edit-button').click();
         await page.getByTestId('message-editor').fill(newMessage);

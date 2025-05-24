@@ -208,8 +208,8 @@ const PureDocumentHeader = ({
   kind: ArtifactKind;
   isStreaming: boolean;
 }) => (
-  <div className="p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700">
-    <div className="flex flex-row items-start sm:items-center gap-3">
+  <div className="p-2 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700">
+    <div className="flex flex-row items-start sm:items-center gap-2 sm:gap-3">
       <div className="text-muted-foreground">
         {isStreaming ? (
           <div className="animate-spin">
@@ -221,7 +221,7 @@ const PureDocumentHeader = ({
           <FileIcon />
         )}
       </div>
-      <div className="-translate-y-1 sm:translate-y-0 font-medium">{title}</div>
+      <div className="sm:-translate-y-1 sm:translate-y-0 font-medium text-sm sm:text-base truncate max-w-[230px] sm:max-w-full">{title}</div>
     </div>
     <div className="w-8" />
   </div>
@@ -238,9 +238,9 @@ const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(
-    'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
+    'h-[200px] sm:h-[257px] overflow-y-auto max-w-full border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
     {
-      'p-4 sm:px-14 sm:py-16': document.kind === 'text',
+      'p-2 sm:p-4 md:px-14 md:py-16': document.kind === 'text',
       'p-0': document.kind === 'code',
     },
   );
@@ -265,7 +265,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
           </div>
         </div>
       ) : document.kind === 'sheet' ? (
-        <div className="flex flex-1 relative size-full p-4">
+        <div className="flex flex-1 relative size-full p-2 sm:p-4">
           <div className="absolute inset-0">
             <SpreadsheetEditor {...commonProps} />
           </div>
@@ -282,8 +282,19 @@ const DocumentContent = ({ document }: { document: Document }) => {
       ) : document.kind === 'html' ? (
         <div className="w-full h-full">
           <iframe
-            srcDoc={document.content ?? ''}
-            className="w-full h-full border-0 min-h-[200px]"
+            srcDoc={`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  ${document.content && document.content.includes('<head>') ? 
+                    document.content.replace('<head>', '<head><meta name="viewport" content="width=device-width, initial-scale=1.0">') : 
+                    document.content ?? ''}
+                </head>
+              </html>
+            `.replace('<!DOCTYPE html>', '').replace('<html>', '').replace('</html>', '')}
+            className="w-full h-full border-0 min-h-[200px] max-w-full"
+            style={{ width: '100%', maxWidth: '100vw' }}
             sandbox="allow-scripts"
           />
         </div>

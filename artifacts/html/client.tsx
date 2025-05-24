@@ -9,30 +9,44 @@ import {
   RedoIcon,
   EyeIcon,
   CodeIcon,
-  SparklesIcon
+  SparklesIcon,
+  MessageIcon
 } from '@/components/icons';
+import type { Suggestion } from '@/lib/db/schema';
 
 interface HTMLArtifactMetadata {
   showPreview: boolean;
   showSmartUpdateInfo: boolean;
+  suggestions: Array<Suggestion>;
 }
 
 export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
   kind: 'html',
-  description: 'Useful for creating HTML documents with CSS and JavaScript.',
-  initialize: async ({ setMetadata }) => {
+  description: 'Useful for creating HTML documents with CSS and JavaScript.',  initialize: async ({ setMetadata }) => {
     setMetadata((currentMetadata) => ({
       showPreview: false,
-      showSmartUpdateInfo: false
+      showSmartUpdateInfo: false,
+      suggestions: []
     }));
-  },
-  onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
+  },  onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
     if (streamPart.type === 'html-delta') {
       setArtifact((draftArtifact) => ({
         ...draftArtifact,
         content: streamPart.content as string,
         isVisible: true,
         status: 'streaming',
+      }));
+    }
+    
+    if (streamPart.type === 'suggestion') {
+      // Add the suggestion to metadata when it comes through the stream
+      setMetadata((metadata) => ({
+        ...metadata,
+        suggestions: [
+          ...metadata.suggestions,
+          streamPart.content as Suggestion
+        ],
+        showSmartUpdateInfo: true
       }));
     }
     
@@ -77,19 +91,34 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
 
     if (metadata?.showPreview) {
       return (
-        <div className="w-full h-full flex flex-col">
-          {metadata?.showSmartUpdateInfo && (
+        <div className="w-full h-full flex flex-col">          {metadata?.showSmartUpdateInfo && (
             <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-3 m-3 flex items-center">
-              <span className="mr-2"><SparklesIcon size={18} /></span>
+              <span className="mr-2"><MessageIcon size={18} /></span>
               <div>
-                <p className="font-medium">Smart Update Active</p>
-                <p className="text-sm">Making targeted changes without rewriting the entire document for better performance and efficiency.</p>
+                <p className="font-medium">Code Updates Available</p>
+                <p className="text-sm">Interactive code updates have been added to the code view. Switch to code view to see and apply them.</p>
               </div>
             </div>
-          )}
-          <iframe
-            srcDoc={content}
-            className="w-full h-full border-0"
+          )}          <iframe
+            srcDoc={`
+              <!DOCTYPE html>
+              <html>
+                <head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+                  <style>
+                    body { max-width: 100%; overflow-x: hidden; }
+                    img { max-width: 100%; height: auto; }
+                    pre { overflow-x: auto; white-space: pre-wrap; word-wrap: break-word; }
+                    table { width: 100%; overflow-x: auto; display: block; }
+                  </style>
+                  ${content.includes('<head>') ? 
+                    content.replace('<head>', '<head><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">') : 
+                    content}
+                </head>
+              </html>
+            `.replace('<!DOCTYPE html>', '').replace('<html>', '').replace('</html>', '')}
+            className="w-full h-full border-0 max-w-full"
+            style={{ width: '100%', maxWidth: '100vw' }}
             sandbox="allow-scripts"
           />
         </div>
@@ -97,21 +126,28 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
     }
 
     return (
-      <div className="p-4 w-full flex flex-col">
-        {metadata?.showSmartUpdateInfo && (
+      <div className="p-2 sm:p-4 w-full flex flex-col max-w-[100vw] overflow-x-hidden">      {metadata?.showSmartUpdateInfo && (
         <div className="bg-green-50 border border-green-200 text-green-800 rounded-md p-3 mb-3 flex items-center">
-          <span className="mr-2"><SparklesIcon size={18} /></span>
+          <span className="mr-2"><MessageIcon size={18} /></span>
           <div>
-            <p className="font-medium">Smart Update Active</p>
-            <p className="text-sm">Making targeted changes without rewriting the entire document for better performance and efficiency.</p>
+            <p className="font-medium">Code Updates Available ({metadata?.suggestions?.length || 0})</p>
+            <p className="text-sm">Review and apply proposed changes by clicking on the message icons in the editor. Each suggestion can be applied independently.</p>
+            {metadata?.suggestions && metadata?.suggestions.length > 0 && (              <div className="mt-1 flex flex-wrap gap-1">
+                {(Array.from(new Set(metadata.suggestions.map(s => (s as any).type || 'general')))).map(type => (
+                  <span key={type} className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {(type as string).replace('-', ' ')}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-      )}
-        <CodeEditor
+      )}<CodeEditor
           content={content}
           language="html"
           onSaveContent={onSaveContent}
           isCurrentVersion={isCurrentVersion}
+          suggestions={metadata?.suggestions || []}
         />
       </div>
     );
@@ -167,20 +203,20 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
         toast.success('Copied to clipboard!');
       },
     },
-  ],
-  toolbar: [
+  ],  toolbar: [
     {
-      icon: <SparklesIcon size={18} />,
-      description: 'Use Smart Update',
+      icon: <MessageIcon size={18} />,
+      description: 'HTML Smart Mode',
       onClick: ({ appendMessage, setMetadata }) => {
         setMetadata((metadata: any) => ({
           ...metadata,
-          showSmartUpdateInfo: true
+          showSmartUpdateInfo: true,
+          suggestions: []
         }));
         
         appendMessage({
           role: 'user',
-          content: "When updating HTML documents, you can use the smart update feature by adding 'smart update' to your instruction. This feature makes targeted changes to specific parts of the HTML without rewriting the entire document.\n\nExamples:\n- 'Smart update: change the navigation bar background color to blue'\n- 'Smart update: add a new list item to the features section'\n- 'Smart update: remove the contact form'\n\nSmart updates are faster and more efficient, especially for large HTML documents or when making small changes."
+          content: "HTML Smart Mode activated! This enables AI-powered intelligent HTML editing through targeted updates and suggestions.\n\nYou can:\n\n• Request targeted additions: \"Add a sticky navigation bar with 5 menu items\"\n• Update specific elements: \"Change the hero section background to a gradient\"\n• Apply focused enhancements: \"Add ARIA labels to all interactive elements\"\n• Request general improvements: \"Make this page more responsive on mobile devices\"\n• Ask for specialized fixes: \"Fix any accessibility issues in this form\"\n\nHow it works:\n1. The AI analyzes your request and current HTML document\n2. It determines the most appropriate approach based on context\n3. It generates targeted suggestions you can review and apply selectively\n4. You keep full control of which changes to accept\n\nThis approach preserves your document structure while enabling precise updates to exactly where they're needed.\n\nWhat improvements would you like to make to your HTML?"
         });
       }
     }
