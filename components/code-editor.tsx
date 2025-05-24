@@ -1,6 +1,6 @@
 'use client';
 
-import { EditorView, ViewPlugin, Decoration, type DecorationSet } from '@codemirror/view';
+import { EditorView } from '@codemirror/view';
 import { EditorState, Transaction } from '@codemirror/state';
 import { python } from '@codemirror/lang-python';
 import { html } from '@codemirror/lang-html';
@@ -8,19 +8,13 @@ import { markdown } from '@codemirror/lang-markdown';
 import { javascript } from '@codemirror/lang-javascript';
 import { php } from '@codemirror/lang-php';
 import { css } from '@codemirror/lang-css';
+import { java } from '@codemirror/lang-java';
+import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { basicSetup } from 'codemirror';
 import { LanguageSupport } from '@codemirror/language';
 import React, { memo, useEffect, useRef } from 'react';
 import type { Suggestion } from '@/lib/db/schema';
-import { languages, tokenize } from 'prismjs';
-// Import only the language components that actually exist in Prism.js
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-php';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-ruby';
-// Note: prism-mermaid doesn't exist, we define it manually
 
 type EditorProps = {
   content: string;
@@ -32,141 +26,7 @@ type EditorProps = {
   language?: string;
 };
 
-const createPrismHighlighter = (language: string) => {
-  return ViewPlugin.fromClass(class {
-    decorations: DecorationSet;
-
-    constructor(view: EditorView) {
-      this.decorations = this.highlight(view);
-    }
-
-    update(update: any) {
-      if (update.docChanged || update.viewportChanged) {
-        this.decorations = this.highlight(update.view);
-      }
-    }    highlight(view: EditorView) {
-      const code = view.state.doc.toString();
-      
-      // Ensure languages object exists and the specific language is defined
-      if (!languages || typeof languages !== 'object') {
-        console.warn('Prism languages object is not available. Skipping syntax highlighting.');
-        return Decoration.set([]);
-      }
-      
-      if (!languages[language] || typeof languages[language] !== 'object') {
-        console.warn(`Prism language '${language}' is not defined. Skipping syntax highlighting.`);
-        return Decoration.set([]);
-      }
-      
-      try {
-        // Additional safety check for the language definition
-        const langDef = languages[language];
-        if (!langDef || typeof langDef !== 'object') {
-          console.warn(`Invalid language definition for '${language}'. Skipping syntax highlighting.`);
-          return Decoration.set([]);
-        }
-
-        const tokens = tokenize(code, langDef);
-        let pos = 0;
-        const decorations: any[] = [];
-
-        const processToken = (token: any) => {
-          if (typeof token === 'string') {
-            pos += token.length;
-            return;
-          }
-
-          if (token && typeof token === 'object' && token.type && token.content !== undefined) {
-            const tokenContent = typeof token.content === 'string' ? token.content : 
-                                 Array.isArray(token.content) ? token.content.join('') : String(token.content);
-            const className = `token ${token.type}`;
-            decorations.push(Decoration.mark({
-              class: className
-            }).range(pos, pos + tokenContent.length));
-            pos += tokenContent.length;
-          } else {
-            // Fallback for unexpected token structure
-            const tokenStr = String(token);
-            pos += tokenStr.length;
-          }
-        };
-
-        if (Array.isArray(tokens)) {
-          tokens.forEach(token => processToken(token));
-        }
-        
-        return Decoration.set(decorations);
-      } catch (error) {
-        console.error(`Error during syntax highlighting for language '${language}':`, error);
-        return Decoration.set([]);
-      }
-    }
-  }, {
-    decorations: v => v.decorations
-  });
-};
-
-// Safely define language grammars with comprehensive error handling
-const ensureLanguageDefinition = (languageName: string) => {
-  // First, ensure Prism languages object exists and is properly initialized
-  if (!languages || typeof languages !== 'object') {
-    console.error('Prism languages object is not available');
-    return false;
-  }
-  
-  try {
-    switch (languageName) {
-      case 'mermaid':
-        if (!languages.mermaid) {
-          // Create a completely isolated language definition to avoid prototype pollution
-          const mermaidDef = Object.create(null);
-          mermaidDef.keyword = /\b(?:graph|subgraph|end|sequenceDiagram|participant|loop|alt|else|opt|par|class|classDef|flowchart|gantt|pie|stateDiagram|journey)\b/;
-          mermaidDef.operator = /[->]/;
-          mermaidDef.punctuation = /[[\]{}():;,]/;
-          mermaidDef.string = /{[^}]+}|"[^"]*"|'[^']*'/;
-          mermaidDef.function = /\b\w+\(/;
-          mermaidDef.arrow = /--?>|==?>|-.->|==>>/;
-          mermaidDef.entity = /&[a-z0-9]+;|\([^)]*\)/i;
-          // Use bracket notation to safely set the class-name property
-          mermaidDef['class-name'] = /\b[A-Z][a-zA-Z0-9_]*\b/;
-          
-          // Safely assign to languages object
-          Object.defineProperty(languages, 'mermaid', {
-            value: mermaidDef,
-            writable: true,
-            enumerable: true,
-            configurable: true
-          });
-          
-          console.log('Mermaid language definition created successfully');
-        }
-        break;
-      case 'ruby':
-        if (!languages.ruby) {
-          console.warn('Ruby language not found in Prism.js. Ruby syntax highlighting may not work properly.');
-          return false;
-        }
-        break;
-    }
-    
-    return languages[languageName] !== undefined;
-  } catch (error) {
-    console.error(`Failed to ensure language definition for '${languageName}':`, error);
-    return false;
-  }
-};
-
-// Create highlighter factory with better error handling
-const createSafeHighlighter = (language: string) => {
-  if (!ensureLanguageDefinition(language)) {
-    console.warn(`Cannot create highlighter for language '${language}' - language definition failed`);
-    return null;
-  }
-  
-  return createPrismHighlighter(language);
-};
-
-const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSupport, ViewPlugin<any>] => {
+const getLanguageExtension = (language?: string): LanguageSupport => {
   switch (language?.toLowerCase()) {
     case 'html':
     case 'svg':
@@ -185,28 +45,25 @@ const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSup
       return php();
     case 'css':
       return css();
+    case 'java':
+      return java();
+    case 'cpp':
+    case 'c++':
+      return cpp();
+    case 'csharp':
+    case 'cs':
+    case 'c#':
+      // C# uses similar syntax to Java, so we'll use Java highlighting as fallback
+      return java();
     case 'ruby':
-    case 'rb': {
-      // For Ruby, we use Prism.js highlighting via custom highlighter
-      const rubyHighlighter = createSafeHighlighter('ruby');
-      if (rubyHighlighter) {
-        return new LanguageSupport(markdown().language, [rubyHighlighter]);
-      }
-      // Fallback to Python if Ruby highlighter creation fails
-      return python();
-    }
-    case 'mermaid': {
-      const mermaidHighlighter = createSafeHighlighter('mermaid');
-      if (mermaidHighlighter) {
-        return new LanguageSupport(markdown().language, [mermaidHighlighter]);
-      }
-      // Fallback to markdown if mermaid highlighter creation fails
+    case 'rb':
+    case 'mermaid':
+      // For languages that don't have CodeMirror support, use markdown as fallback
       return markdown();
-    }
     case 'python':
+    case 'py':
       return python();
     default:
-      // Attempt to determine language from content or fallback to Python
       return python();
   }
 };
@@ -214,8 +71,7 @@ const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSup
 function PureCodeEditor({ content, onSaveContent, status, language }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
-  
-  // Detect language from code content if not specified
+    // Detect language from code content if not specified
   const detectLanguage = (code: string): string | undefined => {
     if (language) return language;
     
@@ -227,6 +83,9 @@ function PureCodeEditor({ content, onSaveContent, status, language }: EditorProp
     if (code.includes('body {') || code.includes('@media')) return 'css';
     if (code.includes('<!DOCTYPE html>') || code.includes('<html>')) return 'html';
     if (code.includes('require ') && code.includes('end')) return 'ruby';
+    if (code.includes('public class')) return 'java';
+    if (code.includes('#include') && code.includes('iostream')) return 'cpp';
+    if (code.includes('using System') || code.includes('Console.WriteLine')) return 'csharp';
     
     // Default to python if can't detect
     return 'python';
