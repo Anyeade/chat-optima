@@ -43,10 +43,17 @@ const createPrismHighlighter = (language: string) => {
       if (update.docChanged || update.viewportChanged) {
         this.decorations = this.highlight(update.view);
       }
-    }
+        }
 
     highlight(view: EditorView) {
       const code = view.state.doc.toString();
+      
+      // Check if the language is defined before tokenizing
+      if (!languages[language]) {
+        console.warn(`Prism language '${language}' is not defined. Skipping syntax highlighting.`);
+        return Decoration.set([]);
+      }
+      
       const tokens = tokenize(code, languages[language]);
       let pos = 0;
       const decorations: any[] = [];
@@ -73,6 +80,26 @@ const createPrismHighlighter = (language: string) => {
   });
 };
 
+// Define Mermaid language before creating the highlighter
+if (!languages.mermaid) {
+  languages.mermaid = {
+    'keyword': /\b(?:graph|subgraph|end|sequenceDiagram|participant|loop|alt|else|opt|par|class|classDef|flowchart|gantt|pie|stateDiagram|journey)\b/,
+    'operator': /[->]/,
+    'punctuation': /[[\]{}():;,]/,
+    'class-name': /\b[A-Z][a-zA-Z0-9_]*\b/,
+    'string': /{[^}]+}|"[^"]*"|'[^']*'/,
+    'function': /\b\w+\(/,
+    'arrow': /--?>|==?>|-.->|==>>/,
+    'entity': /&[a-z0-9]+;|\([^)]*\)/i
+  };
+}
+
+// Ensure Ruby language is properly loaded (though it should be from the import)
+// This is a safety check in case the import doesn't work as expected
+if (!languages.ruby) {
+  console.warn('Ruby language not found in Prism.js. Ruby syntax highlighting may not work properly.');
+}
+
 const mermaidHighlighter = createPrismHighlighter('mermaid');
 const mermaidLanguageSupport = new LanguageSupport(markdown().language, [mermaidHighlighter]);
 
@@ -96,23 +123,9 @@ const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSup
     case 'css':
       return css();
     case 'ruby':
-    case 'rb':
-      // For Ruby, we use Prism.js highlighting via custom highlighter
+    case 'rb':      // For Ruby, we use Prism.js highlighting via custom highlighter
       return new LanguageSupport(markdown().language, [createPrismHighlighter('ruby')]);
     case 'mermaid':
-      if (!languages.mermaid) {
-        // If Mermaid grammar is not loaded, define a simple one
-        languages.mermaid = {
-          'keyword': /\b(?:graph|subgraph|end|sequenceDiagram|participant|loop|alt|else|opt|par|class|classDef|flowchart|gantt|pie|stateDiagram|journey)\b/,
-          'operator': /[->]/,
-          'punctuation': /[[\]{}():;,]/,
-          'class-name': /\b[A-Z][a-zA-Z0-9_]*\b/,
-          'string': /{[^}]+}|"[^"]*"|'[^']*'/,
-          'function': /\b\w+\(/,
-          'arrow': /--?>|==?>|-.->|==>>/,
-          'entity': /&[a-z0-9]+;|\([^)]*\)/i
-        };
-      }
       return [mermaidLanguageSupport, mermaidHighlighter];
     case 'python':
       return python();
