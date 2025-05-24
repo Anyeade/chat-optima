@@ -1,42 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { CopyIcon } from './icons';
-import { toast } from 'sonner';
-import Prism from 'prismjs';
-
-// Import common language definitions
-import 'prismjs/components/prism-javascript';
-import 'prismjs/components/prism-typescript';
-import 'prismjs/components/prism-jsx';
-import 'prismjs/components/prism-tsx';
-import 'prismjs/components/prism-python';
-import 'prismjs/components/prism-java';
-import 'prismjs/components/prism-csharp';
-import 'prismjs/components/prism-cpp';
-import 'prismjs/components/prism-c';
-import 'prismjs/components/prism-php';
-import 'prismjs/components/prism-ruby';
-import 'prismjs/components/prism-go';
-import 'prismjs/components/prism-rust';
-import 'prismjs/components/prism-swift';
-import 'prismjs/components/prism-kotlin';
-import 'prismjs/components/prism-scala';
-import 'prismjs/components/prism-css';
-import 'prismjs/components/prism-scss';
-import 'prismjs/components/prism-sass';
-import 'prismjs/components/prism-less';
-import 'prismjs/components/prism-json';
-import 'prismjs/components/prism-yaml';
-import 'prismjs/components/prism-xml-doc';
-import 'prismjs/components/prism-markup';
-import 'prismjs/components/prism-markdown';
-import 'prismjs/components/prism-sql';
-import 'prismjs/components/prism-bash';
-import 'prismjs/components/prism-powershell';
-import 'prismjs/components/prism-docker';
-import 'prismjs/themes/prism.css';
-import 'prismjs/themes/prism-dark.css';
+import { useState, useEffect, useRef } from 'react';
+import { CheckIcon, CopyIcon } from './icons';
 
 interface CodeBlockProps {
   node: any;
@@ -52,89 +17,86 @@ export function CodeBlock({
   children,
   ...props
 }: CodeBlockProps) {
-  const [copied, setCopied] = useState(false);
+  const [isCopied, setIsCopied] = useState(false);
+  const codeRef = useRef<HTMLElement>(null);
 
-  const handleCopy = async () => {
-    const code = String(children).replace(/\n$/, '');
+  const copyToClipboard = async () => {
     try {
-      await navigator.clipboard.writeText(code);
-      setCopied(true);
-      toast.success('Code copied to clipboard!');
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(children);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      toast.error('Failed to copy code');
+      console.error('Failed to copy text: ', err);
     }
   };
 
-  const getLanguage = (className: string): string => {
-    const match = className?.match(/language-(\w+)/);
-    return match ? match[1] : '';
-  };
+  useEffect(() => {
+    if (codeRef.current && !inline) {
+      // Load highlight.js dynamically
+      import('./highlight/highlight.min.js').then((hljs) => {
+        // Load the theme CSS dynamically based on current theme
+        const isDark = document.documentElement.classList.contains('dark');
+        const themeUrl = isDark 
+          ? '/components/highlight/styles/github-dark.min.css'
+          : '/components/highlight/styles/github.min.css';
+        
+        // Add the CSS if it's not already loaded
+        if (!document.querySelector(`link[href="${themeUrl}"]`)) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = themeUrl;
+          document.head.appendChild(link);
+        }
 
-  const getHighlightedCode = (code: string, language: string): string => {
-    // Map common language aliases to Prism language identifiers
-    const languageMap: { [key: string]: string } = {
-      'js': 'javascript',
-      'ts': 'typescript',
-      'py': 'python',
-      'rb': 'ruby',
-      'sh': 'bash',
-      'shell': 'bash',
-      'yml': 'yaml',
-      'html': 'markup',
-      'xml': 'markup',
-      'cs': 'csharp',
-      'cpp': 'cpp',
-      'c++': 'cpp',
-    };
-
-    const prismLanguage = languageMap[language] || language;
-
-    if (prismLanguage && Prism.languages[prismLanguage]) {
-      try {
-        return Prism.highlight(code, Prism.languages[prismLanguage], prismLanguage);
-      } catch (err) {
-        console.warn(`Failed to highlight code for language: ${prismLanguage}`, err);
-        return code;
-      }
+        // Apply syntax highlighting
+        if (codeRef.current) {
+          hljs.default.highlightElement(codeRef.current);
+        }
+      }).catch((error) => {
+        console.error('Failed to load highlight.js:', error);
+      });
     }
-    return code;
-  };
+  }, [inline, children]);
 
   if (!inline) {
-    const language = getLanguage(className);
-    const code = String(children).replace(/\n$/, '');
-    const highlightedCode = getHighlightedCode(code, language);
+    // Extract language from className (e.g., "language-javascript" -> "javascript")
+    const language = className?.replace('language-', '') || '';
 
     return (
-      <div className="not-prose flex flex-col relative group">
-        <div className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-800 px-4 py-2 border border-zinc-200 dark:border-zinc-700 rounded-t-xl">
+      <div className="not-prose flex flex-col group">
+        <div className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-t-xl border border-b-0 border-zinc-200 dark:border-zinc-700">
           {language && (
-            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400 uppercase">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium uppercase">
               {language}
             </span>
           )}
           <button
-            onClick={handleCopy}
-            className={`transition-all duration-200 p-1 rounded hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 ${
-              copied ? 'opacity-100 scale-110' : 'opacity-0 group-hover:opacity-100'
-            }`}
-            title={copied ? 'Copied!' : 'Copy code'}
+            onClick={copyToClipboard}
+            className="flex items-center gap-2 px-2 py-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors code-block-copy-button"
+            aria-label="Copy code"
           >
-            <CopyIcon size={14} />
+            {isCopied ? (
+              <>
+                <CheckIcon size={12} />
+                Copied
+              </>
+            ) : (
+              <>
+                <CopyIcon size={12} />
+                Copy
+              </>
+            )}
           </button>
         </div>
         <pre
           {...props}
-          className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 bg-white p-4 border-x border-b border-zinc-200 dark:border-zinc-700 ${
-            language ? 'rounded-b-xl' : 'rounded-xl'
-          } dark:text-zinc-50 text-zinc-900 prism-theme-dark`}
+          className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 bg-zinc-50 p-4 border border-t-0 border-zinc-200 dark:border-zinc-700 rounded-b-xl dark:text-zinc-50 text-zinc-900`}
         >
           <code 
-            className={`${className} whitespace-pre-wrap break-words language-${language}`}
-            dangerouslySetInnerHTML={language ? { __html: highlightedCode } : undefined}
+            ref={codeRef}
+            className={`${className} whitespace-pre-wrap break-words`}
           >
-            {!language && children}
+            {children}
           </code>
         </pre>
       </div>

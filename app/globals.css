@@ -164,71 +164,41 @@
     @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
 
-/* Prism.js Syntax Highlighting for Mermaid */
-.token.keyword {
-    @apply text-blue-500 dark:text-blue-400 font-medium;
+/* CodeMirror and Editor Styling */
+.cm-editor,
+.cm-gutters {
+    @apply bg-background dark:bg-zinc-800 outline-none selection:bg-zinc-900 !important;
 }
 
-.token.operator {
-    @apply text-zinc-600 dark:text-zinc-400;
+.ͼo.cm-focused>.cm-scroller>.cm-selectionLayer .cm-selectionBackground,
+.ͼo.cm-selectionBackground,
+.ͼo.cm-content::selection {
+    @apply bg-zinc-200 dark:bg-zinc-900 !important;
 }
 
-.token.string {
-    @apply text-green-600 dark:text-green-400;
+.cm-activeLine,
+.cm-activeLineGutter {
+    @apply bg-transparent !important;
 }
 
-.token.punctuation {
-    @apply text-zinc-500 dark:text-zinc-400;
+.cm-activeLine {
+    @apply rounded-r-sm !important;
 }
 
-.token.arrow {
-    @apply text-orange-500 dark:text-orange-400;
+.cm-lineNumbers {
+    @apply min-w-7;
 }
 
-.token.entity {
-    @apply text-purple-500 dark:text-purple-400;
+.cm-foldGutter {
+    @apply min-w-3;
 }
 
-.token.class-name {
-    @apply text-yellow-600 dark:text-yellow-400 font-medium;
+.cm-lineNumbers .cm-activeLineGutter {
+    @apply rounded-l-sm !important;
 }
 
-.token.property {
-    @apply text-pink-600 dark:text-pink-400;
-}
-
-.token.function {
-    @apply text-blue-600 dark:text-blue-400;
-}
-
-.token.comment {
-    @apply text-zinc-500 dark:text-zinc-400 italic;
-}
-
-.token.boolean,
-.token.number {
-    @apply text-orange-500 dark:text-orange-300;
-}
-
-.token.selector,
-.token.important,
-.token.regex {
-    @apply text-red-500 dark:text-red-300;
-}
-
-.token.builtin,
-.token.important,
-.token.variable {
-    @apply text-purple-600 dark:text-purple-300;
-}
-
-.token.tag,
-.token.deleted {
-    @apply text-red-600 dark:text-red-400;
-}
-
-.token.inserted {
-    @apply text-green-600 dark:text-green-400;
+.suggestion-highlight {
+    @apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
 
 /* KaTeX Math Styling */
