@@ -14,12 +14,13 @@ import { LanguageSupport } from '@codemirror/language';
 import React, { memo, useEffect, useRef } from 'react';
 import type { Suggestion } from '@/lib/db/schema';
 import { languages, tokenize } from 'prismjs';
-import 'prismjs/components/prism-mermaid';
+// Import only the language components that actually exist in Prism.js
 import 'prismjs/components/prism-javascript';
 import 'prismjs/components/prism-typescript';
 import 'prismjs/components/prism-php';
 import 'prismjs/components/prism-css';
 import 'prismjs/components/prism-ruby';
+// Note: prism-mermaid doesn't exist, we define it manually
 
 type EditorProps = {
   content: string;
@@ -43,65 +44,127 @@ const createPrismHighlighter = (language: string) => {
       if (update.docChanged || update.viewportChanged) {
         this.decorations = this.highlight(update.view);
       }
-        }
-
-    highlight(view: EditorView) {
+    }    highlight(view: EditorView) {
       const code = view.state.doc.toString();
       
-      // Check if the language is defined before tokenizing
-      if (!languages[language]) {
+      // Ensure languages object exists and the specific language is defined
+      if (!languages || typeof languages !== 'object') {
+        console.warn('Prism languages object is not available. Skipping syntax highlighting.');
+        return Decoration.set([]);
+      }
+      
+      if (!languages[language] || typeof languages[language] !== 'object') {
         console.warn(`Prism language '${language}' is not defined. Skipping syntax highlighting.`);
         return Decoration.set([]);
       }
       
-      const tokens = tokenize(code, languages[language]);
-      let pos = 0;
-      const decorations: any[] = [];
-
-      const processToken = (token: any) => {
-        if (typeof token === 'string') {
-          pos += token.length;
-          return;
+      try {
+        // Additional safety check for the language definition
+        const langDef = languages[language];
+        if (!langDef || typeof langDef !== 'object') {
+          console.warn(`Invalid language definition for '${language}'. Skipping syntax highlighting.`);
+          return Decoration.set([]);
         }
 
-        const tokenContent = typeof token.content === 'string' ? token.content : token.content.join('');
-        const className = `token ${token.type}`;
-        decorations.push(Decoration.mark({
-          class: className
-        }).range(pos, pos + tokenContent.length));
-        pos += tokenContent.length;
-      };
+        const tokens = tokenize(code, langDef);
+        let pos = 0;
+        const decorations: any[] = [];
 
-      tokens.forEach(token => processToken(token));
-      return Decoration.set(decorations);
+        const processToken = (token: any) => {
+          if (typeof token === 'string') {
+            pos += token.length;
+            return;
+          }
+
+          if (token && typeof token === 'object' && token.type && token.content !== undefined) {
+            const tokenContent = typeof token.content === 'string' ? token.content : 
+                                 Array.isArray(token.content) ? token.content.join('') : String(token.content);
+            const className = `token ${token.type}`;
+            decorations.push(Decoration.mark({
+              class: className
+            }).range(pos, pos + tokenContent.length));
+            pos += tokenContent.length;
+          } else {
+            // Fallback for unexpected token structure
+            const tokenStr = String(token);
+            pos += tokenStr.length;
+          }
+        };
+
+        if (Array.isArray(tokens)) {
+          tokens.forEach(token => processToken(token));
+        }
+        
+        return Decoration.set(decorations);
+      } catch (error) {
+        console.error(`Error during syntax highlighting for language '${language}':`, error);
+        return Decoration.set([]);
+      }
     }
   }, {
     decorations: v => v.decorations
   });
 };
 
-// Define Mermaid language before creating the highlighter
-if (!languages.mermaid) {
-  languages.mermaid = {
-    'keyword': /\b(?:graph|subgraph|end|sequenceDiagram|participant|loop|alt|else|opt|par|class|classDef|flowchart|gantt|pie|stateDiagram|journey)\b/,
-    'operator': /[->]/,
-    'punctuation': /[[\]{}():;,]/,
-    'class-name': /\b[A-Z][a-zA-Z0-9_]*\b/,
-    'string': /{[^}]+}|"[^"]*"|'[^']*'/,
-    'function': /\b\w+\(/,
-    'arrow': /--?>|==?>|-.->|==>>/,
-    'entity': /&[a-z0-9]+;|\([^)]*\)/i
-  };
-}
+// Safely define language grammars with comprehensive error handling
+const ensureLanguageDefinition = (languageName: string) => {
+  // First, ensure Prism languages object exists and is properly initialized
+  if (!languages || typeof languages !== 'object') {
+    console.error('Prism languages object is not available');
+    return false;
+  }
+  
+  try {
+    switch (languageName) {
+      case 'mermaid':
+        if (!languages.mermaid) {
+          // Create a completely isolated language definition to avoid prototype pollution
+          const mermaidDef = Object.create(null);
+          mermaidDef.keyword = /\b(?:graph|subgraph|end|sequenceDiagram|participant|loop|alt|else|opt|par|class|classDef|flowchart|gantt|pie|stateDiagram|journey)\b/;
+          mermaidDef.operator = /[->]/;
+          mermaidDef.punctuation = /[[\]{}():;,]/;
+          mermaidDef.string = /{[^}]+}|"[^"]*"|'[^']*'/;
+          mermaidDef.function = /\b\w+\(/;
+          mermaidDef.arrow = /--?>|==?>|-.->|==>>/;
+          mermaidDef.entity = /&[a-z0-9]+;|\([^)]*\)/i;
+          // Use bracket notation to safely set the class-name property
+          mermaidDef['class-name'] = /\b[A-Z][a-zA-Z0-9_]*\b/;
+          
+          // Safely assign to languages object
+          Object.defineProperty(languages, 'mermaid', {
+            value: mermaidDef,
+            writable: true,
+            enumerable: true,
+            configurable: true
+          });
+          
+          console.log('Mermaid language definition created successfully');
+        }
+        break;
+      case 'ruby':
+        if (!languages.ruby) {
+          console.warn('Ruby language not found in Prism.js. Ruby syntax highlighting may not work properly.');
+          return false;
+        }
+        break;
+    }
+    
+    return languages[languageName] !== undefined;
+  } catch (error) {
+    console.error(`Failed to ensure language definition for '${languageName}':`, error);
+    return false;
+  }
+};
 
-// Ensure Ruby language is properly loaded (though it should be from the import)
-// This is a safety check in case the import doesn't work as expected
-if (!languages.ruby) {
-  console.warn('Ruby language not found in Prism.js. Ruby syntax highlighting may not work properly.');
-}
-
-const mermaidHighlighter = createPrismHighlighter('mermaid');
-const mermaidLanguageSupport = new LanguageSupport(markdown().language, [mermaidHighlighter]);
+// Create highlighter factory with better error handling
+const createSafeHighlighter = (language: string) => {
+  if (!ensureLanguageDefinition(language)) {
+    console.warn(`Cannot create highlighter for language '${language}' - language definition failed`);
+    return null;
+  }
+  
+  return createPrismHighlighter(language);
+};
 
 const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSupport, ViewPlugin<any>] => {
   switch (language?.toLowerCase()) {
@@ -123,10 +186,23 @@ const getLanguageExtension = (language?: string): LanguageSupport | [LanguageSup
     case 'css':
       return css();
     case 'ruby':
-    case 'rb':      // For Ruby, we use Prism.js highlighting via custom highlighter
-      return new LanguageSupport(markdown().language, [createPrismHighlighter('ruby')]);
-    case 'mermaid':
-      return [mermaidLanguageSupport, mermaidHighlighter];
+    case 'rb': {
+      // For Ruby, we use Prism.js highlighting via custom highlighter
+      const rubyHighlighter = createSafeHighlighter('ruby');
+      if (rubyHighlighter) {
+        return new LanguageSupport(markdown().language, [rubyHighlighter]);
+      }
+      // Fallback to Python if Ruby highlighter creation fails
+      return python();
+    }
+    case 'mermaid': {
+      const mermaidHighlighter = createSafeHighlighter('mermaid');
+      if (mermaidHighlighter) {
+        return new LanguageSupport(markdown().language, [mermaidHighlighter]);
+      }
+      // Fallback to markdown if mermaid highlighter creation fails
+      return markdown();
+    }
     case 'python':
       return python();
     default:
