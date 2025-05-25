@@ -128,13 +128,12 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
       <div>
         <FullscreenIcon />
       </div>
-    </div>
-    {artifactKind === 'image' ? (
+    </div>    {artifactKind === 'image' ? (
       <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
-        <div className="animate-pulse h-[200px] sm:h-[257px] bg-muted-foreground/20 w-full" />
+        <div className="animate-pulse h-[120px] sm:h-[257px] bg-muted-foreground/20 w-full" />
       </div>
     ) : (
-      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700">
+      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700 h-[120px] sm:h-[257px]">
         <InlineDocumentSkeleton />
       </div>
     )}
@@ -237,7 +236,7 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
     const containerClassName = cn(
-    'min-h-[200px] h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
+    'h-[120px] sm:h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-[60%] sm:w-full max-w-full',
     {
       'p-2 sm:p-4': document.kind === 'text' || document.kind === 'sheet' || document.kind === 'image',
       'p-0': document.kind === 'code' || document.kind === 'html',
