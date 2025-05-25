@@ -100,7 +100,7 @@ export function DocumentPreview({
   if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
 
   return (
-    <div className="relative w-full cursor-pointer">
+    <div className="relative w-full cursor-pointer max-w-full overflow-hidden">
       <HitboxLayer
         hitboxRef={hitboxRef}
         result={result}
@@ -238,7 +238,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(
-    'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
+    'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 max-w-full',
     {
       'p-4 sm:px-14 sm:py-16': document.kind === 'text',
       'p-0': document.kind === 'code',
@@ -259,7 +259,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
       {document.kind === 'text' ? (
         <Editor {...commonProps} onSaveContent={() => {}} />
       ) : document.kind === 'code' ? (
-        <div className="flex flex-1 relative w-full">
+        <div className="flex flex-1 relative w-full max-w-full overflow-hidden">
           <div className="absolute inset-0">
             <CodeEditor {...commonProps} onSaveContent={() => {}} />
           </div>

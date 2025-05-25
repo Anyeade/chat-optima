@@ -35,9 +35,10 @@ export function ImageEditor({
       ) : (
         <picture>
           <img
-            className={cn('w-full h-fit max-w-[800px]', {
+            className={cn('w-full h-fit max-w-full object-contain', {
               'p-0 md:p-20': !isInline,
             })}
+            style={{ maxWidth: '100%' }}
             src={`data:image/png;base64,${content}`}
             alt={title}
           />
