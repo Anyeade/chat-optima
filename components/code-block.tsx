@@ -22,7 +22,7 @@ export function CodeBlock({
 
   // ✅ Dynamically load highlight.js and theme CSS
   useEffect(() => {
-    if (!inline && codeRef.current) {
+    if (!inline && codeRef.current && children) {
       import('./highlight/highlight.min.js').then((hljs) => {
         const isDark = document.documentElement.classList.contains('dark');
         const themeUrl = isDark
@@ -40,7 +40,15 @@ export function CodeBlock({
           existingLink.setAttribute('href', themeUrl);
         }
 
-        hljs.highlightElement(codeRef.current!);
+        // Ensure content is set before highlighting
+        if (codeRef.current && codeRef.current.textContent) {
+          // Clear any existing highlighting
+          codeRef.current.removeAttribute('data-highlighted');
+          codeRef.current.className = codeRef.current.className.replace(/hljs[^\s]*/g, '').trim();
+          
+          // Apply highlighting
+          hljs.highlightElement(codeRef.current);
+        }
       });
     }
   }, [children, inline]);
