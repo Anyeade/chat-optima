@@ -253,28 +253,26 @@ const DocumentContent = ({ document }: { document: Document }) => {
     saveContent: () => {},
     suggestions: [],
   };
-
   return (
     <div className={containerClassName}>
       {document.kind === 'text' ? (
-        <div className="w-full overflow-hidden">
+        <div className="w-full max-w-full overflow-hidden">
           <Editor {...commonProps} onSaveContent={() => {}} />
         </div>
       ) : document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full max-w-full overflow-hidden">
-          <div className="absolute inset-0 overflow-x-auto">
+          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
             <CodeEditor {...commonProps} onSaveContent={() => {}} />
           </div>
         </div>
       ) : document.kind === 'sheet' ? (
         <div className="flex flex-1 relative w-full h-full p-2 sm:p-4 overflow-hidden">
-          <div className="absolute inset-2 sm:inset-4 overflow-auto">
+          <div className="absolute inset-2 sm:inset-4 overflow-y-auto overflow-x-hidden">
             <SpreadsheetEditor {...commonProps} />
           </div>
-        </div>
-      ) : document.kind === 'image' ? (
+        </div>      ) : document.kind === 'image' ? (
         <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-          <div className="max-w-full max-h-full overflow-auto">
+          <div className="max-w-full max-h-full overflow-y-auto overflow-x-hidden">
             <ImageEditor
               title={document.title}
               content={document.content ?? ''}
@@ -286,9 +284,33 @@ const DocumentContent = ({ document }: { document: Document }) => {
           </div>
         </div>
       ) : document.kind === 'html' ? (
-        <div className="w-full h-full overflow-x-auto">
+        <div className="w-full h-full">
           <iframe
-            srcDoc={document.content ?? ''}
+            srcDoc={`
+              <html>
+                <head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                  <style>
+                    body {
+                      margin: 0;
+                      padding: 0;
+                      width: 100%;
+                      height: 100%;
+                      overflow-x: hidden;
+                    }
+                    * {
+                      box-sizing: border-box;
+                      max-width: 100%;
+                    }
+                    img, video, iframe, table {
+                      max-width: 100%;
+                      height: auto;
+                    }
+                  </style>
+                </head>
+                <body>${document.content ?? ''}</body>
+              </html>
+            `}
             className="w-full h-full border-0 min-h-[200px]"
             sandbox="allow-scripts"
           />
