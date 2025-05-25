@@ -100,7 +100,7 @@ export function DocumentPreview({
   if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
 
   return (
-    <div className="relative w-full cursor-pointer max-w-full overflow-hidden">
+    <div className="relative w-full cursor-pointer max-w-full overflow-hidden flex flex-col">
       <HitboxLayer
         hitboxRef={hitboxRef}
         result={result}
@@ -221,7 +221,7 @@ const PureDocumentHeader = ({
           <FileIcon />
         )}
       </div>
-      <div className="-translate-y-1 sm:translate-y-0 font-medium text-sm sm:text-base truncate">{title}</div>
+      <div className="font-medium text-sm sm:text-base truncate max-w-[calc(100%-40px)]">{title}</div>
     </div>
     <div className="w-6 sm:w-8 flex-shrink-0" />
   </div>
@@ -238,9 +238,9 @@ const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(
-    'min-h-[200px] h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
+    'min-h-[200px] h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
     {
-      'p-2 sm:p-4 sm:px-14 sm:py-16': document.kind === 'text',
+      'p-2 sm:p-4 sm:px-8 sm:py-12': document.kind === 'text',
       'p-0': document.kind === 'code',
     },
   );
@@ -257,10 +257,12 @@ const DocumentContent = ({ document }: { document: Document }) => {
   return (
     <div className={containerClassName}>
       {document.kind === 'text' ? (
-        <Editor {...commonProps} onSaveContent={() => {}} />
+        <div className="w-full overflow-hidden">
+          <Editor {...commonProps} onSaveContent={() => {}} />
+        </div>
       ) : document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full max-w-full overflow-hidden">
-          <div className="absolute inset-0">
+          <div className="absolute inset-0 overflow-x-auto">
             <CodeEditor {...commonProps} onSaveContent={() => {}} />
           </div>
         </div>
@@ -282,7 +284,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
           />
         </div>
       ) : document.kind === 'html' ? (
-        <div className="w-full h-full">
+        <div className="w-full h-full overflow-x-auto">
           <iframe
             srcDoc={document.content ?? ''}
             className="w-full h-full border-0 min-h-[200px]"
