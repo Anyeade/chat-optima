@@ -234,3 +234,25 @@
 .code-block-language-label {
     @apply bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 rounded;
 }
+
+/* Mobile-specific code block styling for 30-character breaking */
+.mobile-code-break {
+    /* Default behavior for larger screens */
+    word-break: break-all;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+@media (max-width: 640px) {
+    .mobile-code-break {
+        /* Force line breaking at approximately 30 characters on mobile */
+        max-width: 30ch;
+        word-break: break-all;
+        overflow-wrap: anywhere;
+        white-space: pre-wrap;
+        hyphens: auto;
+        /* Ensure text doesn't overflow horizontally */
+        overflow-wrap: break-word;
+        word-wrap: break-word;
+    }
+}

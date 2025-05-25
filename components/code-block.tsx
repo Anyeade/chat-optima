@@ -78,7 +78,7 @@ export function CodeBlock({
         >
           <code
             ref={codeRef}
-            className={`whitespace-pre-wrap break-words ${className}`}
+            className={`whitespace-pre-wrap break-words max-w-full sm:max-w-none mobile-code-break ${className}`}
           >
             {children}
           </code>
