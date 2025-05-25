@@ -130,11 +130,11 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
       </div>
     </div>
     {artifactKind === 'image' ? (
-      <div className="overflow-y-scroll border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
+      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
         <div className="animate-pulse h-[200px] sm:h-[257px] bg-muted-foreground/20 w-full" />
       </div>
     ) : (
-      <div className="overflow-y-scroll border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700">
+      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700">
         <InlineDocumentSkeleton />
       </div>
     )}
@@ -208,8 +208,8 @@ const PureDocumentHeader = ({
   kind: ArtifactKind;
   isStreaming: boolean;
 }) => (
-  <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700">
-    <div className="flex flex-row items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+  <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700 overflow-hidden">
+    <div className="flex flex-row items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
       <div className="text-muted-foreground flex-shrink-0">
         {isStreaming ? (
           <div className="animate-spin">
@@ -267,21 +267,23 @@ const DocumentContent = ({ document }: { document: Document }) => {
           </div>
         </div>
       ) : document.kind === 'sheet' ? (
-        <div className="flex flex-1 relative w-full h-full p-2 sm:p-4">
-          <div className="absolute inset-2 sm:inset-4">
+        <div className="flex flex-1 relative w-full h-full p-2 sm:p-4 overflow-hidden">
+          <div className="absolute inset-2 sm:inset-4 overflow-auto">
             <SpreadsheetEditor {...commonProps} />
           </div>
         </div>
       ) : document.kind === 'image' ? (
-        <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
-          <ImageEditor
-            title={document.title}
-            content={document.content ?? ''}
-            isCurrentVersion={true}
-            currentVersionIndex={0}
-            status={artifact.status}
-            isInline={true}
-          />
+        <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden">
+          <div className="max-w-full max-h-full overflow-auto">
+            <ImageEditor
+              title={document.title}
+              content={document.content ?? ''}
+              isCurrentVersion={true}
+              currentVersionIndex={0}
+              status={artifact.status}
+              isInline={true}
+            />
+          </div>
         </div>
       ) : document.kind === 'html' ? (
         <div className="w-full h-full overflow-x-auto">
