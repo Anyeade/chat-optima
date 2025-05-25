@@ -98,9 +98,8 @@ export function DocumentPreview({
       : null;
 
   if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
-
   return (
-    <div className="relative w-full cursor-pointer max-w-full overflow-hidden flex flex-col">
+    <div className="relative w-[60%] sm:w-full cursor-pointer max-w-full overflow-hidden flex flex-col mx-auto">
       <HitboxLayer
         hitboxRef={hitboxRef}
         result={result}
@@ -117,7 +116,7 @@ export function DocumentPreview({
 }
 
 const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
-  <div className="w-full">
+  <div className="w-[60%] sm:w-full mx-auto">
     <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[53px] sm:h-[57px] dark:border-zinc-700 border-b-0">
       <div className="flex flex-row items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <div className="text-muted-foreground">
@@ -128,7 +127,7 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
       <div>
         <FullscreenIcon />
       </div>
-    </div>    {artifactKind === 'image' ? (
+    </div>{artifactKind === 'image' ? (
       <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
         <div className="animate-pulse h-[120px] sm:h-[257px] bg-muted-foreground/20 w-full" />
       </div>
@@ -236,7 +235,7 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
     const containerClassName = cn(
-    'h-[120px] sm:h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-[60%] sm:w-full max-w-full',
+    'h-[120px] sm:h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
     {
       'p-2 sm:p-4': document.kind === 'text' || document.kind === 'sheet' || document.kind === 'image',
       'p-0': document.kind === 'code' || document.kind === 'html',
@@ -250,11 +249,12 @@ const DocumentContent = ({ document }: { document: Document }) => {
     saveContent: () => {},
     suggestions: [],
   };
-  
-  return (
+    return (
     <div className={containerClassName}>      {document.kind === 'text' ? (
-        <div className="w-full max-w-full overflow-hidden break-words">
-          <Editor {...commonProps} onSaveContent={() => {}} />
+        <div className="w-auto max-w-full overflow-hidden break-words flex justify-center">
+          <div className="w-full">
+            <Editor {...commonProps} onSaveContent={() => {}} />
+          </div>
         </div>
       ): document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full max-w-full overflow-hidden">

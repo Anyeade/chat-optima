@@ -129,7 +129,8 @@
     word-wrap: break-word;
     overflow-wrap: break-word;
     white-space: pre-wrap;
-    max-width: 100%;
+    max-width: 100% !important;
+    width: 100% !important;
 }
 
 .cm-editor,
