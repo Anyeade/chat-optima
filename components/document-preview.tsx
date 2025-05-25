@@ -236,11 +236,10 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
-  
-  const containerClassName = cn(
+    const containerClassName = cn(
     'min-h-[200px] h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
     {
-      'p-2 sm:p-4': document.kind === 'text',
+      'p-2 sm:p-4': document.kind === 'text' || document.kind === 'sheet' || document.kind === 'image',
       'p-0': document.kind === 'code' || document.kind === 'html',
     },
   );
@@ -254,20 +253,18 @@ const DocumentContent = ({ document }: { document: Document }) => {
   };
   
   return (
-    <div className={containerClassName}>
-      {document.kind === 'text' ? (
-        <div className="w-full max-w-full overflow-hidden">
+    <div className={containerClassName}>      {document.kind === 'text' ? (
+        <div className="w-full max-w-full overflow-hidden break-words">
           <Editor {...commonProps} onSaveContent={() => {}} />
         </div>
-      ) : document.kind === 'code' ? (
+      ): document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full max-w-full overflow-hidden">
           <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden">
             <CodeEditor {...commonProps} onSaveContent={() => {}} />
           </div>
-        </div>
-      ) : document.kind === 'sheet' ? (
+        </div>      ) : document.kind === 'sheet' ? (
         <div className="flex flex-1 relative w-full h-full overflow-hidden">
-          <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden p-2 sm:p-4">
+          <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden">
             <SpreadsheetEditor {...commonProps} />
           </div>
         </div>
@@ -290,14 +287,15 @@ const DocumentContent = ({ document }: { document: Document }) => {
             srcDoc={`
               <html>
                 <head>
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-                  <style>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">                  <style>
                     body {
                       margin: 0;
                       padding: 0;
                       width: 100%;
                       height: 100%;
                       overflow-x: hidden;
+                      word-break: break-word;
+                      word-wrap: break-word;
                     }
                     * {
                       box-sizing: border-box;
@@ -306,6 +304,11 @@ const DocumentContent = ({ document }: { document: Document }) => {
                     img, video, iframe, table {
                       max-width: 100%;
                       height: auto;
+                    }
+                    pre, code {
+                      white-space: pre-wrap;
+                      word-wrap: break-word;
+                      overflow-wrap: break-word;
                     }
                   </style>
                 </head>
