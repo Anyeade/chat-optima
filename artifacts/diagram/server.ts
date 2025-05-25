@@ -1,5 +1,6 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
+import { diagramPrompt } from '@/lib/ai/prompts';
 import { streamObject } from 'ai';
 import { z } from 'zod';
 
@@ -10,7 +11,7 @@ export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
-      system: 'Create a Mermaid diagram that matches the user\'s request. Use appropriate diagram syntax based on the type needed (flowchart, sequence, etc).',
+      system: diagramPrompt,
       prompt: title,
       schema: z.object({
         diagram: z.string(),
@@ -42,7 +43,10 @@ export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
-      system: `Update the existing Mermaid diagram. Preserve existing structure where appropriate.
+      system: `${diagramPrompt}
+
+Update the existing Mermaid diagram based on the user's request. Preserve existing structure where appropriate and maintain the same high-quality standards.
+
 Current diagram:
 ${document.content}`,
       prompt: description,

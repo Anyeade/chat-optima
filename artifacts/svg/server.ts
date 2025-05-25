@@ -1,5 +1,6 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
+import { svgPrompt } from '@/lib/ai/prompts';
 import { streamObject } from 'ai';
 import { z } from 'zod';
 
@@ -10,7 +11,7 @@ export const svgDocumentHandler = createDocumentHandler<'svg'>({
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
-      system: 'Create an SVG graphic that matches the user\'s request. Use appropriate viewBox and dimensions.',
+      system: svgPrompt,
       prompt: title,
       schema: z.object({
         svg: z.string(),
@@ -42,7 +43,10 @@ export const svgDocumentHandler = createDocumentHandler<'svg'>({
 
     const { fullStream } = streamObject({
       model: myProvider.languageModel('artifact-model'),
-      system: `Update the existing SVG graphic. Preserve existing structure where appropriate.
+      system: `${svgPrompt}
+
+Update the existing SVG graphic based on the user's request. Preserve existing structure where appropriate and maintain the same high-quality standards.
+
 Current SVG:
 ${document.content}`,
       prompt: description,
