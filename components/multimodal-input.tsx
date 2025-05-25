@@ -106,6 +106,54 @@ function PureMultimodalInput({
     adjustHeight();
   };
 
+  const handlePaste = useCallback(
+    async (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
+      const items = Array.from(event.clipboardData.items);
+      const imageItems = items.filter(item => item.type.startsWith('image/'));
+      
+      if (imageItems.length > 0) {
+        event.preventDefault();
+        
+        const files = imageItems.map(item => {
+          const file = item.getAsFile();
+          if (file) {
+            // Generate a filename with timestamp for pasted images
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const extension = file.type.split('/')[1] || 'png';
+            const filename = `pasted-image-${timestamp}.${extension}`;
+            
+            // Create a new file with a proper filename
+            return new File([file], filename, { type: file.type });
+          }
+          return null;
+        }).filter(file => file !== null) as File[];
+
+        if (files.length > 0) {
+          setUploadQueue(files.map((file) => file.name));
+
+          try {
+            const uploadPromises = files.map((file) => uploadFile(file));
+            const uploadedAttachments = await Promise.all(uploadPromises);
+            const successfullyUploadedAttachments = uploadedAttachments.filter(
+              (attachment) => attachment !== undefined,
+            );
+
+            setAttachments((currentAttachments) => [
+              ...currentAttachments,
+              ...successfullyUploadedAttachments,
+            ]);
+          } catch (error) {
+            console.error('Error uploading pasted images!', error);
+            toast.error('Failed to upload pasted images, please try again!');
+          } finally {
+            setUploadQueue([]);
+          }
+        }
+      }
+    },
+    [setAttachments],
+  );
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<Array<string>>([]);
 
@@ -275,6 +323,7 @@ function PureMultimodalInput({
         placeholder="Send a message..."
         value={input}
         onChange={handleInput}
+        onPaste={handlePaste}
         className={cx(
           'min-h-[24px] max-h-[calc(75dvh)] overflow-hidden resize-none rounded-2xl !text-base bg-muted pb-10 dark:border-zinc-700',
           className,
