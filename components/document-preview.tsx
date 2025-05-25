@@ -2,16 +2,16 @@
 
 import {
   memo,
-  type MouseEvent,
+  MouseEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
 } from 'react';
-import type { ArtifactKind, UIArtifact } from './artifact';
+import { ArtifactKind, UIArtifact } from './artifact';
 import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
-import type { Document } from '@/lib/db/schema';
+import { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
 import { Editor } from './text-editor';
@@ -95,9 +95,12 @@ export function DocumentPreview({
           createdAt: new Date(),
           userId: 'noop',
         }
-      : null;  if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
+      : null;
+
+  if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
+
   return (
-    <div className="relative w-[60%] sm:w-full cursor-pointer flex flex-col ml-0 mr-auto">
+    <div className="relative w-full cursor-pointer">
       <HitboxLayer
         hitboxRef={hitboxRef}
         result={result}
@@ -114,23 +117,24 @@ export function DocumentPreview({
 }
 
 const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
-  <div className="w-[60%] sm:w-full ml-0 mr-auto">
-    <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[53px] sm:h-[57px] dark:border-zinc-700 border-b-0">
-      <div className="flex flex-row items-center gap-2 sm:gap-3 min-w-0 flex-1">
+  <div className="w-full">
+    <div className="p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[57px] dark:border-zinc-700 border-b-0">
+      <div className="flex flex-row items-center gap-3">
         <div className="text-muted-foreground">
           <div className="animate-pulse rounded-md size-4 bg-muted-foreground/20" />
         </div>
-        <div className="animate-pulse rounded-lg h-3 sm:h-4 bg-muted-foreground/20 w-20 sm:w-24" />
+        <div className="animate-pulse rounded-lg h-4 bg-muted-foreground/20 w-24" />
       </div>
       <div>
         <FullscreenIcon />
       </div>
-    </div>{artifactKind === 'image' ? (
-      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
-        <div className="animate-pulse h-[120px] sm:h-[257px] bg-muted-foreground/20 w-full" />
+    </div>
+    {artifactKind === 'image' ? (
+      <div className="overflow-y-scroll border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
+        <div className="animate-pulse h-[257px] bg-muted-foreground/20 w-full" />
       </div>
     ) : (
-      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700 h-[120px] sm:h-[257px]">
+      <div className="overflow-y-scroll border rounded-b-2xl p-8 pt-4 bg-muted border-t-0 dark:border-zinc-700">
         <InlineDocumentSkeleton />
       </div>
     )}
@@ -154,13 +158,13 @@ const PureHitboxLayer = ({
 
       setArtifact((artifact) =>
         artifact.status === 'streaming'
-          ? { ...artifact, isVisible: !artifact.isVisible }
+          ? { ...artifact, isVisible: true }
           : {
               ...artifact,
               title: result.title,
               documentId: result.id,
               kind: result.kind,
-              isVisible: !artifact.isVisible,
+              isVisible: true,
               boundingBox: {
                 left: boundingBox.x,
                 top: boundingBox.y,
@@ -181,8 +185,8 @@ const PureHitboxLayer = ({
       role="presentation"
       aria-hidden="true"
     >
-      <div className="w-full p-3 sm:p-4 flex justify-end items-center">
-        <div className="absolute right-[7px] sm:right-[9px] top-[11px] sm:top-[13px] p-1.5 sm:p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
+      <div className="w-full p-4 flex justify-end items-center">
+        <div className="absolute right-[9px] top-[13px] p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
           <FullscreenIcon />
         </div>
       </div>
@@ -204,9 +208,9 @@ const PureDocumentHeader = ({
   kind: ArtifactKind;
   isStreaming: boolean;
 }) => (
-  <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700 overflow-hidden">
-    <div className="flex flex-row items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
-      <div className="text-muted-foreground flex-shrink-0">
+  <div className="p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700">
+    <div className="flex flex-row items-start sm:items-center gap-3">
+      <div className="text-muted-foreground">
         {isStreaming ? (
           <div className="animate-spin">
             <LoaderIcon />
@@ -217,9 +221,9 @@ const PureDocumentHeader = ({
           <FileIcon />
         )}
       </div>
-      <div className="font-medium text-sm sm:text-base truncate max-w-[calc(100%-40px)]">{title}</div>
+      <div className="-translate-y-1 sm:translate-y-0 font-medium">{title}</div>
     </div>
-    <div className="w-6 sm:w-8 flex-shrink-0" />
+    <div className="w-8" />
   </div>
 );
 
@@ -232,69 +236,67 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
-    const containerClassName = cn(
-    'h-[120px] sm:h-[257px] border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full overflow-hidden',
+
+  const containerClassName = cn(
+    'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700',
     {
-      'p-2 sm:p-4': document.kind === 'text' || document.kind === 'sheet' || document.kind === 'image',
+      'p-4 sm:px-14 sm:py-16': document.kind === 'text',
       'p-0': document.kind === 'code' || document.kind === 'html',
     },
   );
 
-  const commonProps = {    content: document.content ?? '',
+  const commonProps = {
+    content: document.content ?? '',
     isCurrentVersion: true,
     currentVersionIndex: 0,
     status: artifact.status,
     saveContent: () => {},
     suggestions: [],
-  };    return (
-    <div className={containerClassName}>      {document.kind === 'text' ? (
-        <div className="h-full w-full relative">
-          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
-            <div className="min-w-0 w-full break-words whitespace-normal">
-              <Editor {...commonProps} onSaveContent={() => {}} />
-            </div>
-          </div>
-        </div>
-      ): document.kind === 'code' ? (
-        <div className="flex flex-1 relative w-full max-w-full overflow-hidden">
-          <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden">
+  };
+
+  return (
+    <div className={containerClassName}>
+      {document.kind === 'text' ? (
+        <Editor {...commonProps} onSaveContent={() => {}} />
+      ) : document.kind === 'code' ? (
+        <div className="flex flex-1 relative w-full">
+          <div className="absolute inset-0">
             <CodeEditor {...commonProps} onSaveContent={() => {}} />
           </div>
-        </div>      ) : document.kind === 'sheet' ? (
-        <div className="flex flex-1 relative w-full h-full overflow-hidden">
-          <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden">
+        </div>
+      ) : document.kind === 'sheet' ? (
+        <div className="flex flex-1 relative size-full p-4">
+          <div className="absolute inset-0">
             <SpreadsheetEditor {...commonProps} />
           </div>
         </div>
       ) : document.kind === 'image' ? (
-        <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-          <div className="w-full max-w-full max-h-full overflow-y-auto overflow-x-hidden">
-            <ImageEditor
-              title={document.title}
-              content={document.content ?? ''}
-              isCurrentVersion={true}
-              currentVersionIndex={0}
-              status={artifact.status}
-              isInline={true}
-            />
-          </div>
-        </div>      ) : document.kind === 'html' ? (
-        <div className="w-full h-full flex justify-center items-center overflow-hidden">
-          <div className="w-[60%] sm:w-full h-full">
-            <iframe
-              srcDoc={`
-                <html>
-                  <head>
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">                  <style>
-                      body {
-                        margin: 0;
-                        padding: 0;
-                        width: 100%;
-                        height: 100%;
-                        overflow-x: hidden;
-                        word-break: break-word;
-                        word-wrap: break-word;
-                      }
+        <ImageEditor
+          title={document.title}
+          content={document.content ?? ''}
+          isCurrentVersion={true}
+          currentVersionIndex={0}
+          status={artifact.status}
+          isInline={true}
+        />
+      ) : document.kind === 'html' ? (
+        <div className="w-full h-full flex justify-center items-center overflow-hidden p-0">
+          <iframe
+            srcDoc={`
+              <html>
+                <head>
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                  <style>
+                    body {
+                      margin: 0;
+                      padding: 8px;
+                      width: 100%;
+                      height: 100vh;
+                      overflow-x: hidden;
+                      word-break: break-word;
+                      word-wrap: break-word;
+                      font-family: system-ui, -apple-system, sans-serif;
+                    }
                     * {
                       box-sizing: border-box;
                       max-width: 100%;
@@ -311,11 +313,11 @@ const DocumentContent = ({ document }: { document: Document }) => {
                   </style>
                 </head>
                 <body>${document.content ?? ''}</body>
-              </html>            `}
-              className="w-full h-full border-0 min-h-[120px] sm:min-h-[200px]"
-              sandbox="allow-scripts"
-            />
-          </div>
+              </html>
+            `}
+            className="w-full h-full border-0"
+            sandbox="allow-scripts allow-same-origin"
+          />
         </div>
       ) : null}
     </div>
