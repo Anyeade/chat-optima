@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { CheckIcon, CopyIcon } from './icons';
+import { useEffect, useRef, useState } from 'react';
+import { CopyIcon, CheckIcon } from './icons'; // ✅ Imported here
 
 interface CodeBlockProps {
   node: any;
@@ -17,90 +17,72 @@ export function CodeBlock({
   children,
   ...props
 }: CodeBlockProps) {
-  const [isCopied, setIsCopied] = useState(false);
   const codeRef = useRef<HTMLElement>(null);
+  const [copied, setCopied] = useState(false);
 
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(children);
-      setIsCopied(true);
-      setTimeout(() => setIsCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy text: ', err);
-    }
-  };
-
+  // ✅ Dynamically load highlight.js and theme CSS
   useEffect(() => {
-    if (codeRef.current && !inline) {
-      // Load highlight.js dynamically
+    if (!inline && codeRef.current) {
       import('./highlight/highlight.min.js').then((hljs) => {
-        // Load the theme CSS dynamically based on current theme
         const isDark = document.documentElement.classList.contains('dark');
-        const themeUrl = isDark 
+        const themeUrl = isDark
           ? '/components/highlight/styles/github-dark.min.css'
           : '/components/highlight/styles/github.min.css';
-        
-        // Add the CSS if it's not already loaded
-        if (!document.querySelector(`link[href="${themeUrl}"]`)) {
+
+        const existingLink = document.getElementById('hljs-theme');
+        if (!existingLink) {
           const link = document.createElement('link');
+          link.id = 'hljs-theme';
           link.rel = 'stylesheet';
           link.href = themeUrl;
           document.head.appendChild(link);
+        } else {
+          existingLink.setAttribute('href', themeUrl);
         }
 
-        // Apply syntax highlighting
-        if (codeRef.current) {
-          hljs.default.highlightElement(codeRef.current);
-        }
-      }).catch((error) => {
-        console.error('Failed to load highlight.js:', error);
+        hljs.highlightElement(codeRef.current!);
       });
     }
-  }, [inline, children]);
+  }, [children, inline]);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(children);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Copy failed', err);
+    }
+  };
 
   if (!inline) {
-    // Extract language from className (e.g., "language-javascript" -> "javascript")
-    const language = className?.replace('language-', '') || '';
-
     return (
-      <div className="not-prose w-full overflow-hidden">
-        <div className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-t-xl border border-b-0 border-zinc-200 dark:border-zinc-700">
-          {language && (
-            <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium uppercase">
-              {language}
+      <div className="not-prose relative flex flex-col">
+        <button
+          onClick={handleCopy}
+          className="absolute top-2 right-2 p-2 rounded-md bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 transition"
+          aria-label="Copy code"
+        >
+          {copied ? (
+            <CheckIcon className="text-green-500" />
+          ) : (
+            <span className="text-gray-600 dark:text-gray-300">
+              <CopyIcon />
             </span>
           )}
-          <button
-            onClick={copyToClipboard}
-            className="flex items-center gap-2 px-2 py-1 text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded transition-colors code-block-copy-button"
-            aria-label="Copy code"
+        </button>
+
+        <pre
+          {...props}
+          className="text-sm w-full overflow-x-auto dark:bg-zinc-900 p-4 border border-zinc-200 dark:border-zinc-700 rounded-xl dark:text-zinc-50 text-zinc-900"
+        >
+          <code
+            ref={codeRef}
+            className={`whitespace-pre-wrap break-words ${className}`}
           >
-            {isCopied ? (
-              <>
-                <CheckIcon size={12} />
-                Copied
-              </>
-            ) : (
-              <>
-                <CopyIcon size={12} />
-                Copy
-              </>
-            )}
-          </button>
-        </div>
-        <div className="relative w-full">
-          <pre
-            {...props}
-            className="text-sm overflow-x-auto dark:bg-zinc-900 bg-zinc-50 p-4 border border-t-0 border-zinc-200 dark:border-zinc-700 rounded-b-xl dark:text-zinc-50 text-zinc-900"
-          >
-            <code 
-              ref={codeRef}
-              className={`${className} block w-fit min-w-full whitespace-pre`}
-            >
-              {children}
-            </code>
-          </pre>
-        </div>
+            {children}
+          </code>
+        </pre>
       </div>
     );
   } else {

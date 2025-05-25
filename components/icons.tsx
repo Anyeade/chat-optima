@@ -808,6 +808,7 @@ export const CheckIcon = ({ size = 16, className = "" }: { size?: number, classN
     strokeLinejoin="round"
     style={{ color: 'currentcolor' }}
     className={className}
+    
   >
     <path
       fillRule="evenodd"
