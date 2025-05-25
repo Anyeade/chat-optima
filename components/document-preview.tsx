@@ -236,23 +236,23 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
-
+  
   const containerClassName = cn(
     'min-h-[200px] h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
     {
-      'p-2 sm:p-4 sm:px-8 sm:py-12': document.kind === 'text',
-      'p-0': document.kind === 'code',
+      'p-2 sm:p-4': document.kind === 'text',
+      'p-0': document.kind === 'code' || document.kind === 'html',
     },
   );
 
-  const commonProps = {
-    content: document.content ?? '',
+  const commonProps = {    content: document.content ?? '',
     isCurrentVersion: true,
     currentVersionIndex: 0,
     status: artifact.status,
     saveContent: () => {},
     suggestions: [],
   };
+  
   return (
     <div className={containerClassName}>
       {document.kind === 'text' ? (
@@ -261,18 +261,19 @@ const DocumentContent = ({ document }: { document: Document }) => {
         </div>
       ) : document.kind === 'code' ? (
         <div className="flex flex-1 relative w-full max-w-full overflow-hidden">
-          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+          <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden">
             <CodeEditor {...commonProps} onSaveContent={() => {}} />
           </div>
         </div>
       ) : document.kind === 'sheet' ? (
-        <div className="flex flex-1 relative w-full h-full p-2 sm:p-4 overflow-hidden">
-          <div className="absolute inset-2 sm:inset-4 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-1 relative w-full h-full overflow-hidden">
+          <div className="absolute inset-0 w-full overflow-y-auto overflow-x-hidden p-2 sm:p-4">
             <SpreadsheetEditor {...commonProps} />
           </div>
-        </div>      ) : document.kind === 'image' ? (
+        </div>
+      ) : document.kind === 'image' ? (
         <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden">
-          <div className="max-w-full max-h-full overflow-y-auto overflow-x-hidden">
+          <div className="w-full max-w-full max-h-full overflow-y-auto overflow-x-hidden">
             <ImageEditor
               title={document.title}
               content={document.content ?? ''}
@@ -284,7 +285,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
           </div>
         </div>
       ) : document.kind === 'html' ? (
-        <div className="w-full h-full">
+        <div className="w-full h-full overflow-hidden">
           <iframe
             srcDoc={`
               <html>
