@@ -95,11 +95,9 @@ export function DocumentPreview({
           createdAt: new Date(),
           userId: 'noop',
         }
-      : null;
-
-  if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
+      : null;  if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
   return (
-    <div className="relative w-[60%] sm:w-full cursor-pointer max-w-full overflow-hidden flex flex-col mx-auto">
+    <div className="relative w-[60%] sm:w-full cursor-pointer flex flex-col ml-0 mr-auto">
       <HitboxLayer
         hitboxRef={hitboxRef}
         result={result}
@@ -116,7 +114,7 @@ export function DocumentPreview({
 }
 
 const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
-  <div className="w-[60%] sm:w-full mx-auto">
+  <div className="w-[60%] sm:w-full ml-0 mr-auto">
     <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[53px] sm:h-[57px] dark:border-zinc-700 border-b-0">
       <div className="flex flex-row items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <div className="text-muted-foreground">
@@ -235,7 +233,7 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
     const containerClassName = cn(
-    'h-[120px] sm:h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
+    'h-[120px] sm:h-[257px] border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full overflow-hidden',
     {
       'p-2 sm:p-4': document.kind === 'text' || document.kind === 'sheet' || document.kind === 'image',
       'p-0': document.kind === 'code' || document.kind === 'html',
@@ -248,12 +246,13 @@ const DocumentContent = ({ document }: { document: Document }) => {
     status: artifact.status,
     saveContent: () => {},
     suggestions: [],
-  };
-    return (
+  };    return (
     <div className={containerClassName}>      {document.kind === 'text' ? (
-        <div className="w-auto max-w-full overflow-hidden break-words flex justify-center">
-          <div className="w-full">
-            <Editor {...commonProps} onSaveContent={() => {}} />
+        <div className="h-full w-full relative">
+          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden">
+            <div className="min-w-0 w-full break-words whitespace-normal">
+              <Editor {...commonProps} onSaveContent={() => {}} />
+            </div>
           </div>
         </div>
       ): document.kind === 'code' ? (
