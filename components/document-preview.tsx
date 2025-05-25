@@ -279,23 +279,23 @@ const DocumentContent = ({ document }: { document: Document }) => {
               isInline={true}
             />
           </div>
-        </div>
-      ) : document.kind === 'html' ? (
-        <div className="w-full h-full overflow-hidden">
-          <iframe
-            srcDoc={`
-              <html>
-                <head>
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">                  <style>
-                    body {
-                      margin: 0;
-                      padding: 0;
-                      width: 100%;
-                      height: 100%;
-                      overflow-x: hidden;
-                      word-break: break-word;
-                      word-wrap: break-word;
-                    }
+        </div>      ) : document.kind === 'html' ? (
+        <div className="w-full h-full flex justify-center items-center overflow-hidden">
+          <div className="w-[60%] sm:w-full h-full">
+            <iframe
+              srcDoc={`
+                <html>
+                  <head>
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">                  <style>
+                      body {
+                        margin: 0;
+                        padding: 0;
+                        width: 100%;
+                        height: 100%;
+                        overflow-x: hidden;
+                        word-break: break-word;
+                        word-wrap: break-word;
+                      }
                     * {
                       box-sizing: border-box;
                       max-width: 100%;
@@ -312,11 +312,11 @@ const DocumentContent = ({ document }: { document: Document }) => {
                   </style>
                 </head>
                 <body>${document.content ?? ''}</body>
-              </html>
-            `}
-            className="w-full h-full border-0 min-h-[200px]"
-            sandbox="allow-scripts"
-          />
+              </html>            `}
+              className="w-full h-full border-0 min-h-[120px] sm:min-h-[200px]"
+              sandbox="allow-scripts"
+            />
+          </div>
         </div>
       ) : null}
     </div>
