@@ -74,12 +74,11 @@ const PurePreviewMessage = ({
             className={cn('flex flex-col gap-4 w-full', {
               'min-h-96': message.role === 'assistant' && requiresScrollPadding,
             })}
-          >
-            {message.experimental_attachments &&
+          >            {message.experimental_attachments &&
               message.experimental_attachments.length > 0 && (
                 <div
                   data-testid={`message-attachments`}
-                  className="flex flex-row justify-end gap-2"
+                  className="flex flex-row justify-end gap-2 overflow-x-auto"
                 >
                   {message.experimental_attachments.map((attachment) => (
                     <PreviewAttachment

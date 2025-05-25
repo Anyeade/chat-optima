@@ -118,12 +118,12 @@ export function DocumentPreview({
 
 const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
   <div className="w-full">
-    <div className="p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[57px] dark:border-zinc-700 border-b-0">
-      <div className="flex flex-row items-center gap-3">
+    <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[53px] sm:h-[57px] dark:border-zinc-700 border-b-0">
+      <div className="flex flex-row items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <div className="text-muted-foreground">
           <div className="animate-pulse rounded-md size-4 bg-muted-foreground/20" />
         </div>
-        <div className="animate-pulse rounded-lg h-4 bg-muted-foreground/20 w-24" />
+        <div className="animate-pulse rounded-lg h-3 sm:h-4 bg-muted-foreground/20 w-20 sm:w-24" />
       </div>
       <div>
         <FullscreenIcon />
@@ -131,10 +131,10 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
     </div>
     {artifactKind === 'image' ? (
       <div className="overflow-y-scroll border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
-        <div className="animate-pulse h-[257px] bg-muted-foreground/20 w-full" />
+        <div className="animate-pulse h-[200px] sm:h-[257px] bg-muted-foreground/20 w-full" />
       </div>
     ) : (
-      <div className="overflow-y-scroll border rounded-b-2xl p-8 pt-4 bg-muted border-t-0 dark:border-zinc-700">
+      <div className="overflow-y-scroll border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700">
         <InlineDocumentSkeleton />
       </div>
     )}
@@ -185,8 +185,8 @@ const PureHitboxLayer = ({
       role="presentation"
       aria-hidden="true"
     >
-      <div className="w-full p-4 flex justify-end items-center">
-        <div className="absolute right-[9px] top-[13px] p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
+      <div className="w-full p-3 sm:p-4 flex justify-end items-center">
+        <div className="absolute right-[7px] sm:right-[9px] top-[11px] sm:top-[13px] p-1.5 sm:p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
           <FullscreenIcon />
         </div>
       </div>
@@ -208,9 +208,9 @@ const PureDocumentHeader = ({
   kind: ArtifactKind;
   isStreaming: boolean;
 }) => (
-  <div className="p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700">
-    <div className="flex flex-row items-start sm:items-center gap-3">
-      <div className="text-muted-foreground">
+  <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700">
+    <div className="flex flex-row items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1">
+      <div className="text-muted-foreground flex-shrink-0">
         {isStreaming ? (
           <div className="animate-spin">
             <LoaderIcon />
@@ -221,9 +221,9 @@ const PureDocumentHeader = ({
           <FileIcon />
         )}
       </div>
-      <div className="-translate-y-1 sm:translate-y-0 font-medium">{title}</div>
+      <div className="-translate-y-1 sm:translate-y-0 font-medium text-sm sm:text-base truncate">{title}</div>
     </div>
-    <div className="w-8" />
+    <div className="w-6 sm:w-8 flex-shrink-0" />
   </div>
 );
 
@@ -238,9 +238,9 @@ const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(
-    'h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 max-w-full',
+    'min-h-[200px] h-[257px] overflow-y-scroll border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
     {
-      'p-4 sm:px-14 sm:py-16': document.kind === 'text',
+      'p-2 sm:p-4 sm:px-14 sm:py-16': document.kind === 'text',
       'p-0': document.kind === 'code',
     },
   );
@@ -265,20 +265,22 @@ const DocumentContent = ({ document }: { document: Document }) => {
           </div>
         </div>
       ) : document.kind === 'sheet' ? (
-        <div className="flex flex-1 relative size-full p-4">
-          <div className="absolute inset-0">
+        <div className="flex flex-1 relative w-full h-full p-2 sm:p-4">
+          <div className="absolute inset-2 sm:inset-4">
             <SpreadsheetEditor {...commonProps} />
           </div>
         </div>
       ) : document.kind === 'image' ? (
-        <ImageEditor
-          title={document.title}
-          content={document.content ?? ''}
-          isCurrentVersion={true}
-          currentVersionIndex={0}
-          status={artifact.status}
-          isInline={true}
-        />
+        <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
+          <ImageEditor
+            title={document.title}
+            content={document.content ?? ''}
+            isCurrentVersion={true}
+            currentVersionIndex={0}
+            status={artifact.status}
+            isInline={true}
+          />
+        </div>
       ) : document.kind === 'html' ? (
         <div className="w-full h-full">
           <iframe
