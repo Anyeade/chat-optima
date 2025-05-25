@@ -100,7 +100,7 @@ export function DocumentPreview({
   if (!document) return <LoadingSkeleton artifactKind={artifact.kind} />;
 
   return (
-    <div className="relative w-full cursor-pointer max-w-[100vw] overflow-hidden flex flex-col">
+    <div className="relative w-full cursor-pointer max-w-full overflow-hidden flex flex-col">
       <HitboxLayer
         hitboxRef={hitboxRef}
         result={result}
@@ -117,8 +117,8 @@ export function DocumentPreview({
 }
 
 const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
-  <div className="w-full max-w-[100vw]">
-    <div className="px-1 py-2 sm:p-3 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted min-h-[45px] sm:min-h-[53px] dark:border-zinc-700 border-b-0">
+  <div className="w-full">
+    <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-center justify-between dark:bg-muted h-[53px] sm:h-[57px] dark:border-zinc-700 border-b-0">
       <div className="flex flex-row items-center gap-2 sm:gap-3 min-w-0 flex-1">
         <div className="text-muted-foreground">
           <div className="animate-pulse rounded-md size-4 bg-muted-foreground/20" />
@@ -131,10 +131,10 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
     </div>
     {artifactKind === 'image' ? (
       <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl bg-muted border-t-0 dark:border-zinc-700">
-        <div className="animate-pulse min-h-[150px] sm:min-h-[200px] bg-muted-foreground/20 w-full" />
+        <div className="animate-pulse h-[200px] sm:h-[257px] bg-muted-foreground/20 w-full" />
       </div>
     ) : (
-      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl px-1 py-4 sm:p-4 bg-muted border-t-0 dark:border-zinc-700">
+      <div className="overflow-y-auto overflow-x-hidden border rounded-b-2xl p-4 pt-4 bg-muted border-t-0 dark:border-zinc-700">
         <InlineDocumentSkeleton />
       </div>
     )}
@@ -185,8 +185,8 @@ const PureHitboxLayer = ({
       role="presentation"
       aria-hidden="true"
     >
-      <div className="w-full p-2 sm:p-3 flex justify-end items-center">
-        <div className="absolute right-2 sm:right-3 top-2 sm:top-3 p-1.5 sm:p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
+      <div className="w-full p-3 sm:p-4 flex justify-end items-center">
+        <div className="absolute right-[7px] sm:right-[9px] top-[11px] sm:top-[13px] p-1.5 sm:p-2 hover:dark:bg-zinc-700 rounded-md hover:bg-zinc-100">
           <FullscreenIcon />
         </div>
       </div>
@@ -208,7 +208,7 @@ const PureDocumentHeader = ({
   kind: ArtifactKind;
   isStreaming: boolean;
 }) => (
-  <div className="px-1 py-2 sm:p-3 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700 overflow-hidden">
+  <div className="p-3 sm:p-4 border rounded-t-2xl flex flex-row gap-2 items-start sm:items-center justify-between dark:bg-muted border-b-0 dark:border-zinc-700 overflow-hidden">
     <div className="flex flex-row items-start sm:items-center gap-2 sm:gap-3 min-w-0 flex-1 overflow-hidden">
       <div className="text-muted-foreground flex-shrink-0">
         {isStreaming ? (
@@ -238,10 +238,10 @@ const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
   const containerClassName = cn(
-    'min-h-[200px] sm:h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-[100vw]',
+    'min-h-[200px] h-[257px] overflow-y-auto overflow-x-hidden border rounded-b-2xl dark:bg-muted border-t-0 dark:border-zinc-700 w-full max-w-full',
     {
-      'px-1 py-2 sm:p-4 sm:px-8 sm:py-12': document.kind === 'text',
-      'p-0': document.kind === 'code' || document.kind === 'html',
+      'p-2 sm:p-4 sm:px-8 sm:py-12': document.kind === 'text',
+      'p-0': document.kind === 'code',
     },
   );
 
@@ -267,13 +267,13 @@ const DocumentContent = ({ document }: { document: Document }) => {
           </div>
         </div>
       ) : document.kind === 'sheet' ? (
-        <div className="flex flex-1 relative w-full h-full px-1 py-2 sm:p-4 overflow-hidden">
-          <div className="absolute inset-1 sm:inset-4 overflow-auto">
+        <div className="flex flex-1 relative w-full h-full p-2 sm:p-4 overflow-hidden">
+          <div className="absolute inset-2 sm:inset-4 overflow-auto">
             <SpreadsheetEditor {...commonProps} />
           </div>
         </div>
       ) : document.kind === 'image' ? (
-        <div className="w-full h-full flex items-center justify-center px-1 py-2 sm:p-4 overflow-hidden">
+        <div className="w-full h-full flex items-center justify-center p-2 sm:p-4 overflow-hidden">
           <div className="max-w-full max-h-full overflow-auto">
             <ImageEditor
               title={document.title}
