@@ -9,116 +9,116 @@ export interface ChatModel {
 export const chatModels: Array<ChatModel> = [
   {
     id: 'chat-model',
-    name: 'Chat model',
-    description: 'Primary model for all-purpose chat',
+    name: 'Optima Core',
+    description: 'HansTech flagship model',
   },
   {
     id: 'chat-model-reasoning',
-    name: 'Reasoning model',
-    description: 'Uses advanced reasoning',
+    name: 'Optima Reasoning',
+    description: 'HansTech advanced reasoning',
   },
-  // Google Gemini Models
+  // Optima Series
   {
     id: 'gemini-2.5-flash-preview-04-17',
-    name: 'Gemini 2.5 Flash Preview (04/17)',
-    description: 'Google Gemini 2.5 Flash Preview model',
+    name: 'Optima Flash 2.5',
+    description: 'HansTech fast response',
   },
   {
     id: 'gemini-2.5-pro-preview-05-06',
-    name: 'Gemini 2.5 Pro Preview (05/06)',
-    description: 'Google Gemini 2.5 Pro Preview model',
+    name: 'Optima Pro 2.5',
+    description: 'HansTech pro edition',
   },
   {
     id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    description: 'Google Gemini 2.0 Flash model',
+    name: 'Optima Flash 2.0',
+    description: 'HansTech flash model',
   },
   {
     id: 'gemini-2.0-flash-lite-preview-02-05',
-    name: 'Gemini 2.0 Flash Lite Preview (02/05)',
-    description: 'Google Gemini 2.0 Flash Lite Preview model',
+    name: 'Optima Flash Lite',
+    description: 'HansTech lightweight flash',
   },
   {
     id: 'gemini-2.0-flash-thinking-exp-01-21',
-    name: 'Gemini 2.0 Flash Thinking Exp (01/21)',
-    description: 'Google Gemini 2.0 Flash Thinking Experimental model',
+    name: 'Optima Thinker',
+    description: 'HansTech experimental thinking',
   },
   {
     id: 'gemini-2.0-flash-thinking-exp-1219',
-    name: 'Gemini 2.0 Flash Thinking Exp (12/19)',
-    description: 'Google Gemini 2.0 Flash Thinking Experimental model',
+    name: 'Optima Thinker X',
+    description: 'HansTech experimental model',
   },
   {
     id: 'gemini-1.5-pro-001',
-    name: 'Gemini 1.5 Pro (001)',
-    description: 'Google Gemini 1.5 Pro model',
+    name: 'Optima Pro 1.5',
+    description: 'HansTech pro model',
   },
   {
     id: 'gemini-1.5-pro-002',
-    name: 'Gemini 1.5 Pro (002)',
-    description: 'Google Gemini 1.5 Pro model',
+    name: 'Optima Pro 1.5X',
+    description: 'HansTech pro enhanced',
   },
   {
     id: 'gemini-1.5-flash-001',
-    name: 'Gemini 1.5 Flash (001)',
-    description: 'Google Gemini 1.5 Flash model',
+    name: 'Optima Flash 1.5',
+    description: 'HansTech flash edition',
   },
   {
     id: 'gemini-1.5-flash-002',
-    name: 'Gemini 1.5 Flash (002)',
-    description: 'Google Gemini 1.5 Flash model',
+    name: 'Optima Flash 1.5X',
+    description: 'HansTech flash enhanced',
   },
   {
     id: 'gemini-1.5-flash-8b-001',
-    name: 'Gemini 1.5 Flash 8B (001)',
-    description: 'Google Gemini 1.5 Flash 8B model',
+    name: 'Optima Flash 8B',
+    description: 'HansTech 8B flash',
   },
   {
     id: 'gemini-1.5-flash-8b-exp-0924',
-    name: 'Gemini 1.5 Flash 8B Exp (09/24)',
-    description: 'Google Gemini 1.5 Flash 8B Experimental model',
+    name: 'Optima Flash 8B X',
+    description: 'HansTech experimental flash',
   },
   {
     id: 'gemma-3-27b-it',
-    name: 'Gemma 3 27B IT',
-    description: 'Google Gemma 3 27B Instruct model',
+    name: 'Optima Gem 3',
+    description: 'HansTech instructive model',
   },
-  // Groq Models
+  // Trio Series
   {
     id: 'llama-4-scout-17b-16e-instruct',
-    name: 'Llama 4 Scout 17B Instruct',
-    description: 'Groq Llama 4 Scout 17B Instruct model',
+    name: 'Trio Scout 17B',
+    description: 'HansTech instructive scout',
   },
   {
     id: 'qwen-qwq-32b',
-    name: 'Qwen QWQ 32B',
-    description: 'Groq Qwen QWQ 32B model',
+    name: 'Trio QWQ 32B',
+    description: 'HansTech QWQ series',
   },
   {
     id: 'deepseek-r1-distill-llama-70b',
-    name: 'Deepseek R1 Distill Llama 70B',
-    description: 'Groq Deepseek R1 Distill Llama 70B model',
+    name: 'Trio Distill 70B',
+    description: 'HansTech distilled model',
   },
-  // Mistral Models
+  // Optima Fast
   {
     id: 'pixtral-12b-2409',
-    name: 'Optima AI fast',
-    description: 'Optima AI model',
+    name: 'Optima Fast',
+    description: 'HansTech fast model',
   },
-  // Cohere Models
+  // Optima Deluxe
   {
     id: 'command-r-plus',
     name: 'Optima Deluxe',
-    description: 'Best  for complex tasks',
+    description: 'HansTech complex tasks',
   },
   {
     id: 'command-r',
-    name: 'Trio beta 2.0',
-    description: 'HansTech Agentic model',
+    name: 'Trio Beta 2.0',
+    description: 'HansTech agentic model',
   },
   {
     id: 'command-light',
-    name: 'Command Light',
-    description: 'Cohere Command Light model',
+    name: 'Optima Light',
+    description: 'HansTech light edition',
   },
 ];
