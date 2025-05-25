@@ -63,7 +63,7 @@ export function CodeBlock({
     const language = className?.replace('language-', '') || '';
 
     return (
-      <div className="not-prose flex flex-col group w-full">
+      <div className="not-prose w-full overflow-hidden">
         <div className="flex items-center justify-between bg-zinc-100 dark:bg-zinc-800 px-4 py-2 rounded-t-xl border border-b-0 border-zinc-200 dark:border-zinc-700">
           {language && (
             <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium uppercase">
@@ -88,16 +88,14 @@ export function CodeBlock({
             )}
           </button>
         </div>
-        <div className="w-full overflow-hidden">
+        <div className="relative w-full">
           <pre
             {...props}
-            className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 bg-zinc-50 p-4 border border-t-0 border-zinc-200 dark:border-zinc-700 rounded-b-xl dark:text-zinc-50 text-zinc-900`}
-            style={{ maxWidth: '100%' }}
+            className="text-sm overflow-x-auto dark:bg-zinc-900 bg-zinc-50 p-4 border border-t-0 border-zinc-200 dark:border-zinc-700 rounded-b-xl dark:text-zinc-50 text-zinc-900"
           >
             <code 
               ref={codeRef}
-              className={`${className} whitespace-pre-wrap break-words max-w-full`}
-              style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}
+              className={`${className} block w-fit min-w-full whitespace-pre`}
             >
               {children}
             </code>
