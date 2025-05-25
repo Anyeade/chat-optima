@@ -102,19 +102,19 @@ export const chatModels: Array<ChatModel> = [
   // Mistral Models
   {
     id: 'pixtral-12b-2409',
-    name: 'Pixtral 12B',
-    description: 'Mistral Pixtral 12B model',
+    name: 'Optima AI fast',
+    description: 'Optima AI model',
   },
   // Cohere Models
   {
     id: 'command-r-plus',
-    name: 'Command R Plus',
-    description: 'Cohere Command R Plus model',
+    name: 'Optima Deluxe',
+    description: 'Best  for complex tasks',
   },
   {
     id: 'command-r',
-    name: 'Command R',
-    description: 'Cohere Command R model',
+    name: 'Trio beta 2.0',
+    description: 'HansTech Agentic model',
   },
   {
     id: 'command-light',

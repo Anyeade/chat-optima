@@ -88,14 +88,16 @@ export function CodeBlock({
             )}
           </button>
         </div>
-        <div className="w-full relative">
+        <div className="w-full overflow-hidden">
           <pre
             {...props}
-            className="text-sm w-full overflow-x-auto whitespace-pre-wrap break-words dark:bg-zinc-900 bg-zinc-50 p-4 border border-t-0 border-zinc-200 dark:border-zinc-700 rounded-b-xl dark:text-zinc-50 text-zinc-900"
+            className={`text-sm w-full overflow-x-auto dark:bg-zinc-900 bg-zinc-50 p-4 border border-t-0 border-zinc-200 dark:border-zinc-700 rounded-b-xl dark:text-zinc-50 text-zinc-900`}
+            style={{ maxWidth: '100%' }}
           >
             <code 
               ref={codeRef}
-              className={`${className} block w-fit min-w-full`}
+              className={`${className} whitespace-pre-wrap break-words max-w-full`}
+              style={{ overflowWrap: 'break-word', wordWrap: 'break-word' }}
             >
               {children}
             </code>
