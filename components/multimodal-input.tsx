@@ -240,6 +240,15 @@ function PureMultimodalInput({
     [setAttachments],
   );
 
+  const removeAttachment = useCallback(
+    (attachmentToRemove: Attachment) => {
+      setAttachments((currentAttachments) =>
+        currentAttachments.filter((attachment) => attachment.url !== attachmentToRemove.url)
+      );
+    },
+    [setAttachments],
+  );
+
   const { isAtBottom, scrollToBottom } = useScrollToBottom();
 
   useEffect(() => {
@@ -300,7 +309,11 @@ function PureMultimodalInput({
           className="flex flex-row gap-2 overflow-x-scroll items-end"
         >
           {attachments.map((attachment) => (
-            <PreviewAttachment key={attachment.url} attachment={attachment} />
+            <PreviewAttachment 
+              key={attachment.url} 
+              attachment={attachment} 
+              onRemove={() => removeAttachment(attachment)}
+            />
           ))}
 
           {uploadQueue.map((filename) => (
