@@ -13,8 +13,7 @@ enum UpdateMethod {
   REGEX_UPDATE = 'regex', 
   STRING_MANIPULATION = 'string',
   TEMPLATE_BASED = 'template',
-  DIFF_BASED = 'diff',
-  REGEX_BLOCK_REPLACE = 'regex_block'
+  DIFF_BASED = 'diff'
 }
 
 // Simplified smart update schema
@@ -28,7 +27,7 @@ const simpleUpdateSchema = z.object({
 
 // Enhanced HTML update schema with multiple methods
 const enhancedUpdateSchema = z.object({
-  updateMethod: z.enum(['smart', 'regex', 'string', 'template', 'diff', 'regex_block']),
+  updateMethod: z.enum(['smart', 'regex', 'string', 'template', 'diff']),
   operations: z.array(simpleUpdateSchema)
 });
 
@@ -38,7 +37,7 @@ interface UpdateParams {
   dataStream: DataStreamWriter;
 }
 
-export const htmlDocumentHandler = createDocumentHandler<'html'>({
+export const enhancedHtmlDocumentHandler = createDocumentHandler<'html'>({
   kind: 'html',
   
   onCreateDocument: async ({ title, dataStream }) => {
@@ -112,10 +111,6 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
           
         case UpdateMethod.DIFF_BASED:
           draftContent = await diffBasedUpdate({ document, description, dataStream });
-          break;
-          
-        case UpdateMethod.REGEX_BLOCK_REPLACE:
-          draftContent = await regexBlockReplaceUpdate({ document, description, dataStream });
           break;
           
         case UpdateMethod.SMART_UPDATE:
@@ -250,7 +245,7 @@ Only include operations that will actually change the content. Be precise with t
       const operations = delta.object.operations;
       
       for (const op of operations) {
-        if (op && op.find && op.replace && content.includes(op.find)) {
+        if (content.includes(op.find)) {
           content = content.replace(op.find, op.replace);
           dataStream.writeData({
             type: 'html-smart-update',
@@ -320,7 +315,7 @@ Respond with JSON containing only the sections that need to be updated:
       
       // Apply section updates
       for (const [sectionName, newContent] of Object.entries(updates)) {
-        if (sections[sectionName] && newContent) {
+        if (sections[sectionName]) {
           content = content.replace(sections[sectionName], newContent);
           dataStream.writeData({
             type: 'html-smart-update',
@@ -389,138 +384,7 @@ async function diffBasedUpdate(params: UpdateParams): Promise<string> {
   return originalContent;
 }
 
-// Method 5: Regex + Search and Replace Block method
-async function regexBlockReplaceUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
-  let content = document.content || '';
-  
-  console.log('Using regex block replace update method');
-  
-  // Use AI to generate regex patterns and replacement blocks
-  const prompt = `
-You are an expert at HTML regex patterns and block replacements. Given the HTML content and update request, 
-provide regex patterns and replacement blocks for complex HTML modifications.
-
-HTML Content:
-${content}
-
-Update Request: ${description}
-
-Respond with JSON containing regex operations:
-{
-  "operations": [
-    {
-      "type": "regex_replace",
-      "pattern": "regex pattern (without delimiters)",
-      "flags": "regex flags (g, i, m, s)",
-      "replacement": "replacement content with $1, $2 capture groups if needed",
-      "description": "what this operation does"
-    },
-    {
-      "type": "block_replace",
-      "startPattern": "pattern to find start of block",
-      "endPattern": "pattern to find end of block", 
-      "newContent": "entire new content for the block",
-      "description": "what this operation does"
-    }
-  ]
-}
-
-Use regex_replace for pattern-based substitutions and block_replace for replacing entire sections.
-Be precise with patterns and ensure they will match the actual content.
-`;
-
-  const { fullStream } = streamObject({
-    model: myProvider.languageModel('artifact-model'),
-    system: prompt,
-    prompt: description,
-    schema: z.object({
-      operations: z.array(z.object({
-        type: z.enum(['regex_replace', 'block_replace']),
-        pattern: z.string().optional(),
-        flags: z.string().optional(),
-        replacement: z.string().optional(),
-        startPattern: z.string().optional(),
-        endPattern: z.string().optional(),
-        newContent: z.string().optional(),
-        description: z.string().optional()
-      }))
-    }),
-  });
-
-  for await (const delta of fullStream) {
-    if (delta.type === 'object' && delta.object?.operations) {
-      const operations = delta.object.operations;
-      
-      for (const op of operations) {
-        if (!op) continue;
-        
-        try {
-          if (op.type === 'regex_replace' && op.pattern && op.replacement) {
-            const flags = op.flags || 'g';
-            const regex = new RegExp(op.pattern, flags);
-            const oldContent = content;
-            content = content.replace(regex, op.replacement);
-            
-            if (content !== oldContent) {
-              dataStream.writeData({
-                type: 'html-smart-update',
-                content: JSON.stringify({ 
-                  operation: 'regex-replace',
-                  pattern: op.pattern.substring(0, 50),
-                  description: op.description,
-                  success: true 
-                })
-              });
-            }
-          } else if (op.type === 'block_replace' && op.startPattern && op.endPattern && op.newContent) {
-            const blockRegex = new RegExp(
-              `${op.startPattern}[\\s\\S]*?${op.endPattern}`, 
-              'gi'
-            );
-            const oldContent = content;
-            content = content.replace(blockRegex, op.newContent);
-            
-            if (content !== oldContent) {
-              dataStream.writeData({
-                type: 'html-smart-update',
-                content: JSON.stringify({ 
-                  operation: 'block-replace',
-                  description: op.description,
-                  success: true 
-                })
-              });
-            }
-          }
-        } catch (error) {
-          console.warn('Failed to apply regex operation:', op, error);
-          dataStream.writeData({
-            type: 'html-smart-update',
-            content: JSON.stringify({ 
-              operation: 'regex-error',
-              error: error instanceof Error ? error.message : String(error),
-              success: false 
-            })
-          });
-        }
-      }
-      
-      dataStream.writeData({
-        type: 'html-delta',
-        content: content,
-      });
-      
-      dataStream.writeData({
-        type: 'finish',
-        content: ''
-      });
-    }
-  }
-
-  return content;
-}
-
-// Method 6: Simplified smart update (improved version)
+// Method 5: Simplified smart update (improved version)
 async function simplifiedSmartUpdate(params: UpdateParams): Promise<string> {
   const { document, description, dataStream } = params;
   let content = document.content || '';
@@ -570,17 +434,15 @@ Be specific and ensure operations will actually change the content.
       
       for (const op of operations) {
         try {
-          if (op && op.method && op.target) {
-            content = applySimpleOperation(content, op);
-            dataStream.writeData({
-              type: 'html-smart-update',
-              content: JSON.stringify({ 
-                operation: op.method,
-                target: op.target.substring(0, 30),
-                success: true 
-              })
-            });
-          }
+          content = applySimpleOperation(content, op);
+          dataStream.writeData({
+            type: 'html-smart-update',
+            content: JSON.stringify({ 
+              operation: op.method,
+              target: op.target.substring(0, 30),
+              success: true 
+            })
+          });
         } catch (error) {
           console.warn('Failed to apply operation:', op, error);
         }
@@ -642,10 +504,6 @@ function determineUpdateMethod(description: string, content: string): UpdateMeth
   const lowerDesc = description.toLowerCase();
   
   // Check for specific method requests
-  if (lowerDesc.includes('regex block') || lowerDesc.includes('block replace') || lowerDesc.includes('regex replace')) {
-    return UpdateMethod.REGEX_BLOCK_REPLACE;
-  }
-  
   if (lowerDesc.includes('regex') || lowerDesc.includes('pattern')) {
     return UpdateMethod.REGEX_UPDATE;
   }
@@ -662,23 +520,13 @@ function determineUpdateMethod(description: string, content: string): UpdateMeth
     return UpdateMethod.DIFF_BASED;
   }
   
-  // Auto-detect based on content and request complexity
-  if (lowerDesc.includes('complex') || lowerDesc.includes('advanced') || lowerDesc.includes('multiple')) {
-    return UpdateMethod.REGEX_BLOCK_REPLACE;
-  }
-  
+  // Auto-detect based on content and request
   if (content.length > 5000 && (lowerDesc.includes('small') || lowerDesc.includes('minor'))) {
     return UpdateMethod.STRING_MANIPULATION;
   }
   
   if (lowerDesc.includes('title') || lowerDesc.includes('heading') || lowerDesc.includes('footer')) {
     return UpdateMethod.REGEX_UPDATE;
-  }
-  
-  // Use regex block replace for complex HTML structure changes
-  if (lowerDesc.includes('restructure') || lowerDesc.includes('reorganize') || 
-      lowerDesc.includes('replace all') || lowerDesc.includes('change all')) {
-    return UpdateMethod.REGEX_BLOCK_REPLACE;
   }
   
   return UpdateMethod.SMART_UPDATE;
@@ -792,4 +640,4 @@ function applySimpleOperation(content: string, operation: any): string {
   }
   
   return content;
-}
+} 
