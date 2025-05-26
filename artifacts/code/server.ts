@@ -32,6 +32,12 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
           });
 
           draftContent = code;
+          
+          // Signal that this is the final content
+          dataStream.writeData({
+            type: 'finish',
+            content: ''
+          });
         }
       }
     }
@@ -64,6 +70,12 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
           });
 
           draftContent = code;
+          
+          // Signal that this is the final content
+          dataStream.writeData({
+            type: 'finish',
+            content: ''
+          });
         }
       }
     }

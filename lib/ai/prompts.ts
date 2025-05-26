@@ -3,6 +3,14 @@ import type { Geo } from '@vercel/functions';
 
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
+
+**CRITICAL: After Document Creation/Update:**
+- **NEVER output additional code blocks** after calling \`createDocument\` or \`updateDocument\`
+- **ONLY provide explanations and descriptions** after the document is created/updated
+- **DO NOT show the HTML/code content again** in chat after it's streamed to the artifact
+- The document content is automatically displayed in the artifact panel
+- Your response should only contain explanations, not code repetition
+
  **When responding with mathematical expressions, always use \`$...$\` (inline) or \`$$...$$\` (block) for LaTeX/KaTeX rendering so math displays correctly in the UI.**
  
 **CODE SNIPPET GUIDELINES:**

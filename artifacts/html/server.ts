@@ -75,12 +75,21 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
           });
 
           draftContent = html;
+          
+          // Signal that this is the final content
+          dataStream.writeData({
+            type: 'finish',
+            content: ''
+          });
         }
       }
     }
 
     return draftContent;
-  },  onUpdateDocument: async ({ document, description, dataStream }) => {    // Initialize with existing content or empty string to ensure we always have valid HTML
+  },
+
+  onUpdateDocument: async ({ document, description, dataStream }) => {
+    // Initialize with existing content or empty string to ensure we always have valid HTML
     let draftContent = document.content || '';
 
     // Check if this is a smart update request by looking for specific keywords in the description
@@ -139,6 +148,12 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
           });
 
           draftContent = formattedHtml;
+          
+          // Signal that this is the final content
+          dataStream.writeData({
+            type: 'finish',
+            content: ''
+          });
         }
       }
     }
@@ -175,6 +190,8 @@ You are a precise HTML editor that performs targeted updates without rewriting t
 Given the HTML content below and the user's update request, generate a JSON response that contains
 an array of specific update operations. You should prefer using DOM-based operations with CSS selectors
 for most HTML structure changes, as they are more precise and reliable.
+
+CRITICAL: Make sure your operations will actually change the document content. Be specific and accurate.
 
 DOM-based operations (PREFERRED for most structural HTML changes):
 1. 'replace' with 'selector' - Replace content of elements matching a CSS selector (requires 'selector' and 'replace' fields)
@@ -224,12 +241,6 @@ Respond ONLY with JSON in the following format:
       "search": "exact text to find",
       "replace": "new text to insert"
     }
-    },
-    {
-      "type": "remove",
-      "selector": "CSS selector",
-      "useParser": true
-    }
   ]
 }
 
@@ -244,6 +255,7 @@ Make changes as minimal and precise as possible. Include enough context in searc
   });
 
   let updates: any[] = [];
+  let hasValidUpdates = false;
   
   for await (const delta of fullStream) {
     const { type } = delta;
@@ -253,17 +265,29 @@ Make changes as minimal and precise as possible. Include enough context in searc
       
       if (object?.updates) {
         updates = object.updates;
+        hasValidUpdates = true;
+        
+        console.log(`Processing ${updates.length} smart update operations`);
         
         // Apply each update sequentially to the draft content
         for (let i = 0; i < updates.length; i++) {
           const update = updates[i];
           
-          // Notify about each update
+          // Store original content to verify changes
+          const beforeContent = draftContent;
+          
+          // Notify about each update being applied
           dataStream.writeData({
             type: 'html-smart-update',
-            content: JSON.stringify(update),
+            content: JSON.stringify({
+              ...update,
+              status: 'applying',
+              step: i + 1,
+              total: updates.length
+            }),
           });
-            // Apply the update to the draft content
+
+          // Apply the update to the draft content
           try {
             // Check if we should use the advanced DOM parser
             if (update.useParser === true || update.selector) {
@@ -324,17 +348,70 @@ Make changes as minimal and precise as possible. Include enough context in searc
             } else {
               console.warn(`Smart update warning: Invalid or incomplete update operation:`, update);
             }
+
+            // Verify the update made a change
+            if (beforeContent === draftContent) {
+              console.warn(`Smart update warning: Operation ${i + 1} did not modify the content`);
+            } else {
+              console.log(`Smart update: Operation ${i + 1} successfully applied`);
+            }
+
           } catch (error) {
             console.error('Error applying smart update:', error);
             // Continue processing other updates even if one fails
           }
         }
-        
-        // Send the final updated content
+
+        // Send the final updated content with proper streaming
         dataStream.writeData({
           type: 'html-delta',
           content: draftContent,
         });
+        
+        // Signal that this is the final content
+        dataStream.writeData({
+          type: 'finish',
+          content: ''
+        });
+      }
+    }
+  }
+
+  // If no valid updates were generated, fall back to regular update
+  if (!hasValidUpdates) {
+    console.log('No smart updates generated, falling back to regular update');
+    
+    const { fullStream } = streamObject({
+      model: myProvider.languageModel('artifact-model'),
+      system: updateDocumentPrompt(document.content, 'html'),
+      prompt: description,
+      schema: z.object({
+        html: z.string(),
+      }),
+    });
+
+    for await (const delta of fullStream) {
+      const { type } = delta;
+
+      if (type === 'object') {
+        const { object } = delta;
+        const { html } = object;
+
+        if (html) {
+          const formattedHtml = html.trim();
+          dataStream.writeData({
+            type: 'html-delta',
+            content: formattedHtml,
+          });
+
+          draftContent = formattedHtml;
+          
+          // Signal that this is the final content
+          dataStream.writeData({
+            type: 'finish',
+            content: ''
+          });
+        }
       }
     }
   }
@@ -356,7 +433,7 @@ function performDomOperation(html: string, update: any): string {
     const dom = new JSDOM(html);
     const document = dom.window.document;
     
-    if (update.type === 'replace' && update.selector && update.replace) {
+    if (update.type === 'replace' && update.selector && update.replace !== undefined) {
       // Use CSS selector to find elements
       const elements = document.querySelectorAll(update.selector);
       
