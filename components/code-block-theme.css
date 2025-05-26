@@ -1,0 +1,173 @@
+/* Code Block Theme Overrides for Dark/Light Mode */
+
+/* Base code block styling */
+.code-block-container {
+    position: relative;
+}
+
+/* Ensure proper text color inheritance in light mode */
+.code-block-container pre {
+    background-color: white;
+    color: #18181b;
+    /* zinc-900 */
+    border: 1px solid #e4e4e7;
+    /* zinc-200 */
+}
+
+/* Dark mode overrides */
+.dark .code-block-container pre {
+    background-color: #18181b;
+    /* zinc-900 */
+    color: #fafafa;
+    /* zinc-50 */
+    border: 1px solid #3f3f46;
+    /* zinc-700 */
+}
+
+/* Inline code styling */
+.code-block-inline {
+    background-color: #f4f4f5;
+    /* zinc-100 */
+    color: #18181b;
+    /* zinc-900 */
+    font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+}
+
+.dark .code-block-inline {
+    background-color: #27272a;
+    /* zinc-800 */
+    color: #fafafa;
+    /* zinc-100 */
+}
+
+/* Copy button styling */
+.code-copy-button {
+    background-color: #f4f4f5;
+    /* zinc-100 */
+    color: #52525b;
+    /* gray-600 */
+    transition: all 0.2s ease-in-out;
+    z-index: 10;
+}
+
+.code-copy-button:hover {
+    background-color: #e4e4e7;
+    /* zinc-200 */
+}
+
+.dark .code-copy-button {
+    background-color: #27272a;
+    /* zinc-800 */
+    color: #d4d4d8;
+    /* gray-300 */
+}
+
+.dark .code-copy-button:hover {
+    background-color: #3f3f46;
+    /* zinc-700 */
+}
+
+/* Ensure highlight.js themes don't override our base colors */
+.code-block-container .hljs {
+    background: inherit !important;
+    color: inherit !important;
+}
+
+/* Override specific highlight.js color conflicts in dark mode */
+.dark .code-block-container .hljs {
+    background: #18181b !important;
+    /* zinc-900 */
+}
+
+/* Light mode highlight.js override */
+.code-block-container .hljs {
+    background: white !important;
+}
+
+/* Ensure syntax highlighting colors are visible in both modes */
+.dark .code-block-container .hljs-comment,
+.dark .code-block-container .hljs-quote {
+    color: #71717a;
+    /* zinc-500 - visible gray for dark mode */
+}
+
+.code-block-container .hljs-comment,
+.code-block-container .hljs-quote {
+    color: #71717a;
+    /* zinc-500 - visible gray for light mode */
+}
+
+/* Ensure keywords are visible */
+.dark .code-block-container .hljs-keyword,
+.dark .code-block-container .hljs-selector-tag,
+.dark .code-block-container .hljs-built_in {
+    color: #a78bfa;
+    /* purple-400 for dark mode */
+}
+
+.code-block-container .hljs-keyword,
+.code-block-container .hljs-selector-tag,
+.code-block-container .hljs-built_in {
+    color: #7c3aed;
+    /* purple-600 for light mode */
+}
+
+/* Ensure strings are visible */
+.dark .code-block-container .hljs-string,
+.dark .code-block-container .hljs-attr {
+    color: #34d399;
+    /* emerald-400 for dark mode */
+}
+
+.code-block-container .hljs-string,
+.code-block-container .hljs-attr {
+    color: #059669;
+    /* emerald-600 for light mode */
+}
+
+/* Ensure numbers are visible */
+.dark .code-block-container .hljs-number,
+.dark .code-block-container .hljs-literal {
+    color: #fbbf24;
+    /* amber-400 for dark mode */
+}
+
+.code-block-container .hljs-number,
+.code-block-container .hljs-literal {
+    color: #d97706;
+    /* amber-600 for light mode */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 640px) {
+    .mobile-code-break {
+        word-break: break-all;
+        white-space: pre-wrap;
+    }
+
+    .code-copy-button {
+        top: 0.25rem;
+        right: 0.25rem;
+        padding: 0.375rem;
+    }
+}
+
+/* Focus states for accessibility */
+.code-copy-button:focus {
+    outline: 2px solid #3b82f6;
+    /* blue-500 */
+    outline-offset: 2px;
+}
+
+.dark .code-copy-button:focus {
+    outline: 2px solid #60a5fa;
+    /* blue-400 */
+    outline-offset: 2px;
+}
+
+/* Smooth transitions for theme switching */
+.code-block-container pre,
+.code-block-inline,
+.code-copy-button {
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
