@@ -50,72 +50,46 @@ export function createDocumentHandler<T extends ArtifactKind>(config: {
   return {
     kind: config.kind,
     onCreateDocument: async (args: CreateDocumentCallbackProps) => {
-      try {
-        const draftContent = await config.onCreateDocument({
+      const draftContent = await config.onCreateDocument({
+        id: args.id,
+        title: args.title,
+        dataStream: args.dataStream,
+        session: args.session,
+        selectedChatModel: args.selectedChatModel,
+      });
+
+      if (args.session?.user?.id) {
+        await saveDocument({
           id: args.id,
           title: args.title,
-          dataStream: args.dataStream,
-          session: args.session,
-          selectedChatModel: args.selectedChatModel,
+          content: draftContent,
+          kind: config.kind,
+          userId: args.session.user.id,
         });
-
-        if (args.session?.user?.id) {
-          await saveDocument({
-            id: args.id,
-            title: args.title,
-            content: draftContent,
-            kind: config.kind,
-            userId: args.session.user.id,
-          });
-        }
-
-        return;
-      } catch (error) {
-        console.error(`❌ Error in ${config.kind} document handler (create):`, error);
-        
-        // Send error to client
-        args.dataStream.writeData({
-          type: 'error',
-          content: `Failed to create ${config.kind} document: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        });
-
-        // Re-throw to be handled by the tool
-        throw error;
       }
+
+      return;
     },
     onUpdateDocument: async (args: UpdateDocumentCallbackProps) => {
-      try {
-        const draftContent = await config.onUpdateDocument({
-          document: args.document,
-          description: args.description,
-          dataStream: args.dataStream,
-          session: args.session,
-          selectedChatModel: args.selectedChatModel,
+      const draftContent = await config.onUpdateDocument({
+        document: args.document,
+        description: args.description,
+        dataStream: args.dataStream,
+        session: args.session,
+        selectedChatModel: args.selectedChatModel,
+      });
+
+      if (args.session?.user?.id) {
+        await saveDocument({
+          id: args.document.id,
+          title: args.document.title,
+          content: draftContent,
+          kind: config.kind,
+          userId: args.session.user.id,
         });
-
-        if (args.session?.user?.id) {
-          await saveDocument({
-            id: args.document.id,
-            title: args.document.title,
-            content: draftContent,
-            kind: config.kind,
-            userId: args.session.user.id,
-          });
-        }
-
-        return;
-      } catch (error) {
-        console.error(`❌ Error in ${config.kind} document handler (update):`, error);
-        
-        // Send error to client
-        args.dataStream.writeData({
-          type: 'error',
-          content: `Failed to update ${config.kind} document: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        });
-
-        // Re-throw to be handled by the tool
-        throw error;
       }
+
+      return;
     },
   };
 }

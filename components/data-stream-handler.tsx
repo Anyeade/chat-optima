@@ -22,8 +22,7 @@ export type DataStreamDelta = {
     | 'suggestion'
     | 'clear'
     | 'finish'
-    | 'kind'
-    | 'error';
+    | 'kind';
   content: string | Suggestion;
 };
 
@@ -83,14 +82,6 @@ export function DataStreamHandler({ id }: { id: string }) {
               ...draftArtifact,
               content: '',
               status: 'streaming',
-            };
-
-          case 'error':
-            console.error('Artifact error:', delta.content);
-            return {
-              ...draftArtifact,
-              content: `Error: ${delta.content}`,
-              status: 'idle',
             };
 
           case 'finish':
