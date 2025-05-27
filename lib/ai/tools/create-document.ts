@@ -1,7 +1,7 @@
 import { generateUUID } from '@/lib/utils';
-import { type DataStreamWriter, tool } from 'ai';
+import { DataStreamWriter, tool } from 'ai';
 import { z } from 'zod';
-import type { Session } from 'next-auth';
+import { Session } from 'next-auth';
 import {
   artifactKinds,
   documentHandlersByArtifactKind,
@@ -10,7 +10,7 @@ import {
 interface CreateDocumentProps {
   session: Session;
   dataStream: DataStreamWriter;
-  selectedChatModel?: string;
+  selectedChatModel: string;
 }
 
 export const createDocument = ({ session, dataStream, selectedChatModel }: CreateDocumentProps) =>
