@@ -6,11 +6,14 @@ import { createDocumentHandler } from '@/lib/artifacts/server';
 
 export const sandboxDocumentHandler = createDocumentHandler<'sandbox'>({
   kind: 'sandbox',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: sandboxPrompt,
       prompt: title,
       schema: z.object({
@@ -60,8 +63,12 @@ ${code}`;
     }
 
     return draftContent;
-  },  onUpdateDocument: async ({ document, description, dataStream }) => {
+  },
+  onUpdateDocument: async ({ document, description, dataStream, selectedChatModel }) => {
     let draftContent = '';
+
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
 
     // Check if the description contains file modification instructions
     const isFileModification = /modify|update|change|add file|edit file|create file|new file/i.test(description);
@@ -91,7 +98,7 @@ ${code}`;
         });
 
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: updateDocumentPrompt(document.content, 'sandbox'),
       prompt: description,
       schema,

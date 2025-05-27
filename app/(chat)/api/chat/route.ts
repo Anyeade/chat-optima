@@ -187,8 +187,8 @@ export async function POST(request: Request) {
             webSearch,
             webpageScreenshot,
             webScraper,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
+            createDocument: createDocument({ session, dataStream, selectedChatModel }),
+            updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
             requestSuggestions: requestSuggestions({
               session,
               dataStream,

@@ -6,11 +6,14 @@ import { z } from 'zod';
 
 export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
   kind: 'sheet',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: sheetPrompt,
       prompt: title,
       schema: z.object({
@@ -43,11 +46,14 @@ export const sheetDocumentHandler = createDocumentHandler<'sheet'>({
 
     return draftContent;
   },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
+  onUpdateDocument: async ({ document, description, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamObject({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: updateDocumentPrompt(document.content, 'sheet'),
       prompt: description,
       schema: z.object({

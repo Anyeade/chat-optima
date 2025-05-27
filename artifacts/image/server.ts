@@ -5,7 +5,7 @@ import { generateChutesImage } from '@/lib/ai/chutes-image';
 
 export const imageDocumentHandler = createDocumentHandler<'image'>({
   kind: 'image',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
     try {
@@ -35,7 +35,7 @@ export const imageDocumentHandler = createDocumentHandler<'image'>({
 
     return draftContent;
   },
-  onUpdateDocument: async ({ description, dataStream }) => {
+  onUpdateDocument: async ({ description, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
     try {

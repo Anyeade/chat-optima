@@ -5,11 +5,14 @@ import { streamText, smoothStream } from 'ai';
 
 export const svgDocumentHandler = createDocumentHandler<'svg'>({
   kind: 'svg',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: svgPrompt,
       prompt: title,
       experimental_transform: smoothStream({ chunking: 'word' }),
@@ -32,14 +35,17 @@ export const svgDocumentHandler = createDocumentHandler<'svg'>({
 
     return draftContent;
   },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
+  onUpdateDocument: async ({ document, description, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: `${svgPrompt}
 
-Update the existing SVG graphic based on the user's request. Preserve existing structure where appropriate and maintain the same high-quality standards.
+Update the existing SVG based on the user's request. Preserve existing structure where appropriate and maintain the same high-quality standards.
 
 Current SVG:
 ${document.content}`,

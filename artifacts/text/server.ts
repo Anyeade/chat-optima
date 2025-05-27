@@ -5,11 +5,14 @@ import { updateDocumentPrompt } from '@/lib/ai/prompts';
 
 export const textDocumentHandler = createDocumentHandler<'text'>({
   kind: 'text',
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system:
         'Write about the given topic. Markdown is supported. Use headings wherever appropriate.',
       experimental_transform: smoothStream({ chunking: 'word' }),
@@ -33,11 +36,14 @@ export const textDocumentHandler = createDocumentHandler<'text'>({
 
     return draftContent;
   },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
+  onUpdateDocument: async ({ document, description, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: updateDocumentPrompt(document.content, 'text'),
       experimental_transform: smoothStream({ chunking: 'word' }),
       prompt: description,

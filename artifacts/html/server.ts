@@ -36,16 +36,20 @@ interface UpdateParams {
   document: Document;
   description: string;
   dataStream: DataStreamWriter;
+  selectedChatModel?: string;
 }
 
 export const htmlDocumentHandler = createDocumentHandler<'html'>({
   kind: 'html',
   
-  onCreateDocument: async ({ title, dataStream }) => {
+  onCreateDocument: async ({ title, dataStream, selectedChatModel }) => {
     let draftContent = '';
 
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
+
     const { fullStream } = streamText({
-      model: myProvider.languageModel('artifact-model'),
+      model: myProvider.languageModel(modelToUse),
       system: htmlPrompt,
       prompt: title,
       experimental_transform: smoothStream({ chunking: 'word' }),
@@ -69,13 +73,16 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
     return draftContent;
   },
 
-  onUpdateDocument: async ({ document, description, dataStream }) => {
+  onUpdateDocument: async ({ document, description, dataStream, selectedChatModel }) => {
     let draftContent = document.content || '';
+
+    // Use selectedChatModel if provided, fallback to artifact-model
+    const modelToUse = selectedChatModel || 'artifact-model';
 
     // Determine the best update method based on the request
     const updateMethod = determineUpdateMethod(description, draftContent);
     
-    console.log(`Using update method: ${updateMethod}`);
+    console.log(`Using update method: ${updateMethod} with model: ${modelToUse}`);
     
     // Send method info to client
     dataStream.writeData({
@@ -89,33 +96,33 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
     try {
       switch (updateMethod) {
         case UpdateMethod.REGEX_UPDATE:
-          draftContent = await regexBasedUpdate({ document, description, dataStream });
+          draftContent = await regexBasedUpdate({ document, description, dataStream, selectedChatModel });
           break;
           
         case UpdateMethod.STRING_MANIPULATION:
-          draftContent = await stringManipulationUpdate({ document, description, dataStream });
+          draftContent = await stringManipulationUpdate({ document, description, dataStream, selectedChatModel });
           break;
           
         case UpdateMethod.TEMPLATE_BASED:
-          draftContent = await templateBasedUpdate({ document, description, dataStream });
+          draftContent = await templateBasedUpdate({ document, description, dataStream, selectedChatModel });
           break;
           
         case UpdateMethod.DIFF_BASED:
-          draftContent = await diffBasedUpdate({ document, description, dataStream });
+          draftContent = await diffBasedUpdate({ document, description, dataStream, selectedChatModel });
           break;
           
         case UpdateMethod.REGEX_BLOCK_REPLACE:
-          draftContent = await regexBlockReplaceUpdate({ document, description, dataStream });
+          draftContent = await regexBlockReplaceUpdate({ document, description, dataStream, selectedChatModel });
           break;
           
         case UpdateMethod.SMART_UPDATE:
         default:
-          draftContent = await simplifiedSmartUpdate({ document, description, dataStream });
+          draftContent = await simplifiedSmartUpdate({ document, description, dataStream, selectedChatModel });
           break;
       }
     } catch (error) {
       console.error('Update method failed, falling back to regular update:', error);
-      draftContent = await fallbackRegularUpdate({ document, description, dataStream });
+      draftContent = await fallbackRegularUpdate({ document, description, dataStream, selectedChatModel });
     }
 
     return draftContent;
@@ -124,7 +131,7 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
 
 // Method 1: Regex-based updates for common patterns
 async function regexBasedUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   let content = document.content || '';
   
   console.log('Using regex-based update method');
@@ -196,7 +203,7 @@ async function regexBasedUpdate(params: UpdateParams): Promise<string> {
 
 // Method 2: String manipulation for simple text changes
 async function stringManipulationUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   let content = document.content || '';
   
   console.log('Using string manipulation update method');
@@ -224,7 +231,7 @@ Only include operations that will actually change the content. Be precise with t
 `;
 
   const { fullStream } = streamObject({
-    model: myProvider.languageModel('artifact-model'),
+    model: myProvider.languageModel(selectedChatModel || 'artifact-model'),
     system: prompt,
     prompt: description,
     schema: z.object({
@@ -270,7 +277,7 @@ Only include operations that will actually change the content. Be precise with t
 
 // Method 3: Template-based updates for structured changes
 async function templateBasedUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   let content = document.content || '';
   
   console.log('Using template-based update method');
@@ -296,7 +303,7 @@ Respond with JSON containing only the sections that need to be updated:
 `;
 
   const { fullStream } = streamObject({
-    model: myProvider.languageModel('artifact-model'),
+    model: myProvider.languageModel(selectedChatModel || 'artifact-model'),
     system: prompt,
     prompt: description,
     schema: z.object({
@@ -340,14 +347,14 @@ Respond with JSON containing only the sections that need to be updated:
 
 // Method 4: Diff-based updates
 async function diffBasedUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   const originalContent = document.content || '';
   
   console.log('Using diff-based update method');
   
   // Generate new content and create a diff
   const { fullStream } = streamObject({
-    model: myProvider.languageModel('artifact-model'),
+    model: myProvider.languageModel(selectedChatModel || 'artifact-model'),
     system: updateDocumentPrompt(originalContent, 'html'),
     prompt: description,
     schema: z.object({
@@ -381,7 +388,7 @@ async function diffBasedUpdate(params: UpdateParams): Promise<string> {
 
 // Method 5: Regex + Search and Replace Block method
 async function regexBlockReplaceUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   let content = document.content || '';
   
   console.log('Using regex block replace update method');
@@ -421,7 +428,7 @@ Be precise with patterns and ensure they will match the actual content.
 `;
 
   const { fullStream } = streamObject({
-    model: myProvider.languageModel('artifact-model'),
+    model: myProvider.languageModel(selectedChatModel || 'artifact-model'),
     system: prompt,
     prompt: description,
     schema: z.object({
@@ -512,7 +519,7 @@ Be precise with patterns and ensure they will match the actual content.
 
 // Method 6: Simplified smart update (improved version)
 async function simplifiedSmartUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   let content = document.content || '';
   
   console.log('Using simplified smart update method');
@@ -541,7 +548,7 @@ Be specific and ensure operations will actually change the content.
 `;
 
   const { fullStream } = streamObject({
-    model: myProvider.languageModel('artifact-model'),
+    model: myProvider.languageModel(selectedChatModel || 'artifact-model'),
     system: prompt,
     prompt: description,
     schema: z.object({
@@ -593,13 +600,13 @@ Be specific and ensure operations will actually change the content.
 
 // Fallback to regular update
 async function fallbackRegularUpdate(params: UpdateParams): Promise<string> {
-  const { document, description, dataStream } = params;
+  const { document, description, dataStream, selectedChatModel } = params;
   let draftContent = '';
   
   console.log('Using fallback regular update');
   
   const { fullStream } = streamText({
-    model: myProvider.languageModel('artifact-model'),
+    model: myProvider.languageModel(selectedChatModel || 'artifact-model'),
     system: updateDocumentPrompt(document.content, 'html'),
     prompt: description,
     experimental_transform: smoothStream({ chunking: 'word' }),
