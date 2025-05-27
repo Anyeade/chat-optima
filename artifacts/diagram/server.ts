@@ -1,38 +1,32 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { diagramPrompt } from '@/lib/ai/prompts';
-import { streamObject } from 'ai';
-import { z } from 'zod';
+import { streamText, smoothStream } from 'ai';
 
 export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
   kind: 'diagram',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: diagramPrompt,
       prompt: title,
-      schema: z.object({
-        diagram: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { diagram } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (diagram) {
-          dataStream.writeData({
-            type: 'diagram-delta',
-            content: diagram,
-          });
+        draftContent += textDelta;
 
-          draftContent = diagram;
-        }
+        dataStream.writeData({
+          type: 'diagram-delta',
+          content: draftContent,
+        });
       }
     }
 
@@ -41,7 +35,7 @@ export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: `${diagramPrompt}
 
@@ -50,26 +44,21 @@ Update the existing Mermaid diagram based on the user's request. Preserve existi
 Current diagram:
 ${document.content}`,
       prompt: description,
-      schema: z.object({
-        diagram: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { diagram } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (diagram) {
-          dataStream.writeData({
-            type: 'diagram-delta',
-            content: diagram,
-          });
+        draftContent += textDelta;
 
-          draftContent = diagram;
-        }
+        dataStream.writeData({
+          type: 'diagram-delta',
+          content: draftContent,
+        });
       }
     }
 

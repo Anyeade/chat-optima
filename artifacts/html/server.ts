@@ -1,7 +1,7 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import type { DataStreamWriter } from 'ai';
-import { streamObject } from 'ai';
+import { streamText, smoothStream } from 'ai';
 import { z } from 'zod';
 import { htmlPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import type { Document } from '@/lib/db/schema';
@@ -44,35 +44,25 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: htmlPrompt,
       prompt: title,
-      schema: z.object({
-        html: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { html } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (html) {
-          dataStream.writeData({
-            type: 'html-delta',
-            content: html,
-          });
+        draftContent += textDelta;
 
-          draftContent = html;
-          
-          dataStream.writeData({
-            type: 'finish',
-            content: ''
-          });
-        }
+        dataStream.writeData({
+          type: 'html-delta',
+          content: draftContent,
+        });
       }
     }
 
@@ -604,37 +594,33 @@ Be specific and ensure operations will actually change the content.
 // Fallback to regular update
 async function fallbackRegularUpdate(params: UpdateParams): Promise<string> {
   const { document, description, dataStream } = params;
+  let draftContent = '';
   
   console.log('Using fallback regular update');
   
-  const { fullStream } = streamObject({
+  const { fullStream } = streamText({
     model: myProvider.languageModel('artifact-model'),
     system: updateDocumentPrompt(document.content, 'html'),
     prompt: description,
-    schema: z.object({
-      html: z.string(),
-    }),
+    experimental_transform: smoothStream({ chunking: 'word' }),
   });
 
   for await (const delta of fullStream) {
-    if (delta.type === 'object' && delta.object?.html) {
-      const html = delta.object.html.trim();
-      
+    const { type } = delta;
+
+    if (type === 'text-delta') {
+      const { textDelta } = delta;
+
+      draftContent += textDelta;
+
       dataStream.writeData({
         type: 'html-delta',
-        content: html,
+        content: draftContent,
       });
-      
-      dataStream.writeData({
-        type: 'finish',
-        content: ''
-      });
-      
-      return html;
     }
   }
 
-  return document.content || '';
+  return draftContent || document.content || '';
 }
 
 // Helper functions

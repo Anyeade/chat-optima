@@ -1,5 +1,4 @@
-import { z } from 'zod';
-import { streamObject } from 'ai';
+import { streamText, smoothStream } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
 import { codePrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { createDocumentHandler } from '@/lib/artifacts/server';
@@ -9,36 +8,25 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: codePrompt,
       prompt: title,
-      schema: z.object({
-        code: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { code } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (code) {
-          dataStream.writeData({
-            type: 'code-delta',
-            content: code ?? '',
-          });
+        draftContent += textDelta;
 
-          draftContent = code;
-          
-          // Signal that this is the final content
-          dataStream.writeData({
-            type: 'finish',
-            content: ''
-          });
-        }
+        dataStream.writeData({
+          type: 'code-delta',
+          content: draftContent,
+        });
       }
     }
 
@@ -47,36 +35,25 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: updateDocumentPrompt(document.content, 'code'),
       prompt: description,
-      schema: z.object({
-        code: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { code } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (code) {
-          dataStream.writeData({
-            type: 'code-delta',
-            content: code ?? '',
-          });
+        draftContent += textDelta;
 
-          draftContent = code;
-          
-          // Signal that this is the final content
-          dataStream.writeData({
-            type: 'finish',
-            content: ''
-          });
-        }
+        dataStream.writeData({
+          type: 'code-delta',
+          content: draftContent,
+        });
       }
     }
 

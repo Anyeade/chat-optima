@@ -1,38 +1,32 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import { svgPrompt } from '@/lib/ai/prompts';
-import { streamObject } from 'ai';
-import { z } from 'zod';
+import { streamText, smoothStream } from 'ai';
 
 export const svgDocumentHandler = createDocumentHandler<'svg'>({
   kind: 'svg',
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: svgPrompt,
       prompt: title,
-      schema: z.object({
-        svg: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { svg } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (svg) {
-          dataStream.writeData({
-            type: 'svg-delta',
-            content: svg,
-          });
+        draftContent += textDelta;
 
-          draftContent = svg;
-        }
+        dataStream.writeData({
+          type: 'svg-delta',
+          content: draftContent,
+        });
       }
     }
 
@@ -41,7 +35,7 @@ export const svgDocumentHandler = createDocumentHandler<'svg'>({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = '';
 
-    const { fullStream } = streamObject({
+    const { fullStream } = streamText({
       model: myProvider.languageModel('artifact-model'),
       system: `${svgPrompt}
 
@@ -50,26 +44,21 @@ Update the existing SVG graphic based on the user's request. Preserve existing s
 Current SVG:
 ${document.content}`,
       prompt: description,
-      schema: z.object({
-        svg: z.string(),
-      }),
+      experimental_transform: smoothStream({ chunking: 'word' }),
     });
 
     for await (const delta of fullStream) {
       const { type } = delta;
 
-      if (type === 'object') {
-        const { object } = delta;
-        const { svg } = object;
+      if (type === 'text-delta') {
+        const { textDelta } = delta;
 
-        if (svg) {
-          dataStream.writeData({
-            type: 'svg-delta',
-            content: svg,
-          });
+        draftContent += textDelta;
 
-          draftContent = svg;
-        }
+        dataStream.writeData({
+          type: 'svg-delta',
+          content: draftContent,
+        });
       }
     }
 
