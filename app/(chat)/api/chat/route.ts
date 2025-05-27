@@ -149,7 +149,13 @@ export async function POST(request: Request) {
 
     // Debug logging
     console.log('Selected Chat Model:', selectedChatModel);
-    console.log('Available models in provider:', Object.keys(myProvider.languageModels || {}));
+    
+    try {
+      const selectedModel = myProvider.languageModel(selectedChatModel);
+      console.log('Model provider resolved successfully for:', selectedChatModel);
+    } catch (error) {
+      console.error('Failed to resolve model:', selectedChatModel, error);
+    }
     
     const stream = createDataStream({
       execute: (dataStream) => {
