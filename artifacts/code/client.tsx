@@ -217,7 +217,7 @@ function startPerformanceTimer(): { stop: () => number } {
 // 🎯 Code Validation
 function validateCode(code: string, language: string): { isValid: boolean; suggestions: string[] } {
   const suggestions: string[] = [];
-  let isValid = true;
+  const isValid = true;
 
   // Basic validation
   if (code.trim().length === 0) {

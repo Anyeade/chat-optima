@@ -1,7 +1,6 @@
 /*! `c` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: C
@@ -19,11 +18,7 @@
     const DECLTYPE_AUTO_RE = 'decltype\\(auto\\)';
     const NAMESPACE_RE = '[a-zA-Z_]\\w*::';
     const TEMPLATE_ARGUMENT_RE = '<[^<>]+>';
-    const FUNCTION_TYPE_RE = '('
-      + DECLTYPE_AUTO_RE + '|'
-      + regex.optional(NAMESPACE_RE)
-      + '[a-zA-Z_]\\w*' + regex.optional(TEMPLATE_ARGUMENT_RE)
-    + ')';
+    const FUNCTION_TYPE_RE = `(${DECLTYPE_AUTO_RE}|${regex.optional(NAMESPACE_RE)}[a-zA-Z_]\\w*${regex.optional(TEMPLATE_ARGUMENT_RE)})`;
 
 
     const TYPES = {
@@ -48,7 +43,7 @@
           contains: [ hljs.BACKSLASH_ESCAPE ]
         },
         {
-          begin: '(u8?|U|L)?\'(' + CHARACTER_ESCAPES + "|.)",
+          begin: `(u8?|U|L)?\'(${CHARACTER_ESCAPES}|.)`,
           end: '\'',
           illegal: '.'
         },
@@ -74,8 +69,7 @@
       begin: /#\s*[a-z]+\b/,
       end: /$/,
       keywords: { keyword:
-          'if else elif endif define undef warning error line '
-          + 'pragma _Pragma ifdef ifndef elifdef elifndef include' },
+          "if else elif endif define undef warning error line pragma _Pragma ifdef ifndef elifdef elifndef include" },
       contains: [
         {
           begin: /\\\n/,
@@ -97,7 +91,7 @@
       relevance: 0
     };
 
-    const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + '\\s*\\(';
+    const FUNCTION_TITLE = `${regex.optional(NAMESPACE_RE) + hljs.IDENT_RE}\\s*\\(`;
 
     const C_KEYWORDS = [
       "asm",
@@ -186,15 +180,7 @@
       type: C_TYPES,
       literal: 'true false NULL',
       // TODO: apply hinting work similar to what was done in cpp.js
-      built_in: 'std string wstring cin cout cerr clog stdin stdout stderr stringstream istringstream ostringstream '
-        + 'auto_ptr deque list queue stack vector map set pair bitset multiset multimap unordered_set '
-        + 'unordered_map unordered_multiset unordered_multimap priority_queue make_pair array shared_ptr abort terminate abs acos '
-        + 'asin atan2 atan calloc ceil cosh cos exit exp fabs floor fmod fprintf fputs free frexp '
-        + 'fscanf future isalnum isalpha iscntrl isdigit isgraph islower isprint ispunct isspace isupper '
-        + 'isxdigit tolower toupper labs ldexp log10 log malloc realloc memchr memcmp memcpy memset modf pow '
-        + 'printf putchar puts scanf sinh sin snprintf sprintf sqrt sscanf strcat strchr strcmp '
-        + 'strcpy strcspn strlen strncat strncmp strncpy strpbrk strrchr strspn strstr tanh tan '
-        + 'vfprintf vprintf vsprintf endl initializer_list unique_ptr',
+      built_in: "std string wstring cin cout cerr clog stdin stdout stderr stringstream istringstream ostringstream auto_ptr deque list queue stack vector map set pair bitset multiset multimap unordered_set unordered_map unordered_multiset unordered_multimap priority_queue make_pair array shared_ptr abort terminate abs acos asin atan2 atan calloc ceil cosh cos exit exp fabs floor fmod fprintf fputs free frexp fscanf future isalnum isalpha iscntrl isdigit isgraph islower isprint ispunct isspace isupper isxdigit tolower toupper labs ldexp log10 log malloc realloc memchr memcmp memcpy memset modf pow printf putchar puts scanf sinh sin snprintf sprintf sqrt sscanf strcat strchr strcmp strcpy strcspn strlen strncat strncmp strncpy strpbrk strrchr strspn strstr tanh tan vfprintf vprintf vsprintf endl initializer_list unique_ptr",
     };
 
     const EXPRESSION_CONTAINS = [
@@ -238,7 +224,7 @@
     };
 
     const FUNCTION_DECLARATION = {
-      begin: '(' + FUNCTION_TYPE_RE + '[\\*&\\s]+)+' + FUNCTION_TITLE,
+      begin: `(${FUNCTION_TYPE_RE}[\\*&\\s]+)+${FUNCTION_TITLE}`,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -313,7 +299,7 @@
         [
           PREPROCESSOR,
           {
-            begin: hljs.IDENT_RE + '::',
+            begin: `${hljs.IDENT_RE}::`,
             keywords: KEYWORDS
           },
           {

@@ -250,7 +250,7 @@ Only include operations that will actually change the content. Be precise with t
       const operations = delta.object.operations;
       
       for (const op of operations) {
-        if (op && op.find && op.replace && content.includes(op.find)) {
+        if (op?.find && op.replace && content.includes(op.find)) {
           content = content.replace(op.find, op.replace);
           dataStream.writeData({
             type: 'html-smart-update',
@@ -570,7 +570,7 @@ Be specific and ensure operations will actually change the content.
       
       for (const op of operations) {
         try {
-          if (op && op.method && op.target) {
+          if (op?.method && op.target) {
             content = applySimpleOperation(content, op);
             dataStream.writeData({
               type: 'html-smart-update',
@@ -746,16 +746,17 @@ function applySimpleOperation(content: string, operation: any): string {
       }
       break;
       
-    case 'insert':
+    case 'insert': {
       const targetIndex = content.indexOf(target);
       if (targetIndex !== -1) {
         switch (position) {
           case 'before':
             return content.slice(0, targetIndex) + newContent + content.slice(targetIndex);
-          case 'after':
+          case 'after': {
             const afterIndex = targetIndex + target.length;
             return content.slice(0, afterIndex) + newContent + content.slice(afterIndex);
-          case 'inside':
+          }
+          case 'inside': {
             // Insert at the end of the target element
             const endTag = target.replace('<', '</');
             const endIndex = content.indexOf(endTag, targetIndex);
@@ -763,9 +764,11 @@ function applySimpleOperation(content: string, operation: any): string {
               return content.slice(0, endIndex) + newContent + content.slice(endIndex);
             }
             break;
+          }
         }
       }
       break;
+    }
       
     case 'remove':
       return content.replace(target, '');

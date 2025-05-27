@@ -1,7 +1,6 @@
 /*! `scss` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   const MODES = (hljs) => {
     return {
@@ -30,15 +29,7 @@
       },
       CSS_NUMBER_MODE: {
         scope: 'number',
-        begin: hljs.NUMBER_RE + '(' +
-          '%|em|ex|ch|rem' +
-          '|vw|vh|vmin|vmax' +
-          '|cm|mm|in|pt|pc|px' +
-          '|deg|grad|rad|turn' +
-          '|s|ms' +
-          '|Hz|kHz' +
-          '|dpi|dpcm|dppx' +
-          ')?',
+        begin: `${hljs.NUMBER_RE}(%|em|ex|ch|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc|px|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?`,
         relevance: 0
       },
       CSS_VARIABLE: {
@@ -740,7 +731,7 @@
     const IDENT_RE = '[a-zA-Z-][a-zA-Z0-9_-]*';
     const VARIABLE = {
       className: 'variable',
-      begin: '(\\$' + IDENT_RE + ')\\b',
+      begin: `(\\$${IDENT_RE})\\b`,
       relevance: 0
     };
 
@@ -767,17 +758,17 @@
         modes.ATTRIBUTE_SELECTOR_MODE,
         {
           className: 'selector-tag',
-          begin: '\\b(' + TAGS.join('|') + ')\\b',
+          begin: `\\b(${TAGS.join('|')})\\b`,
           // was there, before, but why?
           relevance: 0
         },
         {
           className: 'selector-pseudo',
-          begin: ':(' + PSEUDO_CLASSES$1.join('|') + ')'
+          begin: `:(${PSEUDO_CLASSES$1.join('|')})`
         },
         {
           className: 'selector-pseudo',
-          begin: ':(:)?(' + PSEUDO_ELEMENTS$1.join('|') + ')'
+          begin: `:(:)?(${PSEUDO_ELEMENTS$1.join('|')})`
         },
         VARIABLE,
         { // pseudo-selector params
@@ -788,7 +779,7 @@
         modes.CSS_VARIABLE,
         {
           className: 'attribute',
-          begin: '\\b(' + ATTRIBUTES.join('|') + ')\\b'
+          begin: `\\b(${ATTRIBUTES.join('|')})\\b`
         },
         { begin: '\\b(whitespace|wait|w-resize|visible|vertical-text|vertical-ideographic|uppercase|upper-roman|upper-alpha|underline|transparent|top|thin|thick|text|text-top|text-bottom|tb-rl|table-header-group|table-footer-group|sw-resize|super|strict|static|square|solid|small-caps|separate|se-resize|scroll|s-resize|rtl|row-resize|ridge|right|repeat|repeat-y|repeat-x|relative|progress|pointer|overline|outside|outset|oblique|nowrap|not-allowed|normal|none|nw-resize|no-repeat|no-drop|newspaper|ne-resize|n-resize|move|middle|medium|ltr|lr-tb|lowercase|lower-roman|lower-alpha|loose|list-item|line|line-through|line-edge|lighter|left|keep-all|justify|italic|inter-word|inter-ideograph|inside|inset|inline|inline-block|inherit|inactive|ideograph-space|ideograph-parenthesis|ideograph-numeric|ideograph-alpha|horizontal|hidden|help|hand|groove|fixed|ellipsis|e-resize|double|dotted|distribute|distribute-space|distribute-letter|distribute-all-lines|disc|disabled|default|decimal|dashed|crosshair|collapse|col-resize|circle|char|center|capitalize|break-word|break-all|bottom|both|bolder|bold|block|bidi-override|below|baseline|auto|always|all-scroll|absolute|table|table-cell)\\b' },
         {

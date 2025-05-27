@@ -3,12 +3,14 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 // import { xai } from '@ai-sdk/xai'; // Commented out for now
 import { google } from '@ai-sdk/google';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
 import { cohere } from '@ai-sdk/cohere';
 import { openai } from '@ai-sdk/openai';
+import { togetherai } from '@ai-sdk/togetherai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -16,6 +18,25 @@ import {
   reasoningModel,
   titleModel,
 } from './models.test';
+
+// Create OpenAI-compatible providers
+const requestyAI = createOpenAICompatible({
+  name: 'requesty-ai',
+  baseURL: 'https://router.requesty.ai/v1',
+  apiKey: process.env.REQUESTY_AI_API_KEY || 'dummy-key', // Some providers may not require auth
+});
+
+const glamaAI = createOpenAICompatible({
+  name: 'glama-ai',
+  baseURL: 'https://glama.ai/api/gateway/openai/v1',
+  apiKey: process.env.GLAMA_AI_API_KEY || 'dummy-key', // Some providers may not require auth
+});
+
+const chutesAI = createOpenAICompatible({
+  name: 'chutes-ai',
+  baseURL: 'https://llm.chutes.ai/v1',
+  apiKey: process.env.CHUTES_AI_API_KEY || 'dummy-key', // Some providers may not require auth
+});
 
 // Debug function to check environment variables
 function checkProviderKeys() {
@@ -25,6 +46,11 @@ function checkProviderKeys() {
     mistral: process.env.MISTRAL_API_KEY,
     cohere: process.env.COHERE_API_KEY,
     openai: process.env.OPENAI_API_KEY,
+    togetherai: process.env.TOGETHER_AI_API_KEY,
+    requestyai: process.env.REQUESTY_AI_API_KEY,
+    glamaai: process.env.GLAMA_AI_API_KEY,
+    chutesai: process.env.CHUTES_AI_API_KEY,
+    chutesimage: process.env.CHUTES_IMAGE_API_TOKEN,
     // xai: process.env.XAI_API_KEY, // Commented out for now
   };
   
@@ -52,38 +78,74 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': groq('llama-4-scout-17b-16e-instruct'),
-        'chat-model-reasoning': groq('deepseek-r1-distill-llama-70b'),
-        'title-model': groq('llama-4-scout-17b-16e-instruct'),
-        'artifact-model': groq('llama-4-scout-17b-16e-instruct'),
+        'chat-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
+        'chat-model-reasoning': wrapLanguageModel({
+          model: groq('deepseek-r1-distill-llama-70b'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'title-model': groq('llama3-70b-8192'), // High volume model with tool support
+        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
 
-        // Google Gemini Models
-        'gemini-2.5-flash-preview-04-17': google('gemini-2.5-flash-preview-04-17'),
-        'gemini-2.5-pro-preview-05-06': google('gemini-2.5-pro-preview-05-06'),
+        // Google Gemini Models (selected only)
         'gemini-2.0-flash': google('gemini-2.0-flash'),
         'gemini-2.0-flash-lite-preview-02-05': google('gemini-2.0-flash-lite-preview-02-05'),
         'gemini-2.0-flash-thinking-exp-01-21': google('gemini-2.0-flash-thinking-exp-01-21'),
         'gemini-2.0-flash-thinking-exp-1219': google('gemini-2.0-flash-thinking-exp-1219'),
-        'gemini-1.5-pro-001': google('gemini-1.5-pro-001'),
-        'gemini-1.5-pro-002': google('gemini-1.5-pro-002'),
-        'gemini-1.5-flash-001': google('gemini-1.5-flash-001'),
-        'gemini-1.5-flash-002': google('gemini-1.5-flash-002'),
-        'gemini-1.5-flash-8b-001': google('gemini-1.5-flash-8b-001'),
-        'gemini-1.5-flash-8b-exp-0924': google('gemini-1.5-flash-8b-exp-0924'),
         'gemma-3-27b-it': google('gemma-3-27b-it'),
 
         // Groq Models
-        'llama-4-scout-17b-16e-instruct': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
-        'qwen-qwq-32b': groq('qwen-qwq-32b'),
-        'deepseek-r1-distill-llama-70b': groq('deepseek-r1-distill-llama-70b'),
+        // Premium models (lower daily limits but high token throughput)
+        'meta-llama/llama-4-scout-17b-16e-instruct': groq('meta-llama/llama-4-scout-17b-16e-instruct'), // 30k tokens/min, 1k req/day
+        'meta-llama/llama-4-maverick-17b-128e-instruct': groq('meta-llama/llama-4-maverick-17b-128e-instruct'), // 6k tokens/min, 1k req/day
+        'compound-beta': groq('compound-beta'), // 70k tokens/min, 200 req/day
+        'compound-beta-mini': groq('compound-beta-mini'), // 70k tokens/min, 200 req/day
+        'deepseek-r1-distill-llama-70b': wrapLanguageModel({
+          model: groq('deepseek-r1-distill-llama-70b'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }), // 6k tokens/min, 1k req/day
+        'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'), // 12k tokens/min, 1k req/day
+        'qwen-qwq-32b': groq('qwen-qwq-32b'), // 6k tokens/min, 1k req/day
+        
+        // High volume models (higher daily limits)
+        'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'), // 6k tokens/min, 14.4k req/day
+        'gemma2-9b-it': groq('gemma2-9b-it'), // 15k tokens/min, 14.4k req/day
+        'llama3-70b-8192': groq('llama3-70b-8192'), // 6k tokens/min, 14.4k req/day
+        'llama3-8b-8192': groq('llama3-8b-8192'), // 6k tokens/min, 14.4k req/day
 
         // Mistral Models
         'pixtral-12b-2409': mistral('pixtral-12b-2409'),
 
-        // Cohere Models
-        'command-r-plus': cohere('command-r-plus'),
-        'command-r': cohere('command-r'),
-        'command-light': cohere('command-light'),
+        // Cohere Models (128K context, tool support, no vision)
+        'command-a-03-2025': cohere('command-a-03-2025'),
+        'command-nightly': cohere('command-nightly'),
+        'command-r-plus-04-2024': cohere('command-r-plus-04-2024'),
+        'command-r-08-2024': cohere('command-r-08-2024'),
+
+        // Together.ai Models (200+ open-source models, free options)
+        'meta-llama/Llama-Vision-Free': togetherai('meta-llama/Llama-Vision-Free'),
+        'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free': wrapLanguageModel({
+          model: togetherai('deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free': togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'),
+
+        // Requesty AI Router Models (OpenAI-compatible)
+        'google/gemini-2.0-flash-exp': requestyAI('google/gemini-2.0-flash-exp'),
+        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),
+
+        // Glama AI Gateway Models (OpenAI-compatible)
+        'phi-3-medium-128k-instruct': glamaAI('phi-3-medium-128k-instruct'),
+        'phi-3-mini-128k-instruct': glamaAI('phi-3-mini-128k-instruct'),
+        'llama-3.2-11b-vision-instruct': glamaAI('llama-3.2-11b-vision-instruct'),
+
+        // Chutes AI Models (OpenAI-compatible)
+        'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'),
+        'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
+          model: chutesAI('deepseek-ai/DeepSeek-R1'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'Qwen/Qwen3-235B-A22B': chutesAI('Qwen/Qwen3-235B-A22B'),
+        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),
 
         // X.AI Models (Optional - requires credits)
         // 'grok-2-vision-1212': xai('grok-2-vision-1212'),

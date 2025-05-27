@@ -1,13 +1,12 @@
 /*! `java` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   // https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10
-  var decimalDigits = '[0-9](_*[0-9])*';
-  var frac = `\\.(${decimalDigits})`;
-  var hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
-  var NUMERIC = {
+  const decimalDigits = '[0-9](_*[0-9])*';
+  const frac = `\\.(${decimalDigits})`;
+  const hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
+  const NUMERIC = {
     className: 'number',
     variants: [
       // DecimalFloatingPointLiteral
@@ -70,7 +69,7 @@
     const regex = hljs.regex;
     const JAVA_IDENT_RE = '[\u00C0-\u02B8a-zA-Z_$][\u00C0-\u02B8a-zA-Z_$0-9]*';
     const GENERIC_IDENT_RE = JAVA_IDENT_RE
-      + recurRegex('(?:<' + JAVA_IDENT_RE + '~~~(?:\\s*,\\s*' + JAVA_IDENT_RE + '~~~)*>)?', /~~~/g, 2);
+      + recurRegex(`(?:<${JAVA_IDENT_RE}~~~(?:\\s*,\\s*${JAVA_IDENT_RE}~~~)*>)?`, /~~~/g, 2);
     const MAIN_KEYWORDS = [
       'synchronized',
       'abstract',
@@ -148,7 +147,7 @@
 
     const ANNOTATION = {
       className: 'meta',
-      begin: '@' + JAVA_IDENT_RE,
+      begin: `@${JAVA_IDENT_RE}`,
       contains: [
         {
           begin: /\(/,
@@ -261,7 +260,7 @@
         },
         {
           begin: [
-            '(?:' + GENERIC_IDENT_RE + '\\s+)',
+            `(?:${GENERIC_IDENT_RE}\\s+)`,
             hljs.UNDERSCORE_IDENT_RE,
             /\s*(?=\()/
           ],

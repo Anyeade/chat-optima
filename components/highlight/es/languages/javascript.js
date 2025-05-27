@@ -1,6 +1,5 @@
 /*! `javascript` grammar compiled for Highlight.js 11.10.0 */
-var hljsGrammar = (function () {
-  'use strict';
+const hljsGrammar = (() => {
 
   const IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
   const KEYWORDS = [
@@ -179,7 +178,7 @@ var hljsGrammar = (function () {
      * @param {{after:number}} param1
      */
     const hasClosingTag = (match, { after }) => {
-      const tag = "</" + match[0].slice(1);
+      const tag = `</${match[0].slice(1)}`;
       const pos = match.input.indexOf(tag, after);
       return pos !== -1;
     };
@@ -365,7 +364,7 @@ var hljsGrammar = (function () {
               },
               {
                 className: 'variable',
-                begin: IDENT_RE$1 + '(?=\\s*(-)|$)',
+                begin: `${IDENT_RE$1}(?=\\s*(-)|$)`,
                 endsParent: true,
                 relevance: 0
               },
@@ -585,13 +584,7 @@ var hljsGrammar = (function () {
       ]
     };
 
-    const FUNC_LEAD_IN_RE = '(\\(' +
-      '[^()]*(\\(' +
-      '[^()]*(\\(' +
-      '[^()]*' +
-      '\\)[^()]*)*' +
-      '\\)[^()]*)*' +
-      '\\)|' + hljs.UNDERSCORE_IDENT_RE + ')\\s*=>';
+    const FUNC_LEAD_IN_RE = `(\\([^()]*(\\([^()]*(\\([^()]*\\)[^()]*)*\\)[^()]*)*\\)|${hljs.UNDERSCORE_IDENT_RE})\\s*=>`;
 
     const FUNCTION_VARIABLE = {
       match: [
@@ -643,7 +636,7 @@ var hljsGrammar = (function () {
         },
         FUNCTION_VARIABLE,
         { // "value" container
-          begin: '(' + hljs.RE_STARTERS_RE + '|\\b(case|return|throw)\\b)\\s*',
+          begin: `(${hljs.RE_STARTERS_RE}|\\b(case|return|throw)\\b)\\s*`,
           keywords: 'return throw case',
           relevance: 0,
           contains: [
@@ -724,14 +717,7 @@ var hljsGrammar = (function () {
           // we have to count the parens to make sure we actually have the correct
           // bounding ( ).  There could be any number of sub-expressions inside
           // also surrounded by parens.
-          begin: '\\b(?!function)' + hljs.UNDERSCORE_IDENT_RE +
-            '\\(' + // first parens
-            '[^()]*(\\(' +
-              '[^()]*(\\(' +
-                '[^()]*' +
-              '\\)[^()]*)*' +
-            '\\)[^()]*)*' +
-            '\\)\\s*\\{', // end parens
+          begin: `\\b(?!function)${hljs.UNDERSCORE_IDENT_RE}\\([^()]*(\\([^()]*(\\([^()]*\\)[^()]*)*\\)[^()]*)*\\)\\s*\\{`, // end parens
           returnBegin:true,
           label: "func.def",
           contains: [
@@ -749,7 +735,7 @@ var hljsGrammar = (function () {
         // .keyword()
         // $keyword = x
         {
-          match: '\\$' + IDENT_RE$1,
+          match: `\\$${IDENT_RE$1}`,
           relevance: 0
         },
         {

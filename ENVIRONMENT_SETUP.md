@@ -32,12 +32,51 @@ COHERE_API_KEY=your_cohere_api_key_here
 - Get your API key from: https://dashboard.cohere.com/api-keys
 - Used for Command models
 
-### 5. X.AI (Grok)
+### 5. Together.ai
+```
+TOGETHER_AI_API_KEY=your_together_ai_api_key_here
+```
+- Get your API key from: https://api.together.xyz/settings/api-keys
+- Used for 200+ open-source models with free tier options
+
+### 6. Requesty AI Router (Optional)
+```
+REQUESTY_AI_API_KEY=your_requesty_ai_api_key_here
+```
+- Get your API key from: https://router.requesty.ai/
+- OpenAI-compatible router for accessing various models
+- May not require authentication for some endpoints
+
+### 7. Glama AI Gateway (Optional)
+```
+GLAMA_AI_API_KEY=your_glama_ai_api_key_here
+```
+- Get your API key from: https://glama.ai/
+- OpenAI-compatible gateway for accessing Phi-3 and Llama models
+- May not require authentication for some endpoints
+
+### 8. Chutes AI (Optional)
+```
+CHUTES_AI_API_KEY=your_chutes_ai_api_key_here
+```
+- Get your API key from: https://llm.chutes.ai/
+- OpenAI-compatible provider for DeepSeek V3, DeepSeek R1, Qwen 3, and Llama 4 models
+- May not require authentication for some endpoints
+
+### 8b. Chutes AI Image Generation (Optional)
+```
+CHUTES_IMAGE_API_TOKEN=your_chutes_image_api_token_here
+```
+- Get your API token from: https://chutes-infiniteyou.chutes.ai/
+- Used for AI image generation (replaces OpenAI DALL-E 3)
+- Primary image generation provider with OpenAI fallback
+
+### 9. X.AI (Grok) - Optional
 ```
 XAI_API_KEY=your_xai_api_key_here
 ```
 - Get your API key from: https://console.x.ai/
-- Used for Grok models
+- Used for Grok models (currently commented out due to credit limits)
 
 ## How to Set Environment Variables in Vercel
 

@@ -15,7 +15,7 @@ export const PreviewAttachment = ({
 
   return (
     <div data-testid="input-attachment-preview" className="flex flex-col gap-2 relative group min-w-[80px] max-w-[160px]">
-      <div className="w-20 h-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center flex-shrink-0">
+      <div className="w-20 h-16 aspect-video bg-muted rounded-md relative flex flex-col items-center justify-center shrink-0">
         {contentType ? (
           contentType.startsWith('image') ? (
             // NOTE: it is recommended to use next/image for images
@@ -45,7 +45,7 @@ export const PreviewAttachment = ({
         {onRemove && !isUploading && (
           <button
             onClick={onRemove}
-            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+            className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full size-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             data-testid="remove-attachment-button"
           >
             <CrossIcon size={12} />

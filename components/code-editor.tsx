@@ -12,7 +12,7 @@ import { java } from '@codemirror/lang-java';
 import { cpp } from '@codemirror/lang-cpp';
 import { oneDark } from '@codemirror/theme-one-dark';
 import { basicSetup } from 'codemirror';
-import { LanguageSupport } from '@codemirror/language';
+import type { LanguageSupport } from '@codemirror/language';
 import React, { memo, useEffect, useRef } from 'react';
 import type { Suggestion } from '@/lib/db/schema';
 

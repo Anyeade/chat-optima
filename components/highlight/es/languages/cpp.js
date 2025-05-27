@@ -1,6 +1,5 @@
 /*! `cpp` grammar compiled for Highlight.js 11.10.0 */
-var hljsGrammar = (function () {
-  'use strict';
+const hljsGrammar = (() => {
 
   /*
   Language: C++
@@ -18,11 +17,7 @@ var hljsGrammar = (function () {
     const DECLTYPE_AUTO_RE = 'decltype\\(auto\\)';
     const NAMESPACE_RE = '[a-zA-Z_]\\w*::';
     const TEMPLATE_ARGUMENT_RE = '<[^<>]+>';
-    const FUNCTION_TYPE_RE = '(?!struct)('
-      + DECLTYPE_AUTO_RE + '|'
-      + regex.optional(NAMESPACE_RE)
-      + '[a-zA-Z_]\\w*' + regex.optional(TEMPLATE_ARGUMENT_RE)
-    + ')';
+    const FUNCTION_TYPE_RE = `(?!struct)(${DECLTYPE_AUTO_RE}|${regex.optional(NAMESPACE_RE)}[a-zA-Z_]\\w*${regex.optional(TEMPLATE_ARGUMENT_RE)})`;
 
     const CPP_PRIMITIVE_TYPES = {
       className: 'type',
@@ -42,7 +37,7 @@ var hljsGrammar = (function () {
           contains: [ hljs.BACKSLASH_ESCAPE ]
         },
         {
-          begin: '(u8?|U|L)?\'(' + CHARACTER_ESCAPES + '|.)',
+          begin: `(u8?|U|L)?\'(${CHARACTER_ESCAPES}|.)`,
           end: '\'',
           illegal: '.'
         },
@@ -58,39 +53,11 @@ var hljsGrammar = (function () {
       variants: [
         // Floating-point literal.
         { begin:
-          "[+-]?(?:" // Leading sign.
-            // Decimal.
-            + "(?:"
-              +"[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?"
-              + "|\\.[0-9](?:'?[0-9])*"
-            + ")(?:[Ee][+-]?[0-9](?:'?[0-9])*)?"
-            + "|[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*"
-            // Hexadecimal.
-            + "|0[Xx](?:"
-              +"[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?"
-              + "|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*"
-            + ")[Pp][+-]?[0-9](?:'?[0-9])*"
-          + ")(?:" // Literal suffixes.
-            + "[Ff](?:16|32|64|128)?"
-            + "|(BF|bf)16"
-            + "|[Ll]"
-            + "|" // Literal suffix is optional.
-          + ")"
+          "[+-]?(?:(?:[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?|\\.[0-9](?:'?[0-9])*)(?:[Ee][+-]?[0-9](?:'?[0-9])*)?|[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*|0[Xx](?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)[Pp][+-]?[0-9](?:'?[0-9])*)(?:[Ff](?:16|32|64|128)?|(BF|bf)16|[Ll]|)"
         },
         // Integer literal.
         { begin:
-          "[+-]?\\b(?:" // Leading sign.
-            + "0[Bb][01](?:'?[01])*" // Binary.
-            + "|0[Xx][0-9A-Fa-f](?:'?[0-9A-Fa-f])*" // Hexadecimal.
-            + "|0(?:'?[0-7])*" // Octal or just a lone zero.
-            + "|[1-9](?:'?[0-9])*" // Decimal.
-          + ")(?:" // Literal suffixes.
-            + "[Uu](?:LL?|ll?)"
-            + "|[Uu][Zz]?"
-            + "|(?:LL?|ll?)[Uu]?"
-            + "|[Zz][Uu]"
-            + "|" // Literal suffix is optional.
-          + ")"
+          "[+-]?\\b(?:0[Bb][01](?:'?[01])*|0[Xx][0-9A-Fa-f](?:'?[0-9A-Fa-f])*|0(?:'?[0-7])*|[1-9](?:'?[0-9])*)(?:[Uu](?:LL?|ll?)|[Uu][Zz]?|(?:LL?|ll?)[Uu]?|[Zz][Uu]|)"
           // Note: there are user-defined literal suffixes too, but perhaps having the custom suffix not part of the
           // literal highlight actually makes it stand out more.
         }
@@ -103,8 +70,7 @@ var hljsGrammar = (function () {
       begin: /#\s*[a-z]+\b/,
       end: /$/,
       keywords: { keyword:
-          'if else elif endif define undef warning error line '
-          + 'pragma _Pragma ifdef ifndef include' },
+          "if else elif endif define undef warning error line pragma _Pragma ifdef ifndef include" },
       contains: [
         {
           begin: /\\\n/,
@@ -126,7 +92,7 @@ var hljsGrammar = (function () {
       relevance: 0
     };
 
-    const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + '\\s*\\(';
+    const FUNCTION_TITLE = `${regex.optional(NAMESPACE_RE) + hljs.IDENT_RE}\\s*\\(`;
 
     // https://en.cppreference.com/w/cpp/keyword
     const RESERVED_KEYWORDS = [
@@ -479,7 +445,7 @@ var hljsGrammar = (function () {
 
     const FUNCTION_DECLARATION = {
       className: 'function',
-      begin: '(' + FUNCTION_TYPE_RE + '[\\*&\\s]+)+' + FUNCTION_TITLE,
+      begin: `(${FUNCTION_TYPE_RE}[\\*&\\s]+)+${FUNCTION_TITLE}`,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -585,7 +551,7 @@ var hljsGrammar = (function () {
             ]
           },
           {
-            begin: hljs.IDENT_RE + '::',
+            begin: `${hljs.IDENT_RE}::`,
             keywords: CPP_KEYWORDS
           },
           {

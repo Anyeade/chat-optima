@@ -10,14 +10,14 @@ function deepFreeze(obj) {
     obj.clear =
       obj.delete =
       obj.set =
-        function () {
+        () => {
           throw new Error('map is read-only');
         };
   } else if (obj instanceof Set) {
     obj.add =
       obj.clear =
       obj.delete =
-        function () {
+        () => {
           throw new Error('set is read-only');
         };
   }
@@ -87,7 +87,7 @@ function inherit$1(original, ...objects) {
   for (const key in original) {
     result[key] = original[key];
   }
-  objects.forEach(function(obj) {
+  objects.forEach((obj) => {
     for (const key in obj) {
       result[key] = obj[key];
     }
@@ -278,7 +278,7 @@ class TokenTree {
       builder.addText(node);
     } else if (node.children) {
       builder.openNode(node);
-      node.children.forEach((child) => this._walk(builder, child));
+      node.children.forEach((child) => TokenTree._walk(builder, child));
       builder.closeNode(node);
     }
     return builder;
@@ -447,9 +447,7 @@ function stripOptionsFromArgs(args) {
 function either(...args) {
   /** @type { object & {capture?: boolean} }  */
   const opts = stripOptionsFromArgs(args);
-  const joined = '('
-    + (opts.capture ? "" : "?:")
-    + args.map((x) => source(x)).join("|") + ")";
+  const joined = `(${opts.capture ? "" : "?:"}${args.map((x) => source(x)).join("|")})`;
   return joined;
 }
 
@@ -458,7 +456,7 @@ function either(...args) {
  * @returns {number}
  */
 function countMatchGroups(re) {
-  return (new RegExp(re.toString() + '|')).exec('').length - 1;
+  return (new RegExp(`${re.toString()}|`)).exec('').length - 1;
 }
 
 /**
@@ -467,7 +465,7 @@ function countMatchGroups(re) {
  * @param {string} lexeme
  */
 function startsWith(re, lexeme) {
-  const match = re && re.exec(lexeme);
+  const match = re?.exec(lexeme);
   return match && match.index === 0;
 }
 
@@ -510,7 +508,7 @@ function _rewriteBackreferences(regexps, { joinWith }) {
       re = re.substring(match.index + match[0].length);
       if (match[0][0] === '\\' && match[1]) {
         // Adjust the backreference.
-        out += '\\' + String(Number(match[1]) + offset);
+        out += `\\${String(Number(match[1]) + offset)}`;
       } else {
         out += match[0];
         if (match[0] === '(') {
@@ -587,7 +585,7 @@ const PHRASAL_WORDS_MODE = {
  * @param {Mode | {}} [modeOptions]
  * @returns {Partial<Mode>}
  */
-const COMMENT = function(begin, end, modeOptions = {}) {
+const COMMENT = (begin, end, modeOptions = {}) => {
   const mode = inherit$1(
     {
       scope: 'comment',
@@ -696,7 +694,7 @@ const UNDERSCORE_TITLE_MODE = {
 };
 const METHOD_GUARD = {
   // excludes method names from keyword processing
-  begin: '\\.\\s*' + UNDERSCORE_IDENT_RE,
+  begin: `\\.\\s*${UNDERSCORE_IDENT_RE}`,
   relevance: 0
 };
 
@@ -707,17 +705,15 @@ const METHOD_GUARD = {
  * group is what is used for comparison
  * @param {Partial<Mode>} mode
  */
-const END_SAME_AS_BEGIN = function(mode) {
-  return Object.assign(mode,
+const END_SAME_AS_BEGIN = (mode) => Object.assign(mode,
     {
       /** @type {ModeCallback} */
       'on:begin': (m, resp) => { resp.data._beginMatch = m[1]; },
       /** @type {ModeCallback} */
       'on:end': (m, resp) => { if (resp.data._beginMatch !== m[1]) resp.ignoreMatch(); }
     });
-};
 
-var MODES = /*#__PURE__*/Object.freeze({
+const MODES = /*#__PURE__*/Object.freeze({
   __proto__: null,
   APOS_STRING_MODE: APOS_STRING_MODE,
   BACKSLASH_ESCAPE: BACKSLASH_ESCAPE,
@@ -789,7 +785,7 @@ function scopeClassName(mode, _parent) {
   // eslint-disable-next-line no-undefined
   if (mode.className !== undefined) {
     mode.scope = mode.className;
-    delete mode.className;
+    mode.className = undefined;
   }
 }
 
@@ -806,10 +802,10 @@ function beginKeywords(mode, parent) {
   // or whitespace - this does no harm in any case since our keyword engine
   // doesn't allow spaces in keywords anyways and we still check for the boundary
   // first
-  mode.begin = '\\b(' + mode.beginKeywords.split(' ').join('|') + ')(?!\\.)(?=\\b|\\s)';
+  mode.begin = `\\b(${mode.beginKeywords.split(' ').join('|')})(?!\\.)(?=\\b|\\s)`;
   mode.__beforeBegin = skipIfHasPrecedingDot;
   mode.keywords = mode.keywords || mode.beginKeywords;
-  delete mode.beginKeywords;
+  mode.beginKeywords = undefined;
 
   // prevents double relevance, the keywords themselves provide
   // relevance, the mode doesn't need to double it
@@ -836,7 +832,7 @@ function compileMatch(mode, _parent) {
   if (mode.begin || mode.end) throw new Error("begin & end are not supported with match");
 
   mode.begin = mode.match;
-  delete mode.match;
+  mode.match = undefined;
 }
 
 /**
@@ -869,7 +865,7 @@ const beforeMatchExt = (mode, parent) => {
   };
   mode.relevance = 0;
 
-  delete originalMode.beforeMatch;
+  originalMode.beforeMatch = undefined;
 };
 
 // keywords that should have no default relevance value
@@ -906,7 +902,7 @@ function compileKeywords(rawKeywords, caseInsensitive, scopeName = DEFAULT_KEYWO
   } else if (Array.isArray(rawKeywords)) {
     compileList(scopeName, rawKeywords);
   } else {
-    Object.keys(rawKeywords).forEach(function(scopeName) {
+    Object.keys(rawKeywords).forEach((scopeName) => {
       // collapse all our objects back into the parent object
       Object.assign(
         compiledKeywords,
@@ -930,7 +926,7 @@ function compileKeywords(rawKeywords, caseInsensitive, scopeName = DEFAULT_KEYWO
     if (caseInsensitive) {
       keywordList = keywordList.map(x => x.toLowerCase());
     }
-    keywordList.forEach(function(keyword) {
+    keywordList.forEach((keyword) => {
       const pair = keyword.split('|');
       compiledKeywords[pair[0]] = [scopeName, scoreForKeyword(pair[0], pair[1])];
     });
@@ -1111,7 +1107,7 @@ function endMultiClass(mode) {
 function scopeSugar(mode) {
   if (mode.scope && typeof mode.scope === "object" && mode.scope !== null) {
     mode.beginScope = mode.scope;
-    delete mode.scope;
+    mode.scope = undefined;
   }
 }
 
@@ -1160,10 +1156,7 @@ function compileLanguage(language) {
   function langRe(value, global) {
     return new RegExp(
       source(value),
-      'm'
-      + (language.case_insensitive ? 'i' : '')
-      + (language.unicodeRegex ? 'u' : '')
-      + (global ? 'g' : '')
+      `m${language.case_insensitive ? 'i' : ''}${language.unicodeRegex ? 'u' : ''}${global ? 'g' : ''}`
     );
   }
 
@@ -1449,7 +1442,7 @@ function compileLanguage(language) {
       // pass
       mode.keywords = Object.assign({}, mode.keywords);
       keywordPattern = mode.keywords.$pattern;
-      delete mode.keywords.$pattern;
+      mode.keywords.$pattern = undefined;
     }
     keywordPattern = keywordPattern || /\w+/;
 
@@ -1472,10 +1465,8 @@ function compileLanguage(language) {
     if (mode.illegal) cmode.illegalRe = langRe(/** @type {RegExp | string} */ (mode.illegal));
     if (!mode.contains) mode.contains = [];
 
-    mode.contains = [].concat(...mode.contains.map(function(c) {
-      return expandOrCloneMode(c === 'self' ? mode : c);
-    }));
-    mode.contains.forEach(function(c) { compileMode(/** @type Mode */ (c), cmode); });
+    mode.contains = [].concat(...mode.contains.map((c) => expandOrCloneMode(c === 'self' ? mode : c)));
+    mode.contains.forEach((c) => { compileMode(/** @type Mode */ (c), cmode); });
 
     if (mode.starts) {
       compileMode(mode.starts, parent);
@@ -1488,7 +1479,7 @@ function compileLanguage(language) {
   if (!language.compilerExtensions) language.compilerExtensions = [];
 
   // self is not valid at the top-level
-  if (language.contains && language.contains.includes('self')) {
+  if (language.contains?.includes('self')) {
     throw new Error("ERR: contains `self` is not supported at the top-level of a language.  See documentation.");
   }
 
@@ -1527,9 +1518,7 @@ function dependencyOnParent(mode) {
  * */
 function expandOrCloneMode(mode) {
   if (mode.variants && !mode.cachedVariants) {
-    mode.cachedVariants = mode.variants.map(function(variant) {
-      return inherit$1(mode, { variants: null }, variant);
-    });
+    mode.cachedVariants = mode.variants.map((variant) => inherit$1(mode, { variants: null }, variant));
   }
 
   // EXPAND
@@ -1555,7 +1544,7 @@ function expandOrCloneMode(mode) {
   return mode;
 }
 
-var version = "11.10.0";
+const version = "11.10.0";
 
 class HTMLInjectionError extends Error {
   constructor(reason, html) {
@@ -1603,7 +1592,7 @@ const MAX_KEYWORD_HITS = 7;
  * @param {any} hljs - object that is extended (legacy)
  * @returns {HLJSApi}
  */
-const HLJS = function(hljs) {
+const HLJS = (hljs) => {
   // Global internal variables used within the highlight.js library.
   /** @type {Record<string, Language>} */
   const languages = Object.create(null);
@@ -1649,7 +1638,7 @@ const HLJS = function(hljs) {
    * @param {HighlightedHTMLElement} block - the HTML element to determine language for
    */
   function blockLanguage(block) {
-    let classes = block.className + ' ';
+    let classes = `${block.className} `;
 
     classes += block.parentNode ? block.parentNode.className : '';
 
@@ -1982,10 +1971,10 @@ const HLJS = function(hljs) {
       if (!endMode) { return NO_MATCH; }
 
       const origin = top;
-      if (top.endScope && top.endScope._wrap) {
+      if (top.endScope?._wrap) {
         processBuffer();
         emitKeyword(lexeme, top.endScope._wrap);
-      } else if (top.endScope && top.endScope._multi) {
+      } else if (top.endScope?._multi) {
         processBuffer();
         emitMultiClass(top.endScope, match);
       } else if (origin.skip) {
@@ -2034,7 +2023,7 @@ const HLJS = function(hljs) {
      * @param {EnhancedMatch} [match] - the match itself
      */
     function processLexeme(textBeforeMatch, match) {
-      const lexeme = match && match[0];
+      const lexeme = match?.[0];
 
       // add non-matched text to the current mode buffer
       modeBuffer += textBeforeMatch;
@@ -2067,7 +2056,7 @@ const HLJS = function(hljs) {
       } else if (match.type === "illegal" && !ignoreIllegals) {
         // illegal match, we do not continue processing
         /** @type {AnnotatedError} */
-        const err = new Error('Illegal lexeme "' + lexeme + '" for mode "' + (top.scope || '<unnamed>') + '"');
+        const err = new Error(`Illegal lexeme "${lexeme}" for mode "${top.scope || '<unnamed>'}"`);
         err.mode = top;
         throw err;
       } else if (match.type === "end") {
@@ -2109,7 +2098,7 @@ const HLJS = function(hljs) {
     const language = getLanguage(languageName);
     if (!language) {
       error(LANGUAGE_NOT_FOUND.replace("{}", languageName));
-      throw new Error('Unknown language: "' + languageName + '"');
+      throw new Error(`Unknown language: "${languageName}"`);
     }
 
     const md = compileLanguage(language);
@@ -2167,7 +2156,7 @@ const HLJS = function(hljs) {
         _top: top
       };
     } catch (err) {
-      if (err.message && err.message.includes('Illegal')) {
+      if (err.message?.includes('Illegal')) {
         return {
           language: languageName,
           value: escape(codeToHighlight),
@@ -2524,7 +2513,7 @@ const HLJS = function(hljs) {
    */
   function fire(event, args) {
     const cb = event;
-    plugins.forEach(function(plugin) {
+    plugins.forEach((plugin) => {
       if (plugin[cb]) {
         plugin[cb](args);
       }
@@ -2564,8 +2553,8 @@ const HLJS = function(hljs) {
     removePlugin
   });
 
-  hljs.debugMode = function() { SAFE_MODE = false; };
-  hljs.safeMode = function() { SAFE_MODE = true; };
+  hljs.debugMode = () => { SAFE_MODE = false; };
+  hljs.safeMode = () => { SAFE_MODE = true; };
   hljs.versionString = version;
 
   hljs.regex = {

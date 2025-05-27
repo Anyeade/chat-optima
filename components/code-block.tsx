@@ -35,7 +35,7 @@ export function CodeBlock({
     if (dataTheme === 'dark') return 'dark';
     
     // Check system preference as fallback
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (window.matchMedia?.('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
     
@@ -103,7 +103,7 @@ export function CodeBlock({
       }
 
       // Apply highlighting if content exists
-      if (codeRef.current && codeRef.current.textContent) {
+      if (codeRef.current?.textContent) {
         // Clear any existing highlighting
         codeRef.current.removeAttribute('data-highlighted');
         codeRef.current.className = codeRef.current.className

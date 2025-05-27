@@ -1,7 +1,6 @@
 /*! `plaintext` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Plain text

@@ -3,8 +3,7 @@
   (c) 2006-2024 Josh Goebel <hello@joshgoebel.com> and other contributors
   License: BSD-3-Clause
  */
-var hljs = (function () {
-  'use strict';
+const hljs = (() => {
 
   /* eslint-disable no-multi-assign */
 
@@ -13,14 +12,14 @@ var hljs = (function () {
       obj.clear =
         obj.delete =
         obj.set =
-          function () {
+          () => {
             throw new Error('map is read-only');
           };
     } else if (obj instanceof Set) {
       obj.add =
         obj.clear =
         obj.delete =
-          function () {
+          () => {
             throw new Error('set is read-only');
           };
     }
@@ -90,7 +89,7 @@ var hljs = (function () {
     for (const key in original) {
       result[key] = original[key];
     }
-    objects.forEach(function(obj) {
+    objects.forEach((obj) => {
       for (const key in obj) {
         result[key] = obj[key];
       }
@@ -281,7 +280,7 @@ var hljs = (function () {
         builder.addText(node);
       } else if (node.children) {
         builder.openNode(node);
-        node.children.forEach((child) => this._walk(builder, child));
+        node.children.forEach((child) => TokenTree._walk(builder, child));
         builder.closeNode(node);
       }
       return builder;
@@ -450,9 +449,7 @@ var hljs = (function () {
   function either(...args) {
     /** @type { object & {capture?: boolean} }  */
     const opts = stripOptionsFromArgs(args);
-    const joined = '('
-      + (opts.capture ? "" : "?:")
-      + args.map((x) => source(x)).join("|") + ")";
+    const joined = `(${opts.capture ? "" : "?:"}${args.map((x) => source(x)).join("|")})`;
     return joined;
   }
 
@@ -461,7 +458,7 @@ var hljs = (function () {
    * @returns {number}
    */
   function countMatchGroups(re) {
-    return (new RegExp(re.toString() + '|')).exec('').length - 1;
+    return (new RegExp(`${re.toString()}|`)).exec('').length - 1;
   }
 
   /**
@@ -470,7 +467,7 @@ var hljs = (function () {
    * @param {string} lexeme
    */
   function startsWith(re, lexeme) {
-    const match = re && re.exec(lexeme);
+    const match = re?.exec(lexeme);
     return match && match.index === 0;
   }
 
@@ -513,7 +510,7 @@ var hljs = (function () {
         re = re.substring(match.index + match[0].length);
         if (match[0][0] === '\\' && match[1]) {
           // Adjust the backreference.
-          out += '\\' + String(Number(match[1]) + offset);
+          out += `\\${String(Number(match[1]) + offset)}`;
         } else {
           out += match[0];
           if (match[0] === '(') {
@@ -590,7 +587,7 @@ var hljs = (function () {
    * @param {Mode | {}} [modeOptions]
    * @returns {Partial<Mode>}
    */
-  const COMMENT = function(begin, end, modeOptions = {}) {
+  const COMMENT = (begin, end, modeOptions = {}) => {
     const mode = inherit$1(
       {
         scope: 'comment',
@@ -699,7 +696,7 @@ var hljs = (function () {
   };
   const METHOD_GUARD = {
     // excludes method names from keyword processing
-    begin: '\\.\\s*' + UNDERSCORE_IDENT_RE,
+    begin: `\\.\\s*${UNDERSCORE_IDENT_RE}`,
     relevance: 0
   };
 
@@ -710,17 +707,15 @@ var hljs = (function () {
    * group is what is used for comparison
    * @param {Partial<Mode>} mode
    */
-  const END_SAME_AS_BEGIN = function(mode) {
-    return Object.assign(mode,
+  const END_SAME_AS_BEGIN = (mode) => Object.assign(mode,
       {
         /** @type {ModeCallback} */
         'on:begin': (m, resp) => { resp.data._beginMatch = m[1]; },
         /** @type {ModeCallback} */
         'on:end': (m, resp) => { if (resp.data._beginMatch !== m[1]) resp.ignoreMatch(); }
       });
-  };
 
-  var MODES = /*#__PURE__*/Object.freeze({
+  const MODES = /*#__PURE__*/Object.freeze({
     __proto__: null,
     APOS_STRING_MODE: APOS_STRING_MODE,
     BACKSLASH_ESCAPE: BACKSLASH_ESCAPE,
@@ -792,7 +787,7 @@ var hljs = (function () {
     // eslint-disable-next-line no-undefined
     if (mode.className !== undefined) {
       mode.scope = mode.className;
-      delete mode.className;
+      mode.className = undefined;
     }
   }
 
@@ -809,10 +804,10 @@ var hljs = (function () {
     // or whitespace - this does no harm in any case since our keyword engine
     // doesn't allow spaces in keywords anyways and we still check for the boundary
     // first
-    mode.begin = '\\b(' + mode.beginKeywords.split(' ').join('|') + ')(?!\\.)(?=\\b|\\s)';
+    mode.begin = `\\b(${mode.beginKeywords.split(' ').join('|')})(?!\\.)(?=\\b|\\s)`;
     mode.__beforeBegin = skipIfHasPrecedingDot;
     mode.keywords = mode.keywords || mode.beginKeywords;
-    delete mode.beginKeywords;
+    mode.beginKeywords = undefined;
 
     // prevents double relevance, the keywords themselves provide
     // relevance, the mode doesn't need to double it
@@ -839,7 +834,7 @@ var hljs = (function () {
     if (mode.begin || mode.end) throw new Error("begin & end are not supported with match");
 
     mode.begin = mode.match;
-    delete mode.match;
+    mode.match = undefined;
   }
 
   /**
@@ -872,7 +867,7 @@ var hljs = (function () {
     };
     mode.relevance = 0;
 
-    delete originalMode.beforeMatch;
+    originalMode.beforeMatch = undefined;
   };
 
   // keywords that should have no default relevance value
@@ -909,7 +904,7 @@ var hljs = (function () {
     } else if (Array.isArray(rawKeywords)) {
       compileList(scopeName, rawKeywords);
     } else {
-      Object.keys(rawKeywords).forEach(function(scopeName) {
+      Object.keys(rawKeywords).forEach((scopeName) => {
         // collapse all our objects back into the parent object
         Object.assign(
           compiledKeywords,
@@ -933,7 +928,7 @@ var hljs = (function () {
       if (caseInsensitive) {
         keywordList = keywordList.map(x => x.toLowerCase());
       }
-      keywordList.forEach(function(keyword) {
+      keywordList.forEach((keyword) => {
         const pair = keyword.split('|');
         compiledKeywords[pair[0]] = [scopeName, scoreForKeyword(pair[0], pair[1])];
       });
@@ -1114,7 +1109,7 @@ var hljs = (function () {
   function scopeSugar(mode) {
     if (mode.scope && typeof mode.scope === "object" && mode.scope !== null) {
       mode.beginScope = mode.scope;
-      delete mode.scope;
+      mode.scope = undefined;
     }
   }
 
@@ -1163,10 +1158,7 @@ var hljs = (function () {
     function langRe(value, global) {
       return new RegExp(
         source(value),
-        'm'
-        + (language.case_insensitive ? 'i' : '')
-        + (language.unicodeRegex ? 'u' : '')
-        + (global ? 'g' : '')
+        `m${language.case_insensitive ? 'i' : ''}${language.unicodeRegex ? 'u' : ''}${global ? 'g' : ''}`
       );
     }
 
@@ -1452,7 +1444,7 @@ var hljs = (function () {
         // pass
         mode.keywords = Object.assign({}, mode.keywords);
         keywordPattern = mode.keywords.$pattern;
-        delete mode.keywords.$pattern;
+        mode.keywords.$pattern = undefined;
       }
       keywordPattern = keywordPattern || /\w+/;
 
@@ -1475,10 +1467,8 @@ var hljs = (function () {
       if (mode.illegal) cmode.illegalRe = langRe(/** @type {RegExp | string} */ (mode.illegal));
       if (!mode.contains) mode.contains = [];
 
-      mode.contains = [].concat(...mode.contains.map(function(c) {
-        return expandOrCloneMode(c === 'self' ? mode : c);
-      }));
-      mode.contains.forEach(function(c) { compileMode(/** @type Mode */ (c), cmode); });
+      mode.contains = [].concat(...mode.contains.map((c) => expandOrCloneMode(c === 'self' ? mode : c)));
+      mode.contains.forEach((c) => { compileMode(/** @type Mode */ (c), cmode); });
 
       if (mode.starts) {
         compileMode(mode.starts, parent);
@@ -1491,7 +1481,7 @@ var hljs = (function () {
     if (!language.compilerExtensions) language.compilerExtensions = [];
 
     // self is not valid at the top-level
-    if (language.contains && language.contains.includes('self')) {
+    if (language.contains?.includes('self')) {
       throw new Error("ERR: contains `self` is not supported at the top-level of a language.  See documentation.");
     }
 
@@ -1530,9 +1520,7 @@ var hljs = (function () {
    * */
   function expandOrCloneMode(mode) {
     if (mode.variants && !mode.cachedVariants) {
-      mode.cachedVariants = mode.variants.map(function(variant) {
-        return inherit$1(mode, { variants: null }, variant);
-      });
+      mode.cachedVariants = mode.variants.map((variant) => inherit$1(mode, { variants: null }, variant));
     }
 
     // EXPAND
@@ -1558,7 +1546,7 @@ var hljs = (function () {
     return mode;
   }
 
-  var version = "11.10.0";
+  const version = "11.10.0";
 
   class HTMLInjectionError extends Error {
     constructor(reason, html) {
@@ -1606,7 +1594,7 @@ var hljs = (function () {
    * @param {any} hljs - object that is extended (legacy)
    * @returns {HLJSApi}
    */
-  const HLJS = function(hljs) {
+  const HLJS = (hljs) => {
     // Global internal variables used within the highlight.js library.
     /** @type {Record<string, Language>} */
     const languages = Object.create(null);
@@ -1652,7 +1640,7 @@ var hljs = (function () {
      * @param {HighlightedHTMLElement} block - the HTML element to determine language for
      */
     function blockLanguage(block) {
-      let classes = block.className + ' ';
+      let classes = `${block.className} `;
 
       classes += block.parentNode ? block.parentNode.className : '';
 
@@ -1985,10 +1973,10 @@ var hljs = (function () {
         if (!endMode) { return NO_MATCH; }
 
         const origin = top;
-        if (top.endScope && top.endScope._wrap) {
+        if (top.endScope?._wrap) {
           processBuffer();
           emitKeyword(lexeme, top.endScope._wrap);
-        } else if (top.endScope && top.endScope._multi) {
+        } else if (top.endScope?._multi) {
           processBuffer();
           emitMultiClass(top.endScope, match);
         } else if (origin.skip) {
@@ -2037,7 +2025,7 @@ var hljs = (function () {
        * @param {EnhancedMatch} [match] - the match itself
        */
       function processLexeme(textBeforeMatch, match) {
-        const lexeme = match && match[0];
+        const lexeme = match?.[0];
 
         // add non-matched text to the current mode buffer
         modeBuffer += textBeforeMatch;
@@ -2070,7 +2058,7 @@ var hljs = (function () {
         } else if (match.type === "illegal" && !ignoreIllegals) {
           // illegal match, we do not continue processing
           /** @type {AnnotatedError} */
-          const err = new Error('Illegal lexeme "' + lexeme + '" for mode "' + (top.scope || '<unnamed>') + '"');
+          const err = new Error(`Illegal lexeme "${lexeme}" for mode "${top.scope || '<unnamed>'}"`);
           err.mode = top;
           throw err;
         } else if (match.type === "end") {
@@ -2112,7 +2100,7 @@ var hljs = (function () {
       const language = getLanguage(languageName);
       if (!language) {
         error(LANGUAGE_NOT_FOUND.replace("{}", languageName));
-        throw new Error('Unknown language: "' + languageName + '"');
+        throw new Error(`Unknown language: "${languageName}"`);
       }
 
       const md = compileLanguage(language);
@@ -2170,7 +2158,7 @@ var hljs = (function () {
           _top: top
         };
       } catch (err) {
-        if (err.message && err.message.includes('Illegal')) {
+        if (err.message?.includes('Illegal')) {
           return {
             language: languageName,
             value: escape(codeToHighlight),
@@ -2527,7 +2515,7 @@ var hljs = (function () {
      */
     function fire(event, args) {
       const cb = event;
-      plugins.forEach(function(plugin) {
+      plugins.forEach((plugin) => {
         if (plugin[cb]) {
           plugin[cb](args);
         }
@@ -2567,8 +2555,8 @@ var hljs = (function () {
       removePlugin
     });
 
-    hljs.debugMode = function() { SAFE_MODE = false; };
-    hljs.safeMode = function() { SAFE_MODE = true; };
+    hljs.debugMode = () => { SAFE_MODE = false; };
+    hljs.safeMode = () => { SAFE_MODE = true; };
     hljs.versionString = version;
 
     hljs.regex = {
@@ -2605,9 +2593,8 @@ var hljs = (function () {
 })();
 if (typeof exports === 'object' && typeof module !== 'undefined') { module.exports = hljs; }
 /*! `bash` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Bash
@@ -3021,9 +3008,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('bash', hljsGrammar);
   })();/*! `c` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: C
@@ -3041,11 +3027,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const DECLTYPE_AUTO_RE = 'decltype\\(auto\\)';
     const NAMESPACE_RE = '[a-zA-Z_]\\w*::';
     const TEMPLATE_ARGUMENT_RE = '<[^<>]+>';
-    const FUNCTION_TYPE_RE = '('
-      + DECLTYPE_AUTO_RE + '|'
-      + regex.optional(NAMESPACE_RE)
-      + '[a-zA-Z_]\\w*' + regex.optional(TEMPLATE_ARGUMENT_RE)
-    + ')';
+    const FUNCTION_TYPE_RE = `(${DECLTYPE_AUTO_RE}|${regex.optional(NAMESPACE_RE)}[a-zA-Z_]\\w*${regex.optional(TEMPLATE_ARGUMENT_RE)})`;
 
 
     const TYPES = {
@@ -3070,7 +3052,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           contains: [ hljs.BACKSLASH_ESCAPE ]
         },
         {
-          begin: '(u8?|U|L)?\'(' + CHARACTER_ESCAPES + "|.)",
+          begin: `(u8?|U|L)?\'(${CHARACTER_ESCAPES}|.)`,
           end: '\'',
           illegal: '.'
         },
@@ -3096,8 +3078,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       begin: /#\s*[a-z]+\b/,
       end: /$/,
       keywords: { keyword:
-          'if else elif endif define undef warning error line '
-          + 'pragma _Pragma ifdef ifndef elifdef elifndef include' },
+          "if else elif endif define undef warning error line pragma _Pragma ifdef ifndef elifdef elifndef include" },
       contains: [
         {
           begin: /\\\n/,
@@ -3119,7 +3100,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       relevance: 0
     };
 
-    const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + '\\s*\\(';
+    const FUNCTION_TITLE = `${regex.optional(NAMESPACE_RE) + hljs.IDENT_RE}\\s*\\(`;
 
     const C_KEYWORDS = [
       "asm",
@@ -3208,15 +3189,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       type: C_TYPES,
       literal: 'true false NULL',
       // TODO: apply hinting work similar to what was done in cpp.js
-      built_in: 'std string wstring cin cout cerr clog stdin stdout stderr stringstream istringstream ostringstream '
-        + 'auto_ptr deque list queue stack vector map set pair bitset multiset multimap unordered_set '
-        + 'unordered_map unordered_multiset unordered_multimap priority_queue make_pair array shared_ptr abort terminate abs acos '
-        + 'asin atan2 atan calloc ceil cosh cos exit exp fabs floor fmod fprintf fputs free frexp '
-        + 'fscanf future isalnum isalpha iscntrl isdigit isgraph islower isprint ispunct isspace isupper '
-        + 'isxdigit tolower toupper labs ldexp log10 log malloc realloc memchr memcmp memcpy memset modf pow '
-        + 'printf putchar puts scanf sinh sin snprintf sprintf sqrt sscanf strcat strchr strcmp '
-        + 'strcpy strcspn strlen strncat strncmp strncpy strpbrk strrchr strspn strstr tanh tan '
-        + 'vfprintf vprintf vsprintf endl initializer_list unique_ptr',
+      built_in: "std string wstring cin cout cerr clog stdin stdout stderr stringstream istringstream ostringstream auto_ptr deque list queue stack vector map set pair bitset multiset multimap unordered_set unordered_map unordered_multiset unordered_multimap priority_queue make_pair array shared_ptr abort terminate abs acos asin atan2 atan calloc ceil cosh cos exit exp fabs floor fmod fprintf fputs free frexp fscanf future isalnum isalpha iscntrl isdigit isgraph islower isprint ispunct isspace isupper isxdigit tolower toupper labs ldexp log10 log malloc realloc memchr memcmp memcpy memset modf pow printf putchar puts scanf sinh sin snprintf sprintf sqrt sscanf strcat strchr strcmp strcpy strcspn strlen strncat strncmp strncpy strpbrk strrchr strspn strstr tanh tan vfprintf vprintf vsprintf endl initializer_list unique_ptr",
     };
 
     const EXPRESSION_CONTAINS = [
@@ -3260,7 +3233,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     };
 
     const FUNCTION_DECLARATION = {
-      begin: '(' + FUNCTION_TYPE_RE + '[\\*&\\s]+)+' + FUNCTION_TITLE,
+      begin: `(${FUNCTION_TYPE_RE}[\\*&\\s]+)+${FUNCTION_TITLE}`,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -3335,7 +3308,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         [
           PREPROCESSOR,
           {
-            begin: hljs.IDENT_RE + '::',
+            begin: `${hljs.IDENT_RE}::`,
             keywords: KEYWORDS
           },
           {
@@ -3362,9 +3335,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('c', hljsGrammar);
   })();/*! `cpp` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: C++
@@ -3382,11 +3354,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const DECLTYPE_AUTO_RE = 'decltype\\(auto\\)';
     const NAMESPACE_RE = '[a-zA-Z_]\\w*::';
     const TEMPLATE_ARGUMENT_RE = '<[^<>]+>';
-    const FUNCTION_TYPE_RE = '(?!struct)('
-      + DECLTYPE_AUTO_RE + '|'
-      + regex.optional(NAMESPACE_RE)
-      + '[a-zA-Z_]\\w*' + regex.optional(TEMPLATE_ARGUMENT_RE)
-    + ')';
+    const FUNCTION_TYPE_RE = `(?!struct)(${DECLTYPE_AUTO_RE}|${regex.optional(NAMESPACE_RE)}[a-zA-Z_]\\w*${regex.optional(TEMPLATE_ARGUMENT_RE)})`;
 
     const CPP_PRIMITIVE_TYPES = {
       className: 'type',
@@ -3406,7 +3374,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           contains: [ hljs.BACKSLASH_ESCAPE ]
         },
         {
-          begin: '(u8?|U|L)?\'(' + CHARACTER_ESCAPES + '|.)',
+          begin: `(u8?|U|L)?\'(${CHARACTER_ESCAPES}|.)`,
           end: '\'',
           illegal: '.'
         },
@@ -3422,39 +3390,11 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       variants: [
         // Floating-point literal.
         { begin:
-          "[+-]?(?:" // Leading sign.
-            // Decimal.
-            + "(?:"
-              +"[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?"
-              + "|\\.[0-9](?:'?[0-9])*"
-            + ")(?:[Ee][+-]?[0-9](?:'?[0-9])*)?"
-            + "|[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*"
-            // Hexadecimal.
-            + "|0[Xx](?:"
-              +"[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?"
-              + "|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*"
-            + ")[Pp][+-]?[0-9](?:'?[0-9])*"
-          + ")(?:" // Literal suffixes.
-            + "[Ff](?:16|32|64|128)?"
-            + "|(BF|bf)16"
-            + "|[Ll]"
-            + "|" // Literal suffix is optional.
-          + ")"
+          "[+-]?(?:(?:[0-9](?:'?[0-9])*\\.(?:[0-9](?:'?[0-9])*)?|\\.[0-9](?:'?[0-9])*)(?:[Ee][+-]?[0-9](?:'?[0-9])*)?|[0-9](?:'?[0-9])*[Ee][+-]?[0-9](?:'?[0-9])*|0[Xx](?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*(?:\\.(?:[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)?)?|\\.[0-9A-Fa-f](?:'?[0-9A-Fa-f])*)[Pp][+-]?[0-9](?:'?[0-9])*)(?:[Ff](?:16|32|64|128)?|(BF|bf)16|[Ll]|)"
         },
         // Integer literal.
         { begin:
-          "[+-]?\\b(?:" // Leading sign.
-            + "0[Bb][01](?:'?[01])*" // Binary.
-            + "|0[Xx][0-9A-Fa-f](?:'?[0-9A-Fa-f])*" // Hexadecimal.
-            + "|0(?:'?[0-7])*" // Octal or just a lone zero.
-            + "|[1-9](?:'?[0-9])*" // Decimal.
-          + ")(?:" // Literal suffixes.
-            + "[Uu](?:LL?|ll?)"
-            + "|[Uu][Zz]?"
-            + "|(?:LL?|ll?)[Uu]?"
-            + "|[Zz][Uu]"
-            + "|" // Literal suffix is optional.
-          + ")"
+          "[+-]?\\b(?:0[Bb][01](?:'?[01])*|0[Xx][0-9A-Fa-f](?:'?[0-9A-Fa-f])*|0(?:'?[0-7])*|[1-9](?:'?[0-9])*)(?:[Uu](?:LL?|ll?)|[Uu][Zz]?|(?:LL?|ll?)[Uu]?|[Zz][Uu]|)"
           // Note: there are user-defined literal suffixes too, but perhaps having the custom suffix not part of the
           // literal highlight actually makes it stand out more.
         }
@@ -3467,8 +3407,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       begin: /#\s*[a-z]+\b/,
       end: /$/,
       keywords: { keyword:
-          'if else elif endif define undef warning error line '
-          + 'pragma _Pragma ifdef ifndef include' },
+          "if else elif endif define undef warning error line pragma _Pragma ifdef ifndef include" },
       contains: [
         {
           begin: /\\\n/,
@@ -3490,7 +3429,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       relevance: 0
     };
 
-    const FUNCTION_TITLE = regex.optional(NAMESPACE_RE) + hljs.IDENT_RE + '\\s*\\(';
+    const FUNCTION_TITLE = `${regex.optional(NAMESPACE_RE) + hljs.IDENT_RE}\\s*\\(`;
 
     // https://en.cppreference.com/w/cpp/keyword
     const RESERVED_KEYWORDS = [
@@ -3843,7 +3782,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     const FUNCTION_DECLARATION = {
       className: 'function',
-      begin: '(' + FUNCTION_TYPE_RE + '[\\*&\\s]+)+' + FUNCTION_TITLE,
+      begin: `(${FUNCTION_TYPE_RE}[\\*&\\s]+)+${FUNCTION_TITLE}`,
       returnBegin: true,
       end: /[{;=]/,
       excludeEnd: true,
@@ -3949,7 +3888,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
             ]
           },
           {
-            begin: hljs.IDENT_RE + '::',
+            begin: `${hljs.IDENT_RE}::`,
             keywords: CPP_KEYWORDS
           },
           {
@@ -3974,9 +3913,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('cpp', hljsGrammar);
   })();/*! `css` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   const MODES = (hljs) => {
     return {
@@ -4005,15 +3943,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       },
       CSS_NUMBER_MODE: {
         scope: 'number',
-        begin: hljs.NUMBER_RE + '(' +
-          '%|em|ex|ch|rem' +
-          '|vw|vh|vmin|vmax' +
-          '|cm|mm|in|pt|pc|px' +
-          '|deg|grad|rad|turn' +
-          '|s|ms' +
-          '|Hz|kHz' +
-          '|dpi|dpcm|dppx' +
-          ')?',
+        begin: `${hljs.NUMBER_RE}(%|em|ex|ch|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc|px|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?`,
         relevance: 0
       },
       CSS_VARIABLE: {
@@ -4737,15 +4667,15 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         {
           className: 'selector-class',
-          begin: '\\.' + IDENT_RE,
+          begin: `\\.${IDENT_RE}`,
           relevance: 0
         },
         modes.ATTRIBUTE_SELECTOR_MODE,
         {
           className: 'selector-pseudo',
           variants: [
-            { begin: ':(' + PSEUDO_CLASSES.join('|') + ')' },
-            { begin: ':(:)?(' + PSEUDO_ELEMENTS.join('|') + ')' }
+            { begin: `:(${PSEUDO_CLASSES.join('|')})` },
+            { begin: `:(:)?(${PSEUDO_ELEMENTS.join('|')})` }
           ]
         },
         // we may actually need this (12/2020)
@@ -4757,7 +4687,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         modes.CSS_VARIABLE,
         {
           className: 'attribute',
-          begin: '\\b(' + ATTRIBUTES.join('|') + ')\\b'
+          begin: `\\b(${ATTRIBUTES.join('|')})\\b`
         },
         // attribute values
         {
@@ -4825,7 +4755,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         {
           className: 'selector-tag',
-          begin: '\\b(' + TAGS.join('|') + ')\\b'
+          begin: `\\b(${TAGS.join('|')})\\b`
         }
       ]
     };
@@ -4837,9 +4767,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('css', hljsGrammar);
   })();/*! `dart` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Dart
@@ -5108,9 +5037,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('dart', hljsGrammar);
   })();/*! `django` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Django
@@ -5127,14 +5055,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const FILTER = {
       begin: /\|[A-Za-z]+:?/,
       keywords: { name:
-          'truncatewords removetags linebreaksbr yesno get_digit timesince random striptags '
-          + 'filesizeformat escape linebreaks length_is ljust rjust cut urlize fix_ampersands '
-          + 'title floatformat capfirst pprint divisibleby add make_list unordered_list urlencode '
-          + 'timeuntil urlizetrunc wordcount stringformat linenumbers slice date dictsort '
-          + 'dictsortreversed default_if_none pluralize lower join center default '
-          + 'truncatewords_html upper length phone2numeric wordwrap time addslashes slugify first '
-          + 'escapejs force_escape iriencode last safe safeseq truncatechars localize unlocalize '
-          + 'localtime utc timezone' },
+          "truncatewords removetags linebreaksbr yesno get_digit timesince random striptags filesizeformat escape linebreaks length_is ljust rjust cut urlize fix_ampersands title floatformat capfirst pprint divisibleby add make_list unordered_list urlencode timeuntil urlizetrunc wordcount stringformat linenumbers slice date dictsort dictsortreversed default_if_none pluralize lower join center default truncatewords_html upper length phone2numeric wordwrap time addslashes slugify first escapejs force_escape iriencode last safe safeseq truncatechars localize unlocalize localtime utc timezone" },
       contains: [
         hljs.QUOTE_STRING_MODE,
         hljs.APOS_STRING_MODE
@@ -5158,15 +5079,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
               className: 'name',
               begin: /\w+/,
               keywords: { name:
-                  'comment endcomment load templatetag ifchanged endifchanged if endif firstof for '
-                  + 'endfor ifnotequal endifnotequal widthratio extends include spaceless '
-                  + 'endspaceless regroup ifequal endifequal ssi now with cycle url filter '
-                  + 'endfilter debug block endblock else autoescape endautoescape csrf_token empty elif '
-                  + 'endwith static trans blocktrans endblocktrans get_static_prefix get_media_prefix '
-                  + 'plural get_current_language language get_available_languages '
-                  + 'get_current_language_bidi get_language_info get_language_info_list localize '
-                  + 'endlocalize localtime endlocaltime timezone endtimezone get_current_timezone '
-                  + 'verbatim' },
+                  "comment endcomment load templatetag ifchanged endifchanged if endif firstof for endfor ifnotequal endifnotequal widthratio extends include spaceless endspaceless regroup ifequal endifequal ssi now with cycle url filter endfilter debug block endblock else autoescape endautoescape csrf_token empty elif endwith static trans blocktrans endblocktrans get_static_prefix get_media_prefix plural get_current_language language get_available_languages get_current_language_bidi get_language_info get_language_info_list localize endlocalize localtime endlocaltime timezone endtimezone get_current_timezone verbatim" },
               starts: {
                 endsWithParent: true,
                 keywords: 'in by as',
@@ -5192,9 +5105,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('django', hljsGrammar);
   })();/*! `gradle` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Gradle
@@ -5391,9 +5303,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('gradle', hljsGrammar);
   })();/*! `graphql` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
    Language: GraphQL
@@ -5478,9 +5389,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('graphql', hljsGrammar);
   })();/*! `http` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: HTTP
@@ -5527,7 +5437,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       contains: [
         // response
         {
-          begin: '^(?=' + VERSION + " \\d{3})",
+          begin: `^(?=${VERSION} \\d{3})`,
           end: /$/,
           contains: [
             {
@@ -5547,7 +5457,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         // request
         {
-          begin: '(?=^[A-Z]+ (.*?) ' + VERSION + '$)',
+          begin: `(?=^[A-Z]+ (.*?) ${VERSION}$)`,
           end: /$/,
           contains: [
             {
@@ -5584,9 +5494,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('http', hljsGrammar);
   })();/*! `ini` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: TOML, also INI
@@ -5714,15 +5623,14 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('ini', hljsGrammar);
   })();/*! `java` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   // https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10
-  var decimalDigits = '[0-9](_*[0-9])*';
-  var frac = `\\.(${decimalDigits})`;
-  var hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
-  var NUMERIC = {
+  const decimalDigits = '[0-9](_*[0-9])*';
+  const frac = `\\.(${decimalDigits})`;
+  const hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
+  const NUMERIC = {
     className: 'number',
     variants: [
       // DecimalFloatingPointLiteral
@@ -5785,7 +5693,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const regex = hljs.regex;
     const JAVA_IDENT_RE = '[\u00C0-\u02B8a-zA-Z_$][\u00C0-\u02B8a-zA-Z_$0-9]*';
     const GENERIC_IDENT_RE = JAVA_IDENT_RE
-      + recurRegex('(?:<' + JAVA_IDENT_RE + '~~~(?:\\s*,\\s*' + JAVA_IDENT_RE + '~~~)*>)?', /~~~/g, 2);
+      + recurRegex(`(?:<${JAVA_IDENT_RE}~~~(?:\\s*,\\s*${JAVA_IDENT_RE}~~~)*>)?`, /~~~/g, 2);
     const MAIN_KEYWORDS = [
       'synchronized',
       'abstract',
@@ -5863,7 +5771,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     const ANNOTATION = {
       className: 'meta',
-      begin: '@' + JAVA_IDENT_RE,
+      begin: `@${JAVA_IDENT_RE}`,
       contains: [
         {
           begin: /\(/,
@@ -5976,7 +5884,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         {
           begin: [
-            '(?:' + GENERIC_IDENT_RE + '\\s+)',
+            `(?:${GENERIC_IDENT_RE}\\s+)`,
             hljs.UNDERSCORE_IDENT_RE,
             /\s*(?=\()/
           ],
@@ -6013,9 +5921,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('java', hljsGrammar);
   })();/*! `javascript` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   const IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
   const KEYWORDS = [
@@ -6194,7 +6101,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
      * @param {{after:number}} param1
      */
     const hasClosingTag = (match, { after }) => {
-      const tag = "</" + match[0].slice(1);
+      const tag = `</${match[0].slice(1)}`;
       const pos = match.input.indexOf(tag, after);
       return pos !== -1;
     };
@@ -6380,7 +6287,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
               },
               {
                 className: 'variable',
-                begin: IDENT_RE$1 + '(?=\\s*(-)|$)',
+                begin: `${IDENT_RE$1}(?=\\s*(-)|$)`,
                 endsParent: true,
                 relevance: 0
               },
@@ -6600,13 +6507,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       ]
     };
 
-    const FUNC_LEAD_IN_RE = '(\\(' +
-      '[^()]*(\\(' +
-      '[^()]*(\\(' +
-      '[^()]*' +
-      '\\)[^()]*)*' +
-      '\\)[^()]*)*' +
-      '\\)|' + hljs.UNDERSCORE_IDENT_RE + ')\\s*=>';
+    const FUNC_LEAD_IN_RE = `(\\([^()]*(\\([^()]*(\\([^()]*\\)[^()]*)*\\)[^()]*)*\\)|${hljs.UNDERSCORE_IDENT_RE})\\s*=>`;
 
     const FUNCTION_VARIABLE = {
       match: [
@@ -6658,7 +6559,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         FUNCTION_VARIABLE,
         { // "value" container
-          begin: '(' + hljs.RE_STARTERS_RE + '|\\b(case|return|throw)\\b)\\s*',
+          begin: `(${hljs.RE_STARTERS_RE}|\\b(case|return|throw)\\b)\\s*`,
           keywords: 'return throw case',
           relevance: 0,
           contains: [
@@ -6739,14 +6640,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           // we have to count the parens to make sure we actually have the correct
           // bounding ( ).  There could be any number of sub-expressions inside
           // also surrounded by parens.
-          begin: '\\b(?!function)' + hljs.UNDERSCORE_IDENT_RE +
-            '\\(' + // first parens
-            '[^()]*(\\(' +
-              '[^()]*(\\(' +
-                '[^()]*' +
-              '\\)[^()]*)*' +
-            '\\)[^()]*)*' +
-            '\\)\\s*\\{', // end parens
+          begin: `\\b(?!function)${hljs.UNDERSCORE_IDENT_RE}\\([^()]*(\\([^()]*(\\([^()]*\\)[^()]*)*\\)[^()]*)*\\)\\s*\\{`, // end parens
           returnBegin:true,
           label: "func.def",
           contains: [
@@ -6764,7 +6658,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         // .keyword()
         // $keyword = x
         {
-          match: '\\$' + IDENT_RE$1,
+          match: `\\$${IDENT_RE$1}`,
           relevance: 0
         },
         {
@@ -6789,9 +6683,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('javascript', hljsGrammar);
   })();/*! `json` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: JSON
@@ -6852,15 +6745,14 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('json', hljsGrammar);
   })();/*! `kotlin` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   // https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10
-  var decimalDigits = '[0-9](_*[0-9])*';
-  var frac = `\\.(${decimalDigits})`;
-  var hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
-  var NUMERIC = {
+  const decimalDigits = '[0-9](_*[0-9])*';
+  const frac = `\\.(${decimalDigits})`;
+  const hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
+  const NUMERIC = {
     className: 'number',
     variants: [
       // DecimalFloatingPointLiteral
@@ -6903,11 +6795,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
   function kotlin(hljs) {
     const KEYWORDS = {
       keyword:
-        'abstract as val var vararg get set class object open private protected public noinline '
-        + 'crossinline dynamic final enum if else do while for when throw try catch finally '
-        + 'import package is in fun override companion reified inline lateinit init '
-        + 'interface annotation data sealed internal infix operator out by constructor super '
-        + 'tailrec where const inner suspend typealias external expect actual',
+        "abstract as val var vararg get set class object open private protected public noinline crossinline dynamic final enum if else do while for when throw try catch finally import package is in fun override companion reified inline lateinit init interface annotation data sealed internal infix operator out by constructor super tailrec where const inner suspend typealias external expect actual",
       built_in:
         'Byte Short Char Int Long Boolean Float Double Void Unit Nothing',
       literal:
@@ -6925,7 +6813,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     };
     const LABEL = {
       className: 'symbol',
-      begin: hljs.UNDERSCORE_IDENT_RE + '@'
+      begin: `${hljs.UNDERSCORE_IDENT_RE}@`
     };
 
     // for string templates
@@ -6937,7 +6825,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     };
     const VARIABLE = {
       className: 'variable',
-      begin: '\\$' + hljs.UNDERSCORE_IDENT_RE
+      begin: `\\$${hljs.UNDERSCORE_IDENT_RE}`
     };
     const STRING = {
       className: 'string',
@@ -6975,11 +6863,11 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     const ANNOTATION_USE_SITE = {
       className: 'meta',
-      begin: '@(?:file|property|field|get|set|receiver|param|setparam|delegate)\\s*:(?:\\s*' + hljs.UNDERSCORE_IDENT_RE + ')?'
+      begin: `@(?:file|property|field|get|set|receiver|param|setparam|delegate)\\s*:(?:\\s*${hljs.UNDERSCORE_IDENT_RE})?`
     };
     const ANNOTATION = {
       className: 'meta',
-      begin: '@' + hljs.UNDERSCORE_IDENT_RE,
+      begin: `@${hljs.UNDERSCORE_IDENT_RE}`,
       contains: [
         {
           begin: /\(/,
@@ -7052,7 +6940,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           relevance: 5,
           contains: [
             {
-              begin: hljs.UNDERSCORE_IDENT_RE + '\\s*\\(',
+              begin: `${hljs.UNDERSCORE_IDENT_RE}\\s*\\(`,
               returnBegin: true,
               relevance: 0,
               contains: [ hljs.UNDERSCORE_TITLE_MODE ]
@@ -7147,9 +7035,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('kotlin', hljsGrammar);
   })();/*! `latex` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: LaTeX
@@ -7182,7 +7069,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       '(?:[Ss]igma|varsigma|tau|[Uu]psilon|[Pp]hi|varphi|chi|[Pp]si|[Oo]mega)',
       '(?:frac|sum|prod|lim|infty|times|sqrt|leq|geq|left|right|middle|[bB]igg?)',
       '(?:[lr]angle|q?quad|[lcvdi]?dots|d?dot|hat|tilde|bar)'
-    ].map(word => word + '(?![a-zA-Z@:_])'));
+    ].map(word => `${word}(?![a-zA-Z@:_])`));
     const L3_REGEX = new RegExp([
       // A function \module_function_name:signature or \__module_function_name:signature,
       // where both module and function_name need at least two characters and
@@ -7204,7 +7091,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       '(?:hbox|vbox):n',
       '::[a-zA-Z]_unbraced',
       '::[a-zA-Z:]'
-    ].map(pattern => pattern + '(?![a-zA-Z:_])').join('|'));
+    ].map(pattern => `${pattern}(?![a-zA-Z:_])`).join('|'));
     const L2_VARIANTS = [
       { begin: /[a-zA-Z@]+/ }, // control word
       { begin: /[^a-zA-Z@]?/ } // control symbol
@@ -7309,32 +7196,27 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     };
     const ARGUMENT_M = [ ARGUMENT_BRACES ];
     const ARGUMENT_O = [ ARGUMENT_BRACKETS ];
-    const ARGUMENT_AND_THEN = function(arg, starts_mode) {
-      return {
+    const ARGUMENT_AND_THEN = (arg, starts_mode) => ({
         contains: [ SPACE_GOBBLER ],
         starts: {
           relevance: 0,
           contains: arg,
           starts: starts_mode
         }
-      };
-    };
-    const CSNAME = function(csname, starts_mode) {
-      return {
-        begin: '\\\\' + csname + '(?![a-zA-Z@:_])',
+      });
+    const CSNAME = (csname, starts_mode) => ({
+        begin: `\\\\${csname}(?![a-zA-Z@:_])`,
         keywords: {
           $pattern: /\\[a-zA-Z]+/,
-          keyword: '\\' + csname
+          keyword: `\\${csname}`
         },
         relevance: 0,
         contains: [ SPACE_GOBBLER ],
         starts: starts_mode
-      };
-    };
-    const BEGIN_ENV = function(envname, starts_mode) {
-      return hljs.inherit(
+      });
+    const BEGIN_ENV = (envname, starts_mode) => hljs.inherit(
         {
-          begin: '\\\\begin(?=[ \t]*(\\r?\\n[ \t]*)?\\{' + envname + '\\})',
+          begin: `\\\\begin(?=[ \t]*(\\r?\\n[ \t]*)?\\{${envname}\\})`,
           keywords: {
             $pattern: /\\[a-zA-Z]+/,
             keyword: '\\begin'
@@ -7343,7 +7225,6 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         ARGUMENT_AND_THEN(ARGUMENT_M, starts_mode)
       );
-    };
     const VERBATIM_DELIMITED_EQUAL = (innerName = "string") => {
       return hljs.END_SAME_AS_BEGIN({
         className: innerName,
@@ -7354,12 +7235,10 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         endsParent: true
       });
     };
-    const VERBATIM_DELIMITED_ENV = function(envname) {
-      return {
+    const VERBATIM_DELIMITED_ENV = (envname) => ({
         className: 'string',
-        end: '(?=\\\\end\\{' + envname + '\\})'
-      };
-    };
+        end: `(?=\\\\end\\{${envname}\\})`
+      });
 
     const VERBATIM_DELIMITED_BRACES = (innerName = "string") => {
       return {
@@ -7405,14 +7284,14 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         '',
         '\\*'
       ].map(suffix => [
-        BEGIN_ENV('verbatim' + suffix, VERBATIM_DELIMITED_ENV('verbatim' + suffix)),
-        BEGIN_ENV('filecontents' + suffix, ARGUMENT_AND_THEN(ARGUMENT_M, VERBATIM_DELIMITED_ENV('filecontents' + suffix))),
+        BEGIN_ENV(`verbatim${suffix}`, VERBATIM_DELIMITED_ENV(`verbatim${suffix}`)),
+        BEGIN_ENV(`filecontents${suffix}`, ARGUMENT_AND_THEN(ARGUMENT_M, VERBATIM_DELIMITED_ENV(`filecontents${suffix}`))),
         ...[
           '',
           'B',
           'L'
         ].map(prefix =>
-          BEGIN_ENV(prefix + 'Verbatim' + suffix, ARGUMENT_AND_THEN(ARGUMENT_O, VERBATIM_DELIMITED_ENV(prefix + 'Verbatim' + suffix)))
+          BEGIN_ENV(`${prefix}Verbatim${suffix}`, ARGUMENT_AND_THEN(ARGUMENT_O, VERBATIM_DELIMITED_ENV(`${prefix}Verbatim${suffix}`)))
         )
       ])),
       BEGIN_ENV('minted', ARGUMENT_AND_THEN(ARGUMENT_O, ARGUMENT_AND_THEN(ARGUMENT_M, VERBATIM_DELIMITED_ENV('minted')))),
@@ -7434,9 +7313,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('latex', hljsGrammar);
   })();/*! `markdown` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Markdown
@@ -7691,9 +7569,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('markdown', hljsGrammar);
   })();/*! `perl` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Perl
@@ -8113,7 +7990,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       },
       NUMBER,
       { // regexp container
-        begin: '(\\/\\/|' + hljs.RE_STARTERS_RE + '|\\b(split|return|print|reverse|grep)\\b)\\s*',
+        begin: `(\\/\\/|${hljs.RE_STARTERS_RE}|\\b(split|return|print|reverse|grep)\\b)\\s*`,
         keywords: 'split return print reverse grep',
         relevance: 0,
         contains: [
@@ -8204,9 +8081,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('perl', hljsGrammar);
   })();/*! `pgsql` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: PostgreSQL and PL/pgSQL
@@ -8231,271 +8107,48 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const COMMENT_MODE = hljs.COMMENT('--', '$');
     const UNQUOTED_IDENT = '[a-zA-Z_][a-zA-Z_0-9$]*';
     const DOLLAR_STRING = '\\$([a-zA-Z_]?|[a-zA-Z_][a-zA-Z_0-9]*)\\$';
-    const LABEL = '<<\\s*' + UNQUOTED_IDENT + '\\s*>>';
+    const LABEL = `<<\\s*${UNQUOTED_IDENT}\\s*>>`;
 
     const SQL_KW =
       // https://www.postgresql.org/docs/11/static/sql-keywords-appendix.html
       // https://www.postgresql.org/docs/11/static/sql-commands.html
       // SQL commands (starting words)
-      'ABORT ALTER ANALYZE BEGIN CALL CHECKPOINT|10 CLOSE CLUSTER COMMENT COMMIT COPY CREATE DEALLOCATE DECLARE '
-      + 'DELETE DISCARD DO DROP END EXECUTE EXPLAIN FETCH GRANT IMPORT INSERT LISTEN LOAD LOCK MOVE NOTIFY '
-      + 'PREPARE REASSIGN|10 REFRESH REINDEX RELEASE RESET REVOKE ROLLBACK SAVEPOINT SECURITY SELECT SET SHOW '
-      + 'START TRUNCATE UNLISTEN|10 UPDATE VACUUM|10 VALUES '
-      // SQL commands (others)
-      + 'AGGREGATE COLLATION CONVERSION|10 DATABASE DEFAULT PRIVILEGES DOMAIN TRIGGER EXTENSION FOREIGN '
-      + 'WRAPPER|10 TABLE FUNCTION GROUP LANGUAGE LARGE OBJECT MATERIALIZED VIEW OPERATOR CLASS '
-      + 'FAMILY POLICY PUBLICATION|10 ROLE RULE SCHEMA SEQUENCE SERVER STATISTICS SUBSCRIPTION SYSTEM '
-      + 'TABLESPACE CONFIGURATION DICTIONARY PARSER TEMPLATE TYPE USER MAPPING PREPARED ACCESS '
-      + 'METHOD CAST AS TRANSFORM TRANSACTION OWNED TO INTO SESSION AUTHORIZATION '
-      + 'INDEX PROCEDURE ASSERTION '
-      // additional reserved key words
-      + 'ALL ANALYSE AND ANY ARRAY ASC ASYMMETRIC|10 BOTH CASE CHECK '
-      + 'COLLATE COLUMN CONCURRENTLY|10 CONSTRAINT CROSS '
-      + 'DEFERRABLE RANGE '
-      + 'DESC DISTINCT ELSE EXCEPT FOR FREEZE|10 FROM FULL HAVING '
-      + 'ILIKE IN INITIALLY INNER INTERSECT IS ISNULL JOIN LATERAL LEADING LIKE LIMIT '
-      + 'NATURAL NOT NOTNULL NULL OFFSET ON ONLY OR ORDER OUTER OVERLAPS PLACING PRIMARY '
-      + 'REFERENCES RETURNING SIMILAR SOME SYMMETRIC TABLESAMPLE THEN '
-      + 'TRAILING UNION UNIQUE USING VARIADIC|10 VERBOSE WHEN WHERE WINDOW WITH '
-      // some of non-reserved (which are used in clauses or as PL/pgSQL keyword)
-      + 'BY RETURNS INOUT OUT SETOF|10 IF STRICT CURRENT CONTINUE OWNER LOCATION OVER PARTITION WITHIN '
-      + 'BETWEEN ESCAPE EXTERNAL INVOKER DEFINER WORK RENAME VERSION CONNECTION CONNECT '
-      + 'TABLES TEMP TEMPORARY FUNCTIONS SEQUENCES TYPES SCHEMAS OPTION CASCADE RESTRICT ADD ADMIN '
-      + 'EXISTS VALID VALIDATE ENABLE DISABLE REPLICA|10 ALWAYS PASSING COLUMNS PATH '
-      + 'REF VALUE OVERRIDING IMMUTABLE STABLE VOLATILE BEFORE AFTER EACH ROW PROCEDURAL '
-      + 'ROUTINE NO HANDLER VALIDATOR OPTIONS STORAGE OIDS|10 WITHOUT INHERIT DEPENDS CALLED '
-      + 'INPUT LEAKPROOF|10 COST ROWS NOWAIT SEARCH UNTIL ENCRYPTED|10 PASSWORD CONFLICT|10 '
-      + 'INSTEAD INHERITS CHARACTERISTICS WRITE CURSOR ALSO STATEMENT SHARE EXCLUSIVE INLINE '
-      + 'ISOLATION REPEATABLE READ COMMITTED SERIALIZABLE UNCOMMITTED LOCAL GLOBAL SQL PROCEDURES '
-      + 'RECURSIVE SNAPSHOT ROLLUP CUBE TRUSTED|10 INCLUDE FOLLOWING PRECEDING UNBOUNDED RANGE GROUPS '
-      + 'UNENCRYPTED|10 SYSID FORMAT DELIMITER HEADER QUOTE ENCODING FILTER OFF '
-      // some parameters of VACUUM/ANALYZE/EXPLAIN
-      + 'FORCE_QUOTE FORCE_NOT_NULL FORCE_NULL COSTS BUFFERS TIMING SUMMARY DISABLE_PAGE_SKIPPING '
-      //
-      + 'RESTART CYCLE GENERATED IDENTITY DEFERRED IMMEDIATE LEVEL LOGGED UNLOGGED '
-      + 'OF NOTHING NONE EXCLUDE ATTRIBUTE '
-      // from GRANT (not keywords actually)
-      + 'USAGE ROUTINES '
-      // actually literals, but look better this way (due to IS TRUE, IS FALSE, ISNULL etc)
-      + 'TRUE FALSE NAN INFINITY ';
+      "ABORT ALTER ANALYZE BEGIN CALL CHECKPOINT|10 CLOSE CLUSTER COMMENT COMMIT COPY CREATE DEALLOCATE DECLARE DELETE DISCARD DO DROP END EXECUTE EXPLAIN FETCH GRANT IMPORT INSERT LISTEN LOAD LOCK MOVE NOTIFY PREPARE REASSIGN|10 REFRESH REINDEX RELEASE RESET REVOKE ROLLBACK SAVEPOINT SECURITY SELECT SET SHOW START TRUNCATE UNLISTEN|10 UPDATE VACUUM|10 VALUES AGGREGATE COLLATION CONVERSION|10 DATABASE DEFAULT PRIVILEGES DOMAIN TRIGGER EXTENSION FOREIGN WRAPPER|10 TABLE FUNCTION GROUP LANGUAGE LARGE OBJECT MATERIALIZED VIEW OPERATOR CLASS FAMILY POLICY PUBLICATION|10 ROLE RULE SCHEMA SEQUENCE SERVER STATISTICS SUBSCRIPTION SYSTEM TABLESPACE CONFIGURATION DICTIONARY PARSER TEMPLATE TYPE USER MAPPING PREPARED ACCESS METHOD CAST AS TRANSFORM TRANSACTION OWNED TO INTO SESSION AUTHORIZATION INDEX PROCEDURE ASSERTION ALL ANALYSE AND ANY ARRAY ASC ASYMMETRIC|10 BOTH CASE CHECK COLLATE COLUMN CONCURRENTLY|10 CONSTRAINT CROSS DEFERRABLE RANGE DESC DISTINCT ELSE EXCEPT FOR FREEZE|10 FROM FULL HAVING ILIKE IN INITIALLY INNER INTERSECT IS ISNULL JOIN LATERAL LEADING LIKE LIMIT NATURAL NOT NOTNULL NULL OFFSET ON ONLY OR ORDER OUTER OVERLAPS PLACING PRIMARY REFERENCES RETURNING SIMILAR SOME SYMMETRIC TABLESAMPLE THEN TRAILING UNION UNIQUE USING VARIADIC|10 VERBOSE WHEN WHERE WINDOW WITH BY RETURNS INOUT OUT SETOF|10 IF STRICT CURRENT CONTINUE OWNER LOCATION OVER PARTITION WITHIN BETWEEN ESCAPE EXTERNAL INVOKER DEFINER WORK RENAME VERSION CONNECTION CONNECT TABLES TEMP TEMPORARY FUNCTIONS SEQUENCES TYPES SCHEMAS OPTION CASCADE RESTRICT ADD ADMIN EXISTS VALID VALIDATE ENABLE DISABLE REPLICA|10 ALWAYS PASSING COLUMNS PATH REF VALUE OVERRIDING IMMUTABLE STABLE VOLATILE BEFORE AFTER EACH ROW PROCEDURAL ROUTINE NO HANDLER VALIDATOR OPTIONS STORAGE OIDS|10 WITHOUT INHERIT DEPENDS CALLED INPUT LEAKPROOF|10 COST ROWS NOWAIT SEARCH UNTIL ENCRYPTED|10 PASSWORD CONFLICT|10 INSTEAD INHERITS CHARACTERISTICS WRITE CURSOR ALSO STATEMENT SHARE EXCLUSIVE INLINE ISOLATION REPEATABLE READ COMMITTED SERIALIZABLE UNCOMMITTED LOCAL GLOBAL SQL PROCEDURES RECURSIVE SNAPSHOT ROLLUP CUBE TRUSTED|10 INCLUDE FOLLOWING PRECEDING UNBOUNDED RANGE GROUPS UNENCRYPTED|10 SYSID FORMAT DELIMITER HEADER QUOTE ENCODING FILTER OFF FORCE_QUOTE FORCE_NOT_NULL FORCE_NULL COSTS BUFFERS TIMING SUMMARY DISABLE_PAGE_SKIPPING RESTART CYCLE GENERATED IDENTITY DEFERRED IMMEDIATE LEVEL LOGGED UNLOGGED OF NOTHING NONE EXCLUDE ATTRIBUTE USAGE ROUTINES TRUE FALSE NAN INFINITY ";
 
     const ROLE_ATTRS = // only those not in keywrods already
-      'SUPERUSER NOSUPERUSER CREATEDB NOCREATEDB CREATEROLE NOCREATEROLE INHERIT NOINHERIT '
-      + 'LOGIN NOLOGIN REPLICATION NOREPLICATION BYPASSRLS NOBYPASSRLS ';
+      "SUPERUSER NOSUPERUSER CREATEDB NOCREATEDB CREATEROLE NOCREATEROLE INHERIT NOINHERIT LOGIN NOLOGIN REPLICATION NOREPLICATION BYPASSRLS NOBYPASSRLS ";
 
     const PLPGSQL_KW =
-      'ALIAS BEGIN CONSTANT DECLARE END EXCEPTION RETURN PERFORM|10 RAISE GET DIAGNOSTICS '
-      + 'STACKED|10 FOREACH LOOP ELSIF EXIT WHILE REVERSE SLICE DEBUG LOG INFO NOTICE WARNING ASSERT '
-      + 'OPEN ';
+      "ALIAS BEGIN CONSTANT DECLARE END EXCEPTION RETURN PERFORM|10 RAISE GET DIAGNOSTICS STACKED|10 FOREACH LOOP ELSIF EXIT WHILE REVERSE SLICE DEBUG LOG INFO NOTICE WARNING ASSERT OPEN ";
 
     const TYPES =
       // https://www.postgresql.org/docs/11/static/datatype.html
-      'BIGINT INT8 BIGSERIAL SERIAL8 BIT VARYING VARBIT BOOLEAN BOOL BOX BYTEA CHARACTER CHAR VARCHAR '
-      + 'CIDR CIRCLE DATE DOUBLE PRECISION FLOAT8 FLOAT INET INTEGER INT INT4 INTERVAL JSON JSONB LINE LSEG|10 '
-      + 'MACADDR MACADDR8 MONEY NUMERIC DEC DECIMAL PATH POINT POLYGON REAL FLOAT4 SMALLINT INT2 '
-      + 'SMALLSERIAL|10 SERIAL2|10 SERIAL|10 SERIAL4|10 TEXT TIME ZONE TIMETZ|10 TIMESTAMP TIMESTAMPTZ|10 TSQUERY|10 TSVECTOR|10 '
-      + 'TXID_SNAPSHOT|10 UUID XML NATIONAL NCHAR '
-      + 'INT4RANGE|10 INT8RANGE|10 NUMRANGE|10 TSRANGE|10 TSTZRANGE|10 DATERANGE|10 '
-      // pseudotypes
-      + 'ANYELEMENT ANYARRAY ANYNONARRAY ANYENUM ANYRANGE CSTRING INTERNAL '
-      + 'RECORD PG_DDL_COMMAND VOID UNKNOWN OPAQUE REFCURSOR '
-      // spec. type
-      + 'NAME '
-      // OID-types
-      + 'OID REGPROC|10 REGPROCEDURE|10 REGOPER|10 REGOPERATOR|10 REGCLASS|10 REGTYPE|10 REGROLE|10 '
-      + 'REGNAMESPACE|10 REGCONFIG|10 REGDICTIONARY|10 ';// +
+      "BIGINT INT8 BIGSERIAL SERIAL8 BIT VARYING VARBIT BOOLEAN BOOL BOX BYTEA CHARACTER CHAR VARCHAR CIDR CIRCLE DATE DOUBLE PRECISION FLOAT8 FLOAT INET INTEGER INT INT4 INTERVAL JSON JSONB LINE LSEG|10 MACADDR MACADDR8 MONEY NUMERIC DEC DECIMAL PATH POINT POLYGON REAL FLOAT4 SMALLINT INT2 SMALLSERIAL|10 SERIAL2|10 SERIAL|10 SERIAL4|10 TEXT TIME ZONE TIMETZ|10 TIMESTAMP TIMESTAMPTZ|10 TSQUERY|10 TSVECTOR|10 TXID_SNAPSHOT|10 UUID XML NATIONAL NCHAR INT4RANGE|10 INT8RANGE|10 NUMRANGE|10 TSRANGE|10 TSTZRANGE|10 DATERANGE|10 ANYELEMENT ANYARRAY ANYNONARRAY ANYENUM ANYRANGE CSTRING INTERNAL RECORD PG_DDL_COMMAND VOID UNKNOWN OPAQUE REFCURSOR NAME OID REGPROC|10 REGPROCEDURE|10 REGOPER|10 REGOPERATOR|10 REGCLASS|10 REGTYPE|10 REGROLE|10 REGNAMESPACE|10 REGCONFIG|10 REGDICTIONARY|10 ";// +
 
     const TYPES_RE =
       TYPES.trim()
         .split(' ')
-        .map(function(val) { return val.split('|')[0]; })
+        .map((val) => val.split('|')[0])
         .join('|');
 
     const SQL_BI =
-      'CURRENT_TIME CURRENT_TIMESTAMP CURRENT_USER CURRENT_CATALOG|10 CURRENT_DATE LOCALTIME LOCALTIMESTAMP '
-      + 'CURRENT_ROLE|10 CURRENT_SCHEMA|10 SESSION_USER PUBLIC ';
+      "CURRENT_TIME CURRENT_TIMESTAMP CURRENT_USER CURRENT_CATALOG|10 CURRENT_DATE LOCALTIME LOCALTIMESTAMP CURRENT_ROLE|10 CURRENT_SCHEMA|10 SESSION_USER PUBLIC ";
 
     const PLPGSQL_BI =
-      'FOUND NEW OLD TG_NAME|10 TG_WHEN|10 TG_LEVEL|10 TG_OP|10 TG_RELID|10 TG_RELNAME|10 '
-      + 'TG_TABLE_NAME|10 TG_TABLE_SCHEMA|10 TG_NARGS|10 TG_ARGV|10 TG_EVENT|10 TG_TAG|10 '
-      // get diagnostics
-      + 'ROW_COUNT RESULT_OID|10 PG_CONTEXT|10 RETURNED_SQLSTATE COLUMN_NAME CONSTRAINT_NAME '
-      + 'PG_DATATYPE_NAME|10 MESSAGE_TEXT TABLE_NAME SCHEMA_NAME PG_EXCEPTION_DETAIL|10 '
-      + 'PG_EXCEPTION_HINT|10 PG_EXCEPTION_CONTEXT|10 ';
+      "FOUND NEW OLD TG_NAME|10 TG_WHEN|10 TG_LEVEL|10 TG_OP|10 TG_RELID|10 TG_RELNAME|10 TG_TABLE_NAME|10 TG_TABLE_SCHEMA|10 TG_NARGS|10 TG_ARGV|10 TG_EVENT|10 TG_TAG|10 ROW_COUNT RESULT_OID|10 PG_CONTEXT|10 RETURNED_SQLSTATE COLUMN_NAME CONSTRAINT_NAME PG_DATATYPE_NAME|10 MESSAGE_TEXT TABLE_NAME SCHEMA_NAME PG_EXCEPTION_DETAIL|10 PG_EXCEPTION_HINT|10 PG_EXCEPTION_CONTEXT|10 ";
 
     const PLPGSQL_EXCEPTIONS =
       // exceptions https://www.postgresql.org/docs/current/static/errcodes-appendix.html
-      'SQLSTATE SQLERRM|10 '
-      + 'SUCCESSFUL_COMPLETION WARNING DYNAMIC_RESULT_SETS_RETURNED IMPLICIT_ZERO_BIT_PADDING '
-      + 'NULL_VALUE_ELIMINATED_IN_SET_FUNCTION PRIVILEGE_NOT_GRANTED PRIVILEGE_NOT_REVOKED '
-      + 'STRING_DATA_RIGHT_TRUNCATION DEPRECATED_FEATURE NO_DATA NO_ADDITIONAL_DYNAMIC_RESULT_SETS_RETURNED '
-      + 'SQL_STATEMENT_NOT_YET_COMPLETE CONNECTION_EXCEPTION CONNECTION_DOES_NOT_EXIST CONNECTION_FAILURE '
-      + 'SQLCLIENT_UNABLE_TO_ESTABLISH_SQLCONNECTION SQLSERVER_REJECTED_ESTABLISHMENT_OF_SQLCONNECTION '
-      + 'TRANSACTION_RESOLUTION_UNKNOWN PROTOCOL_VIOLATION TRIGGERED_ACTION_EXCEPTION FEATURE_NOT_SUPPORTED '
-      + 'INVALID_TRANSACTION_INITIATION LOCATOR_EXCEPTION INVALID_LOCATOR_SPECIFICATION INVALID_GRANTOR '
-      + 'INVALID_GRANT_OPERATION INVALID_ROLE_SPECIFICATION DIAGNOSTICS_EXCEPTION '
-      + 'STACKED_DIAGNOSTICS_ACCESSED_WITHOUT_ACTIVE_HANDLER CASE_NOT_FOUND CARDINALITY_VIOLATION '
-      + 'DATA_EXCEPTION ARRAY_SUBSCRIPT_ERROR CHARACTER_NOT_IN_REPERTOIRE DATETIME_FIELD_OVERFLOW '
-      + 'DIVISION_BY_ZERO ERROR_IN_ASSIGNMENT ESCAPE_CHARACTER_CONFLICT INDICATOR_OVERFLOW '
-      + 'INTERVAL_FIELD_OVERFLOW INVALID_ARGUMENT_FOR_LOGARITHM INVALID_ARGUMENT_FOR_NTILE_FUNCTION '
-      + 'INVALID_ARGUMENT_FOR_NTH_VALUE_FUNCTION INVALID_ARGUMENT_FOR_POWER_FUNCTION '
-      + 'INVALID_ARGUMENT_FOR_WIDTH_BUCKET_FUNCTION INVALID_CHARACTER_VALUE_FOR_CAST '
-      + 'INVALID_DATETIME_FORMAT INVALID_ESCAPE_CHARACTER INVALID_ESCAPE_OCTET INVALID_ESCAPE_SEQUENCE '
-      + 'NONSTANDARD_USE_OF_ESCAPE_CHARACTER INVALID_INDICATOR_PARAMETER_VALUE INVALID_PARAMETER_VALUE '
-      + 'INVALID_REGULAR_EXPRESSION INVALID_ROW_COUNT_IN_LIMIT_CLAUSE '
-      + 'INVALID_ROW_COUNT_IN_RESULT_OFFSET_CLAUSE INVALID_TABLESAMPLE_ARGUMENT INVALID_TABLESAMPLE_REPEAT '
-      + 'INVALID_TIME_ZONE_DISPLACEMENT_VALUE INVALID_USE_OF_ESCAPE_CHARACTER MOST_SPECIFIC_TYPE_MISMATCH '
-      + 'NULL_VALUE_NOT_ALLOWED NULL_VALUE_NO_INDICATOR_PARAMETER NUMERIC_VALUE_OUT_OF_RANGE '
-      + 'SEQUENCE_GENERATOR_LIMIT_EXCEEDED STRING_DATA_LENGTH_MISMATCH STRING_DATA_RIGHT_TRUNCATION '
-      + 'SUBSTRING_ERROR TRIM_ERROR UNTERMINATED_C_STRING ZERO_LENGTH_CHARACTER_STRING '
-      + 'FLOATING_POINT_EXCEPTION INVALID_TEXT_REPRESENTATION INVALID_BINARY_REPRESENTATION '
-      + 'BAD_COPY_FILE_FORMAT UNTRANSLATABLE_CHARACTER NOT_AN_XML_DOCUMENT INVALID_XML_DOCUMENT '
-      + 'INVALID_XML_CONTENT INVALID_XML_COMMENT INVALID_XML_PROCESSING_INSTRUCTION '
-      + 'INTEGRITY_CONSTRAINT_VIOLATION RESTRICT_VIOLATION NOT_NULL_VIOLATION FOREIGN_KEY_VIOLATION '
-      + 'UNIQUE_VIOLATION CHECK_VIOLATION EXCLUSION_VIOLATION INVALID_CURSOR_STATE '
-      + 'INVALID_TRANSACTION_STATE ACTIVE_SQL_TRANSACTION BRANCH_TRANSACTION_ALREADY_ACTIVE '
-      + 'HELD_CURSOR_REQUIRES_SAME_ISOLATION_LEVEL INAPPROPRIATE_ACCESS_MODE_FOR_BRANCH_TRANSACTION '
-      + 'INAPPROPRIATE_ISOLATION_LEVEL_FOR_BRANCH_TRANSACTION '
-      + 'NO_ACTIVE_SQL_TRANSACTION_FOR_BRANCH_TRANSACTION READ_ONLY_SQL_TRANSACTION '
-      + 'SCHEMA_AND_DATA_STATEMENT_MIXING_NOT_SUPPORTED NO_ACTIVE_SQL_TRANSACTION '
-      + 'IN_FAILED_SQL_TRANSACTION IDLE_IN_TRANSACTION_SESSION_TIMEOUT INVALID_SQL_STATEMENT_NAME '
-      + 'TRIGGERED_DATA_CHANGE_VIOLATION INVALID_AUTHORIZATION_SPECIFICATION INVALID_PASSWORD '
-      + 'DEPENDENT_PRIVILEGE_DESCRIPTORS_STILL_EXIST DEPENDENT_OBJECTS_STILL_EXIST '
-      + 'INVALID_TRANSACTION_TERMINATION SQL_ROUTINE_EXCEPTION FUNCTION_EXECUTED_NO_RETURN_STATEMENT '
-      + 'MODIFYING_SQL_DATA_NOT_PERMITTED PROHIBITED_SQL_STATEMENT_ATTEMPTED '
-      + 'READING_SQL_DATA_NOT_PERMITTED INVALID_CURSOR_NAME EXTERNAL_ROUTINE_EXCEPTION '
-      + 'CONTAINING_SQL_NOT_PERMITTED MODIFYING_SQL_DATA_NOT_PERMITTED '
-      + 'PROHIBITED_SQL_STATEMENT_ATTEMPTED READING_SQL_DATA_NOT_PERMITTED '
-      + 'EXTERNAL_ROUTINE_INVOCATION_EXCEPTION INVALID_SQLSTATE_RETURNED NULL_VALUE_NOT_ALLOWED '
-      + 'TRIGGER_PROTOCOL_VIOLATED SRF_PROTOCOL_VIOLATED EVENT_TRIGGER_PROTOCOL_VIOLATED '
-      + 'SAVEPOINT_EXCEPTION INVALID_SAVEPOINT_SPECIFICATION INVALID_CATALOG_NAME '
-      + 'INVALID_SCHEMA_NAME TRANSACTION_ROLLBACK TRANSACTION_INTEGRITY_CONSTRAINT_VIOLATION '
-      + 'SERIALIZATION_FAILURE STATEMENT_COMPLETION_UNKNOWN DEADLOCK_DETECTED '
-      + 'SYNTAX_ERROR_OR_ACCESS_RULE_VIOLATION SYNTAX_ERROR INSUFFICIENT_PRIVILEGE CANNOT_COERCE '
-      + 'GROUPING_ERROR WINDOWING_ERROR INVALID_RECURSION INVALID_FOREIGN_KEY INVALID_NAME '
-      + 'NAME_TOO_LONG RESERVED_NAME DATATYPE_MISMATCH INDETERMINATE_DATATYPE COLLATION_MISMATCH '
-      + 'INDETERMINATE_COLLATION WRONG_OBJECT_TYPE GENERATED_ALWAYS UNDEFINED_COLUMN '
-      + 'UNDEFINED_FUNCTION UNDEFINED_TABLE UNDEFINED_PARAMETER UNDEFINED_OBJECT '
-      + 'DUPLICATE_COLUMN DUPLICATE_CURSOR DUPLICATE_DATABASE DUPLICATE_FUNCTION '
-      + 'DUPLICATE_PREPARED_STATEMENT DUPLICATE_SCHEMA DUPLICATE_TABLE DUPLICATE_ALIAS '
-      + 'DUPLICATE_OBJECT AMBIGUOUS_COLUMN AMBIGUOUS_FUNCTION AMBIGUOUS_PARAMETER AMBIGUOUS_ALIAS '
-      + 'INVALID_COLUMN_REFERENCE INVALID_COLUMN_DEFINITION INVALID_CURSOR_DEFINITION '
-      + 'INVALID_DATABASE_DEFINITION INVALID_FUNCTION_DEFINITION '
-      + 'INVALID_PREPARED_STATEMENT_DEFINITION INVALID_SCHEMA_DEFINITION INVALID_TABLE_DEFINITION '
-      + 'INVALID_OBJECT_DEFINITION WITH_CHECK_OPTION_VIOLATION INSUFFICIENT_RESOURCES DISK_FULL '
-      + 'OUT_OF_MEMORY TOO_MANY_CONNECTIONS CONFIGURATION_LIMIT_EXCEEDED PROGRAM_LIMIT_EXCEEDED '
-      + 'STATEMENT_TOO_COMPLEX TOO_MANY_COLUMNS TOO_MANY_ARGUMENTS OBJECT_NOT_IN_PREREQUISITE_STATE '
-      + 'OBJECT_IN_USE CANT_CHANGE_RUNTIME_PARAM LOCK_NOT_AVAILABLE OPERATOR_INTERVENTION '
-      + 'QUERY_CANCELED ADMIN_SHUTDOWN CRASH_SHUTDOWN CANNOT_CONNECT_NOW DATABASE_DROPPED '
-      + 'SYSTEM_ERROR IO_ERROR UNDEFINED_FILE DUPLICATE_FILE SNAPSHOT_TOO_OLD CONFIG_FILE_ERROR '
-      + 'LOCK_FILE_EXISTS FDW_ERROR FDW_COLUMN_NAME_NOT_FOUND FDW_DYNAMIC_PARAMETER_VALUE_NEEDED '
-      + 'FDW_FUNCTION_SEQUENCE_ERROR FDW_INCONSISTENT_DESCRIPTOR_INFORMATION '
-      + 'FDW_INVALID_ATTRIBUTE_VALUE FDW_INVALID_COLUMN_NAME FDW_INVALID_COLUMN_NUMBER '
-      + 'FDW_INVALID_DATA_TYPE FDW_INVALID_DATA_TYPE_DESCRIPTORS '
-      + 'FDW_INVALID_DESCRIPTOR_FIELD_IDENTIFIER FDW_INVALID_HANDLE FDW_INVALID_OPTION_INDEX '
-      + 'FDW_INVALID_OPTION_NAME FDW_INVALID_STRING_LENGTH_OR_BUFFER_LENGTH '
-      + 'FDW_INVALID_STRING_FORMAT FDW_INVALID_USE_OF_NULL_POINTER FDW_TOO_MANY_HANDLES '
-      + 'FDW_OUT_OF_MEMORY FDW_NO_SCHEMAS FDW_OPTION_NAME_NOT_FOUND FDW_REPLY_HANDLE '
-      + 'FDW_SCHEMA_NOT_FOUND FDW_TABLE_NOT_FOUND FDW_UNABLE_TO_CREATE_EXECUTION '
-      + 'FDW_UNABLE_TO_CREATE_REPLY FDW_UNABLE_TO_ESTABLISH_CONNECTION PLPGSQL_ERROR '
-      + 'RAISE_EXCEPTION NO_DATA_FOUND TOO_MANY_ROWS ASSERT_FAILURE INTERNAL_ERROR DATA_CORRUPTED '
-      + 'INDEX_CORRUPTED ';
+      "SQLSTATE SQLERRM|10 SUCCESSFUL_COMPLETION WARNING DYNAMIC_RESULT_SETS_RETURNED IMPLICIT_ZERO_BIT_PADDING NULL_VALUE_ELIMINATED_IN_SET_FUNCTION PRIVILEGE_NOT_GRANTED PRIVILEGE_NOT_REVOKED STRING_DATA_RIGHT_TRUNCATION DEPRECATED_FEATURE NO_DATA NO_ADDITIONAL_DYNAMIC_RESULT_SETS_RETURNED SQL_STATEMENT_NOT_YET_COMPLETE CONNECTION_EXCEPTION CONNECTION_DOES_NOT_EXIST CONNECTION_FAILURE SQLCLIENT_UNABLE_TO_ESTABLISH_SQLCONNECTION SQLSERVER_REJECTED_ESTABLISHMENT_OF_SQLCONNECTION TRANSACTION_RESOLUTION_UNKNOWN PROTOCOL_VIOLATION TRIGGERED_ACTION_EXCEPTION FEATURE_NOT_SUPPORTED INVALID_TRANSACTION_INITIATION LOCATOR_EXCEPTION INVALID_LOCATOR_SPECIFICATION INVALID_GRANTOR INVALID_GRANT_OPERATION INVALID_ROLE_SPECIFICATION DIAGNOSTICS_EXCEPTION STACKED_DIAGNOSTICS_ACCESSED_WITHOUT_ACTIVE_HANDLER CASE_NOT_FOUND CARDINALITY_VIOLATION DATA_EXCEPTION ARRAY_SUBSCRIPT_ERROR CHARACTER_NOT_IN_REPERTOIRE DATETIME_FIELD_OVERFLOW DIVISION_BY_ZERO ERROR_IN_ASSIGNMENT ESCAPE_CHARACTER_CONFLICT INDICATOR_OVERFLOW INTERVAL_FIELD_OVERFLOW INVALID_ARGUMENT_FOR_LOGARITHM INVALID_ARGUMENT_FOR_NTILE_FUNCTION INVALID_ARGUMENT_FOR_NTH_VALUE_FUNCTION INVALID_ARGUMENT_FOR_POWER_FUNCTION INVALID_ARGUMENT_FOR_WIDTH_BUCKET_FUNCTION INVALID_CHARACTER_VALUE_FOR_CAST INVALID_DATETIME_FORMAT INVALID_ESCAPE_CHARACTER INVALID_ESCAPE_OCTET INVALID_ESCAPE_SEQUENCE NONSTANDARD_USE_OF_ESCAPE_CHARACTER INVALID_INDICATOR_PARAMETER_VALUE INVALID_PARAMETER_VALUE INVALID_REGULAR_EXPRESSION INVALID_ROW_COUNT_IN_LIMIT_CLAUSE INVALID_ROW_COUNT_IN_RESULT_OFFSET_CLAUSE INVALID_TABLESAMPLE_ARGUMENT INVALID_TABLESAMPLE_REPEAT INVALID_TIME_ZONE_DISPLACEMENT_VALUE INVALID_USE_OF_ESCAPE_CHARACTER MOST_SPECIFIC_TYPE_MISMATCH NULL_VALUE_NOT_ALLOWED NULL_VALUE_NO_INDICATOR_PARAMETER NUMERIC_VALUE_OUT_OF_RANGE SEQUENCE_GENERATOR_LIMIT_EXCEEDED STRING_DATA_LENGTH_MISMATCH STRING_DATA_RIGHT_TRUNCATION SUBSTRING_ERROR TRIM_ERROR UNTERMINATED_C_STRING ZERO_LENGTH_CHARACTER_STRING FLOATING_POINT_EXCEPTION INVALID_TEXT_REPRESENTATION INVALID_BINARY_REPRESENTATION BAD_COPY_FILE_FORMAT UNTRANSLATABLE_CHARACTER NOT_AN_XML_DOCUMENT INVALID_XML_DOCUMENT INVALID_XML_CONTENT INVALID_XML_COMMENT INVALID_XML_PROCESSING_INSTRUCTION INTEGRITY_CONSTRAINT_VIOLATION RESTRICT_VIOLATION NOT_NULL_VIOLATION FOREIGN_KEY_VIOLATION UNIQUE_VIOLATION CHECK_VIOLATION EXCLUSION_VIOLATION INVALID_CURSOR_STATE INVALID_TRANSACTION_STATE ACTIVE_SQL_TRANSACTION BRANCH_TRANSACTION_ALREADY_ACTIVE HELD_CURSOR_REQUIRES_SAME_ISOLATION_LEVEL INAPPROPRIATE_ACCESS_MODE_FOR_BRANCH_TRANSACTION INAPPROPRIATE_ISOLATION_LEVEL_FOR_BRANCH_TRANSACTION NO_ACTIVE_SQL_TRANSACTION_FOR_BRANCH_TRANSACTION READ_ONLY_SQL_TRANSACTION SCHEMA_AND_DATA_STATEMENT_MIXING_NOT_SUPPORTED NO_ACTIVE_SQL_TRANSACTION IN_FAILED_SQL_TRANSACTION IDLE_IN_TRANSACTION_SESSION_TIMEOUT INVALID_SQL_STATEMENT_NAME TRIGGERED_DATA_CHANGE_VIOLATION INVALID_AUTHORIZATION_SPECIFICATION INVALID_PASSWORD DEPENDENT_PRIVILEGE_DESCRIPTORS_STILL_EXIST DEPENDENT_OBJECTS_STILL_EXIST INVALID_TRANSACTION_TERMINATION SQL_ROUTINE_EXCEPTION FUNCTION_EXECUTED_NO_RETURN_STATEMENT MODIFYING_SQL_DATA_NOT_PERMITTED PROHIBITED_SQL_STATEMENT_ATTEMPTED READING_SQL_DATA_NOT_PERMITTED INVALID_CURSOR_NAME EXTERNAL_ROUTINE_EXCEPTION CONTAINING_SQL_NOT_PERMITTED MODIFYING_SQL_DATA_NOT_PERMITTED PROHIBITED_SQL_STATEMENT_ATTEMPTED READING_SQL_DATA_NOT_PERMITTED EXTERNAL_ROUTINE_INVOCATION_EXCEPTION INVALID_SQLSTATE_RETURNED NULL_VALUE_NOT_ALLOWED TRIGGER_PROTOCOL_VIOLATED SRF_PROTOCOL_VIOLATED EVENT_TRIGGER_PROTOCOL_VIOLATED SAVEPOINT_EXCEPTION INVALID_SAVEPOINT_SPECIFICATION INVALID_CATALOG_NAME INVALID_SCHEMA_NAME TRANSACTION_ROLLBACK TRANSACTION_INTEGRITY_CONSTRAINT_VIOLATION SERIALIZATION_FAILURE STATEMENT_COMPLETION_UNKNOWN DEADLOCK_DETECTED SYNTAX_ERROR_OR_ACCESS_RULE_VIOLATION SYNTAX_ERROR INSUFFICIENT_PRIVILEGE CANNOT_COERCE GROUPING_ERROR WINDOWING_ERROR INVALID_RECURSION INVALID_FOREIGN_KEY INVALID_NAME NAME_TOO_LONG RESERVED_NAME DATATYPE_MISMATCH INDETERMINATE_DATATYPE COLLATION_MISMATCH INDETERMINATE_COLLATION WRONG_OBJECT_TYPE GENERATED_ALWAYS UNDEFINED_COLUMN UNDEFINED_FUNCTION UNDEFINED_TABLE UNDEFINED_PARAMETER UNDEFINED_OBJECT DUPLICATE_COLUMN DUPLICATE_CURSOR DUPLICATE_DATABASE DUPLICATE_FUNCTION DUPLICATE_PREPARED_STATEMENT DUPLICATE_SCHEMA DUPLICATE_TABLE DUPLICATE_ALIAS DUPLICATE_OBJECT AMBIGUOUS_COLUMN AMBIGUOUS_FUNCTION AMBIGUOUS_PARAMETER AMBIGUOUS_ALIAS INVALID_COLUMN_REFERENCE INVALID_COLUMN_DEFINITION INVALID_CURSOR_DEFINITION INVALID_DATABASE_DEFINITION INVALID_FUNCTION_DEFINITION INVALID_PREPARED_STATEMENT_DEFINITION INVALID_SCHEMA_DEFINITION INVALID_TABLE_DEFINITION INVALID_OBJECT_DEFINITION WITH_CHECK_OPTION_VIOLATION INSUFFICIENT_RESOURCES DISK_FULL OUT_OF_MEMORY TOO_MANY_CONNECTIONS CONFIGURATION_LIMIT_EXCEEDED PROGRAM_LIMIT_EXCEEDED STATEMENT_TOO_COMPLEX TOO_MANY_COLUMNS TOO_MANY_ARGUMENTS OBJECT_NOT_IN_PREREQUISITE_STATE OBJECT_IN_USE CANT_CHANGE_RUNTIME_PARAM LOCK_NOT_AVAILABLE OPERATOR_INTERVENTION QUERY_CANCELED ADMIN_SHUTDOWN CRASH_SHUTDOWN CANNOT_CONNECT_NOW DATABASE_DROPPED SYSTEM_ERROR IO_ERROR UNDEFINED_FILE DUPLICATE_FILE SNAPSHOT_TOO_OLD CONFIG_FILE_ERROR LOCK_FILE_EXISTS FDW_ERROR FDW_COLUMN_NAME_NOT_FOUND FDW_DYNAMIC_PARAMETER_VALUE_NEEDED FDW_FUNCTION_SEQUENCE_ERROR FDW_INCONSISTENT_DESCRIPTOR_INFORMATION FDW_INVALID_ATTRIBUTE_VALUE FDW_INVALID_COLUMN_NAME FDW_INVALID_COLUMN_NUMBER FDW_INVALID_DATA_TYPE FDW_INVALID_DATA_TYPE_DESCRIPTORS FDW_INVALID_DESCRIPTOR_FIELD_IDENTIFIER FDW_INVALID_HANDLE FDW_INVALID_OPTION_INDEX FDW_INVALID_OPTION_NAME FDW_INVALID_STRING_LENGTH_OR_BUFFER_LENGTH FDW_INVALID_STRING_FORMAT FDW_INVALID_USE_OF_NULL_POINTER FDW_TOO_MANY_HANDLES FDW_OUT_OF_MEMORY FDW_NO_SCHEMAS FDW_OPTION_NAME_NOT_FOUND FDW_REPLY_HANDLE FDW_SCHEMA_NOT_FOUND FDW_TABLE_NOT_FOUND FDW_UNABLE_TO_CREATE_EXECUTION FDW_UNABLE_TO_CREATE_REPLY FDW_UNABLE_TO_ESTABLISH_CONNECTION PLPGSQL_ERROR RAISE_EXCEPTION NO_DATA_FOUND TOO_MANY_ROWS ASSERT_FAILURE INTERNAL_ERROR DATA_CORRUPTED INDEX_CORRUPTED ";
 
     const FUNCTIONS =
       // https://www.postgresql.org/docs/11/static/functions-aggregate.html
-      'ARRAY_AGG AVG BIT_AND BIT_OR BOOL_AND BOOL_OR COUNT EVERY JSON_AGG JSONB_AGG JSON_OBJECT_AGG '
-      + 'JSONB_OBJECT_AGG MAX MIN MODE STRING_AGG SUM XMLAGG '
-      + 'CORR COVAR_POP COVAR_SAMP REGR_AVGX REGR_AVGY REGR_COUNT REGR_INTERCEPT REGR_R2 REGR_SLOPE '
-      + 'REGR_SXX REGR_SXY REGR_SYY STDDEV STDDEV_POP STDDEV_SAMP VARIANCE VAR_POP VAR_SAMP '
-      + 'PERCENTILE_CONT PERCENTILE_DISC '
-      // https://www.postgresql.org/docs/11/static/functions-window.html
-      + 'ROW_NUMBER RANK DENSE_RANK PERCENT_RANK CUME_DIST NTILE LAG LEAD FIRST_VALUE LAST_VALUE NTH_VALUE '
-      // https://www.postgresql.org/docs/11/static/functions-comparison.html
-      + 'NUM_NONNULLS NUM_NULLS '
-      // https://www.postgresql.org/docs/11/static/functions-math.html
-      + 'ABS CBRT CEIL CEILING DEGREES DIV EXP FLOOR LN LOG MOD PI POWER RADIANS ROUND SCALE SIGN SQRT '
-      + 'TRUNC WIDTH_BUCKET '
-      + 'RANDOM SETSEED '
-      + 'ACOS ACOSD ASIN ASIND ATAN ATAND ATAN2 ATAN2D COS COSD COT COTD SIN SIND TAN TAND '
-      // https://www.postgresql.org/docs/11/static/functions-string.html
-      + 'BIT_LENGTH CHAR_LENGTH CHARACTER_LENGTH LOWER OCTET_LENGTH OVERLAY POSITION SUBSTRING TREAT TRIM UPPER '
-      + 'ASCII BTRIM CHR CONCAT CONCAT_WS CONVERT CONVERT_FROM CONVERT_TO DECODE ENCODE INITCAP '
-      + 'LEFT LENGTH LPAD LTRIM MD5 PARSE_IDENT PG_CLIENT_ENCODING QUOTE_IDENT|10 QUOTE_LITERAL|10 '
-      + 'QUOTE_NULLABLE|10 REGEXP_MATCH REGEXP_MATCHES REGEXP_REPLACE REGEXP_SPLIT_TO_ARRAY '
-      + 'REGEXP_SPLIT_TO_TABLE REPEAT REPLACE REVERSE RIGHT RPAD RTRIM SPLIT_PART STRPOS SUBSTR '
-      + 'TO_ASCII TO_HEX TRANSLATE '
-      // https://www.postgresql.org/docs/11/static/functions-binarystring.html
-      + 'OCTET_LENGTH GET_BIT GET_BYTE SET_BIT SET_BYTE '
-      // https://www.postgresql.org/docs/11/static/functions-formatting.html
-      + 'TO_CHAR TO_DATE TO_NUMBER TO_TIMESTAMP '
-      // https://www.postgresql.org/docs/11/static/functions-datetime.html
-      + 'AGE CLOCK_TIMESTAMP|10 DATE_PART DATE_TRUNC ISFINITE JUSTIFY_DAYS JUSTIFY_HOURS JUSTIFY_INTERVAL '
-      + 'MAKE_DATE MAKE_INTERVAL|10 MAKE_TIME MAKE_TIMESTAMP|10 MAKE_TIMESTAMPTZ|10 NOW STATEMENT_TIMESTAMP|10 '
-      + 'TIMEOFDAY TRANSACTION_TIMESTAMP|10 '
-      // https://www.postgresql.org/docs/11/static/functions-enum.html
-      + 'ENUM_FIRST ENUM_LAST ENUM_RANGE '
-      // https://www.postgresql.org/docs/11/static/functions-geometry.html
-      + 'AREA CENTER DIAMETER HEIGHT ISCLOSED ISOPEN NPOINTS PCLOSE POPEN RADIUS WIDTH '
-      + 'BOX BOUND_BOX CIRCLE LINE LSEG PATH POLYGON '
-      // https://www.postgresql.org/docs/11/static/functions-net.html
-      + 'ABBREV BROADCAST HOST HOSTMASK MASKLEN NETMASK NETWORK SET_MASKLEN TEXT INET_SAME_FAMILY '
-      + 'INET_MERGE MACADDR8_SET7BIT '
-      // https://www.postgresql.org/docs/11/static/functions-textsearch.html
-      + 'ARRAY_TO_TSVECTOR GET_CURRENT_TS_CONFIG NUMNODE PLAINTO_TSQUERY PHRASETO_TSQUERY WEBSEARCH_TO_TSQUERY '
-      + 'QUERYTREE SETWEIGHT STRIP TO_TSQUERY TO_TSVECTOR JSON_TO_TSVECTOR JSONB_TO_TSVECTOR TS_DELETE '
-      + 'TS_FILTER TS_HEADLINE TS_RANK TS_RANK_CD TS_REWRITE TSQUERY_PHRASE TSVECTOR_TO_ARRAY '
-      + 'TSVECTOR_UPDATE_TRIGGER TSVECTOR_UPDATE_TRIGGER_COLUMN '
-      // https://www.postgresql.org/docs/11/static/functions-xml.html
-      + 'XMLCOMMENT XMLCONCAT XMLELEMENT XMLFOREST XMLPI XMLROOT '
-      + 'XMLEXISTS XML_IS_WELL_FORMED XML_IS_WELL_FORMED_DOCUMENT XML_IS_WELL_FORMED_CONTENT '
-      + 'XPATH XPATH_EXISTS XMLTABLE XMLNAMESPACES '
-      + 'TABLE_TO_XML TABLE_TO_XMLSCHEMA TABLE_TO_XML_AND_XMLSCHEMA '
-      + 'QUERY_TO_XML QUERY_TO_XMLSCHEMA QUERY_TO_XML_AND_XMLSCHEMA '
-      + 'CURSOR_TO_XML CURSOR_TO_XMLSCHEMA '
-      + 'SCHEMA_TO_XML SCHEMA_TO_XMLSCHEMA SCHEMA_TO_XML_AND_XMLSCHEMA '
-      + 'DATABASE_TO_XML DATABASE_TO_XMLSCHEMA DATABASE_TO_XML_AND_XMLSCHEMA '
-      + 'XMLATTRIBUTES '
-      // https://www.postgresql.org/docs/11/static/functions-json.html
-      + 'TO_JSON TO_JSONB ARRAY_TO_JSON ROW_TO_JSON JSON_BUILD_ARRAY JSONB_BUILD_ARRAY JSON_BUILD_OBJECT '
-      + 'JSONB_BUILD_OBJECT JSON_OBJECT JSONB_OBJECT JSON_ARRAY_LENGTH JSONB_ARRAY_LENGTH JSON_EACH '
-      + 'JSONB_EACH JSON_EACH_TEXT JSONB_EACH_TEXT JSON_EXTRACT_PATH JSONB_EXTRACT_PATH '
-      + 'JSON_OBJECT_KEYS JSONB_OBJECT_KEYS JSON_POPULATE_RECORD JSONB_POPULATE_RECORD JSON_POPULATE_RECORDSET '
-      + 'JSONB_POPULATE_RECORDSET JSON_ARRAY_ELEMENTS JSONB_ARRAY_ELEMENTS JSON_ARRAY_ELEMENTS_TEXT '
-      + 'JSONB_ARRAY_ELEMENTS_TEXT JSON_TYPEOF JSONB_TYPEOF JSON_TO_RECORD JSONB_TO_RECORD JSON_TO_RECORDSET '
-      + 'JSONB_TO_RECORDSET JSON_STRIP_NULLS JSONB_STRIP_NULLS JSONB_SET JSONB_INSERT JSONB_PRETTY '
-      // https://www.postgresql.org/docs/11/static/functions-sequence.html
-      + 'CURRVAL LASTVAL NEXTVAL SETVAL '
-      // https://www.postgresql.org/docs/11/static/functions-conditional.html
-      + 'COALESCE NULLIF GREATEST LEAST '
-      // https://www.postgresql.org/docs/11/static/functions-array.html
-      + 'ARRAY_APPEND ARRAY_CAT ARRAY_NDIMS ARRAY_DIMS ARRAY_FILL ARRAY_LENGTH ARRAY_LOWER ARRAY_POSITION '
-      + 'ARRAY_POSITIONS ARRAY_PREPEND ARRAY_REMOVE ARRAY_REPLACE ARRAY_TO_STRING ARRAY_UPPER CARDINALITY '
-      + 'STRING_TO_ARRAY UNNEST '
-      // https://www.postgresql.org/docs/11/static/functions-range.html
-      + 'ISEMPTY LOWER_INC UPPER_INC LOWER_INF UPPER_INF RANGE_MERGE '
-      // https://www.postgresql.org/docs/11/static/functions-srf.html
-      + 'GENERATE_SERIES GENERATE_SUBSCRIPTS '
-      // https://www.postgresql.org/docs/11/static/functions-info.html
-      + 'CURRENT_DATABASE CURRENT_QUERY CURRENT_SCHEMA|10 CURRENT_SCHEMAS|10 INET_CLIENT_ADDR INET_CLIENT_PORT '
-      + 'INET_SERVER_ADDR INET_SERVER_PORT ROW_SECURITY_ACTIVE FORMAT_TYPE '
-      + 'TO_REGCLASS TO_REGPROC TO_REGPROCEDURE TO_REGOPER TO_REGOPERATOR TO_REGTYPE TO_REGNAMESPACE TO_REGROLE '
-      + 'COL_DESCRIPTION OBJ_DESCRIPTION SHOBJ_DESCRIPTION '
-      + 'TXID_CURRENT TXID_CURRENT_IF_ASSIGNED TXID_CURRENT_SNAPSHOT TXID_SNAPSHOT_XIP TXID_SNAPSHOT_XMAX '
-      + 'TXID_SNAPSHOT_XMIN TXID_VISIBLE_IN_SNAPSHOT TXID_STATUS '
-      // https://www.postgresql.org/docs/11/static/functions-admin.html
-      + 'CURRENT_SETTING SET_CONFIG BRIN_SUMMARIZE_NEW_VALUES BRIN_SUMMARIZE_RANGE BRIN_DESUMMARIZE_RANGE '
-      + 'GIN_CLEAN_PENDING_LIST '
-      // https://www.postgresql.org/docs/11/static/functions-trigger.html
-      + 'SUPPRESS_REDUNDANT_UPDATES_TRIGGER '
-      // ihttps://www.postgresql.org/docs/devel/static/lo-funcs.html
-      + 'LO_FROM_BYTEA LO_PUT LO_GET LO_CREAT LO_CREATE LO_UNLINK LO_IMPORT LO_EXPORT LOREAD LOWRITE '
-      //
-      + 'GROUPING CAST ';
+      "ARRAY_AGG AVG BIT_AND BIT_OR BOOL_AND BOOL_OR COUNT EVERY JSON_AGG JSONB_AGG JSON_OBJECT_AGG JSONB_OBJECT_AGG MAX MIN MODE STRING_AGG SUM XMLAGG CORR COVAR_POP COVAR_SAMP REGR_AVGX REGR_AVGY REGR_COUNT REGR_INTERCEPT REGR_R2 REGR_SLOPE REGR_SXX REGR_SXY REGR_SYY STDDEV STDDEV_POP STDDEV_SAMP VARIANCE VAR_POP VAR_SAMP PERCENTILE_CONT PERCENTILE_DISC ROW_NUMBER RANK DENSE_RANK PERCENT_RANK CUME_DIST NTILE LAG LEAD FIRST_VALUE LAST_VALUE NTH_VALUE NUM_NONNULLS NUM_NULLS ABS CBRT CEIL CEILING DEGREES DIV EXP FLOOR LN LOG MOD PI POWER RADIANS ROUND SCALE SIGN SQRT TRUNC WIDTH_BUCKET RANDOM SETSEED ACOS ACOSD ASIN ASIND ATAN ATAND ATAN2 ATAN2D COS COSD COT COTD SIN SIND TAN TAND BIT_LENGTH CHAR_LENGTH CHARACTER_LENGTH LOWER OCTET_LENGTH OVERLAY POSITION SUBSTRING TREAT TRIM UPPER ASCII BTRIM CHR CONCAT CONCAT_WS CONVERT CONVERT_FROM CONVERT_TO DECODE ENCODE INITCAP LEFT LENGTH LPAD LTRIM MD5 PARSE_IDENT PG_CLIENT_ENCODING QUOTE_IDENT|10 QUOTE_LITERAL|10 QUOTE_NULLABLE|10 REGEXP_MATCH REGEXP_MATCHES REGEXP_REPLACE REGEXP_SPLIT_TO_ARRAY REGEXP_SPLIT_TO_TABLE REPEAT REPLACE REVERSE RIGHT RPAD RTRIM SPLIT_PART STRPOS SUBSTR TO_ASCII TO_HEX TRANSLATE OCTET_LENGTH GET_BIT GET_BYTE SET_BIT SET_BYTE TO_CHAR TO_DATE TO_NUMBER TO_TIMESTAMP AGE CLOCK_TIMESTAMP|10 DATE_PART DATE_TRUNC ISFINITE JUSTIFY_DAYS JUSTIFY_HOURS JUSTIFY_INTERVAL MAKE_DATE MAKE_INTERVAL|10 MAKE_TIME MAKE_TIMESTAMP|10 MAKE_TIMESTAMPTZ|10 NOW STATEMENT_TIMESTAMP|10 TIMEOFDAY TRANSACTION_TIMESTAMP|10 ENUM_FIRST ENUM_LAST ENUM_RANGE AREA CENTER DIAMETER HEIGHT ISCLOSED ISOPEN NPOINTS PCLOSE POPEN RADIUS WIDTH BOX BOUND_BOX CIRCLE LINE LSEG PATH POLYGON ABBREV BROADCAST HOST HOSTMASK MASKLEN NETMASK NETWORK SET_MASKLEN TEXT INET_SAME_FAMILY INET_MERGE MACADDR8_SET7BIT ARRAY_TO_TSVECTOR GET_CURRENT_TS_CONFIG NUMNODE PLAINTO_TSQUERY PHRASETO_TSQUERY WEBSEARCH_TO_TSQUERY QUERYTREE SETWEIGHT STRIP TO_TSQUERY TO_TSVECTOR JSON_TO_TSVECTOR JSONB_TO_TSVECTOR TS_DELETE TS_FILTER TS_HEADLINE TS_RANK TS_RANK_CD TS_REWRITE TSQUERY_PHRASE TSVECTOR_TO_ARRAY TSVECTOR_UPDATE_TRIGGER TSVECTOR_UPDATE_TRIGGER_COLUMN XMLCOMMENT XMLCONCAT XMLELEMENT XMLFOREST XMLPI XMLROOT XMLEXISTS XML_IS_WELL_FORMED XML_IS_WELL_FORMED_DOCUMENT XML_IS_WELL_FORMED_CONTENT XPATH XPATH_EXISTS XMLTABLE XMLNAMESPACES TABLE_TO_XML TABLE_TO_XMLSCHEMA TABLE_TO_XML_AND_XMLSCHEMA QUERY_TO_XML QUERY_TO_XMLSCHEMA QUERY_TO_XML_AND_XMLSCHEMA CURSOR_TO_XML CURSOR_TO_XMLSCHEMA SCHEMA_TO_XML SCHEMA_TO_XMLSCHEMA SCHEMA_TO_XML_AND_XMLSCHEMA DATABASE_TO_XML DATABASE_TO_XMLSCHEMA DATABASE_TO_XML_AND_XMLSCHEMA XMLATTRIBUTES TO_JSON TO_JSONB ARRAY_TO_JSON ROW_TO_JSON JSON_BUILD_ARRAY JSONB_BUILD_ARRAY JSON_BUILD_OBJECT JSONB_BUILD_OBJECT JSON_OBJECT JSONB_OBJECT JSON_ARRAY_LENGTH JSONB_ARRAY_LENGTH JSON_EACH JSONB_EACH JSON_EACH_TEXT JSONB_EACH_TEXT JSON_EXTRACT_PATH JSONB_EXTRACT_PATH JSON_OBJECT_KEYS JSONB_OBJECT_KEYS JSON_POPULATE_RECORD JSONB_POPULATE_RECORD JSON_POPULATE_RECORDSET JSONB_POPULATE_RECORDSET JSON_ARRAY_ELEMENTS JSONB_ARRAY_ELEMENTS JSON_ARRAY_ELEMENTS_TEXT JSONB_ARRAY_ELEMENTS_TEXT JSON_TYPEOF JSONB_TYPEOF JSON_TO_RECORD JSONB_TO_RECORD JSON_TO_RECORDSET JSONB_TO_RECORDSET JSON_STRIP_NULLS JSONB_STRIP_NULLS JSONB_SET JSONB_INSERT JSONB_PRETTY CURRVAL LASTVAL NEXTVAL SETVAL COALESCE NULLIF GREATEST LEAST ARRAY_APPEND ARRAY_CAT ARRAY_NDIMS ARRAY_DIMS ARRAY_FILL ARRAY_LENGTH ARRAY_LOWER ARRAY_POSITION ARRAY_POSITIONS ARRAY_PREPEND ARRAY_REMOVE ARRAY_REPLACE ARRAY_TO_STRING ARRAY_UPPER CARDINALITY STRING_TO_ARRAY UNNEST ISEMPTY LOWER_INC UPPER_INC LOWER_INF UPPER_INF RANGE_MERGE GENERATE_SERIES GENERATE_SUBSCRIPTS CURRENT_DATABASE CURRENT_QUERY CURRENT_SCHEMA|10 CURRENT_SCHEMAS|10 INET_CLIENT_ADDR INET_CLIENT_PORT INET_SERVER_ADDR INET_SERVER_PORT ROW_SECURITY_ACTIVE FORMAT_TYPE TO_REGCLASS TO_REGPROC TO_REGPROCEDURE TO_REGOPER TO_REGOPERATOR TO_REGTYPE TO_REGNAMESPACE TO_REGROLE COL_DESCRIPTION OBJ_DESCRIPTION SHOBJ_DESCRIPTION TXID_CURRENT TXID_CURRENT_IF_ASSIGNED TXID_CURRENT_SNAPSHOT TXID_SNAPSHOT_XIP TXID_SNAPSHOT_XMAX TXID_SNAPSHOT_XMIN TXID_VISIBLE_IN_SNAPSHOT TXID_STATUS CURRENT_SETTING SET_CONFIG BRIN_SUMMARIZE_NEW_VALUES BRIN_SUMMARIZE_RANGE BRIN_DESUMMARIZE_RANGE GIN_CLEAN_PENDING_LIST SUPPRESS_REDUNDANT_UPDATES_TRIGGER LO_FROM_BYTEA LO_PUT LO_GET LO_CREAT LO_CREATE LO_UNLINK LO_IMPORT LO_EXPORT LOREAD LOWRITE GROUPING CAST ";
 
     const FUNCTIONS_RE =
         FUNCTIONS.trim()
           .split(' ')
-          .map(function(val) { return val.split('|')[0]; })
+          .map((val) => val.split('|')[0])
           .join('|');
 
     return {
@@ -8591,9 +8244,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           returnEnd: true,
           keywords: {
             // built_in: 'EXTRACT',
-            type: 'CENTURY DAY DECADE DOW DOY EPOCH HOUR ISODOW ISOYEAR MICROSECONDS '
-                          + 'MILLENNIUM MILLISECONDS MINUTE MONTH QUARTER SECOND TIMEZONE TIMEZONE_HOUR '
-                          + 'TIMEZONE_MINUTE WEEK YEAR' }
+            type: "CENTURY DAY DECADE DOW DOY EPOCH HOUR ISODOW ISOYEAR MICROSECONDS MILLENNIUM MILLISECONDS MINUTE MONTH QUARTER SECOND TIMEZONE TIMEZONE_HOUR TIMEZONE_MINUTE WEEK YEAR" }
         },
         // xmlelement, xmlpi - special NAME
         {
@@ -8637,14 +8288,14 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           }
         },
         // Known functions - only when followed by '('
-        { begin: '\\b(' + FUNCTIONS_RE + ')\\s*\\('
+        { begin: `\\b(${FUNCTIONS_RE})\\s*\\(`
           // keywords: { built_in: FUNCTIONS }
         },
         // Types
-        { begin: '\\.(' + TYPES_RE + ')\\b' // prevent highlight as type, say, 'oid' in 'pgclass.oid'
+        { begin: `\\.(${TYPES_RE})\\b` // prevent highlight as type, say, 'oid' in 'pgclass.oid'
         },
         {
-          begin: '\\b(' + TYPES_RE + ')\\s+PATH\\b', // in XMLTABLE
+          begin: `\\b(${TYPES_RE})\\s+PATH\\b`, // in XMLTABLE
           keywords: {
             keyword: 'PATH', // hopefully no one would use PATH type in XMLTABLE...
             type: TYPES.replace('PATH ', '')
@@ -8652,7 +8303,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         {
           className: 'type',
-          begin: '\\b(' + TYPES_RE + ')\\b'
+          begin: `\\b(${TYPES_RE})\\b`
         },
         // Strings, see https://www.postgresql.org/docs/11/static/sql-syntax-lexical.html#SQL-SYNTAX-CONSTANTS
         {
@@ -8738,9 +8389,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('pgsql', hljsGrammar);
   })();/*! `php` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: PHP
@@ -8768,7 +8418,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       NOT_PERL_ETC);
     const VARIABLE = {
       scope: 'variable',
-      match: '\\$+' + IDENT_RE,
+      match: `\\$+${IDENT_RE}`,
     };
     const PREPROCESSOR = {
       scope: 'meta',
@@ -9360,9 +9010,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('php', hljsGrammar);
   })();/*! `php-template` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: PHP Template
@@ -9423,9 +9072,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('php-template', hljsGrammar);
   })();/*! `plaintext` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Plain text
@@ -9451,9 +9099,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('plaintext', hljsGrammar);
   })();/*! `python` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Python
@@ -9896,9 +9543,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('python', hljsGrammar);
   })();/*! `python-repl` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Python REPL
@@ -9937,9 +9583,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('python-repl', hljsGrammar);
   })();/*! `scss` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   const MODES = (hljs) => {
     return {
@@ -9968,15 +9613,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       },
       CSS_NUMBER_MODE: {
         scope: 'number',
-        begin: hljs.NUMBER_RE + '(' +
-          '%|em|ex|ch|rem' +
-          '|vw|vh|vmin|vmax' +
-          '|cm|mm|in|pt|pc|px' +
-          '|deg|grad|rad|turn' +
-          '|s|ms' +
-          '|Hz|kHz' +
-          '|dpi|dpcm|dppx' +
-          ')?',
+        begin: `${hljs.NUMBER_RE}(%|em|ex|ch|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc|px|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?`,
         relevance: 0
       },
       CSS_VARIABLE: {
@@ -10678,7 +10315,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const IDENT_RE = '[a-zA-Z-][a-zA-Z0-9_-]*';
     const VARIABLE = {
       className: 'variable',
-      begin: '(\\$' + IDENT_RE + ')\\b',
+      begin: `(\\$${IDENT_RE})\\b`,
       relevance: 0
     };
 
@@ -10705,17 +10342,17 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         modes.ATTRIBUTE_SELECTOR_MODE,
         {
           className: 'selector-tag',
-          begin: '\\b(' + TAGS.join('|') + ')\\b',
+          begin: `\\b(${TAGS.join('|')})\\b`,
           // was there, before, but why?
           relevance: 0
         },
         {
           className: 'selector-pseudo',
-          begin: ':(' + PSEUDO_CLASSES$1.join('|') + ')'
+          begin: `:(${PSEUDO_CLASSES$1.join('|')})`
         },
         {
           className: 'selector-pseudo',
-          begin: ':(:)?(' + PSEUDO_ELEMENTS$1.join('|') + ')'
+          begin: `:(:)?(${PSEUDO_ELEMENTS$1.join('|')})`
         },
         VARIABLE,
         { // pseudo-selector params
@@ -10726,7 +10363,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         modes.CSS_VARIABLE,
         {
           className: 'attribute',
-          begin: '\\b(' + ATTRIBUTES.join('|') + ')\\b'
+          begin: `\\b(${ATTRIBUTES.join('|')})\\b`
         },
         { begin: '\\b(whitespace|wait|w-resize|visible|vertical-text|vertical-ideographic|uppercase|upper-roman|upper-alpha|underline|transparent|top|thin|thick|text|text-top|text-bottom|tb-rl|table-header-group|table-footer-group|sw-resize|super|strict|static|square|solid|small-caps|separate|se-resize|scroll|s-resize|rtl|row-resize|ridge|right|repeat|repeat-y|repeat-x|relative|progress|pointer|overline|outside|outset|oblique|nowrap|not-allowed|normal|none|nw-resize|no-repeat|no-drop|newspaper|ne-resize|n-resize|move|middle|medium|ltr|lr-tb|lowercase|lower-roman|lower-alpha|loose|list-item|line|line-through|line-edge|lighter|left|keep-all|justify|italic|inter-word|inter-ideograph|inside|inset|inline|inline-block|inherit|inactive|ideograph-space|ideograph-parenthesis|ideograph-numeric|ideograph-alpha|horizontal|hidden|help|hand|groove|fixed|ellipsis|e-resize|double|dotted|distribute|distribute-space|distribute-letter|distribute-all-lines|disc|disabled|default|decimal|dashed|crosshair|collapse|col-resize|circle|char|center|capitalize|break-word|break-all|bottom|both|bolder|bold|block|bidi-override|below|baseline|auto|always|all-scroll|absolute|table|table-cell)\\b' },
         {
@@ -10790,9 +10427,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('scss', hljsGrammar);
   })();/*! `shell` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Shell Session
@@ -10832,9 +10468,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('shell', hljsGrammar);
   })();/*! `sql` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
    Language: SQL
@@ -11523,9 +11158,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('sql', hljsGrammar);
   })();/*! `swift` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /**
    * @param {string} value
@@ -11587,9 +11221,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
   function either(...args) {
     /** @type { object & {capture?: boolean} }  */
     const opts = stripOptionsFromArgs(args);
-    const joined = '('
-      + (opts.capture ? "" : "?:")
-      + args.map((x) => source(x)).join("|") + ")";
+    const joined = `(${opts.capture ? "" : "?:"}${args.map((x) => source(x)).join("|")})`;
     return joined;
   }
 
@@ -12475,9 +12107,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('swift', hljsGrammar);
   })();/*! `typescript` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   const IDENT_RE = '[A-Za-z$_][0-9A-Za-z$_]*';
   const KEYWORDS = [
@@ -12656,7 +12287,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
      * @param {{after:number}} param1
      */
     const hasClosingTag = (match, { after }) => {
-      const tag = "</" + match[0].slice(1);
+      const tag = `</${match[0].slice(1)}`;
       const pos = match.input.indexOf(tag, after);
       return pos !== -1;
     };
@@ -12842,7 +12473,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
               },
               {
                 className: 'variable',
-                begin: IDENT_RE$1 + '(?=\\s*(-)|$)',
+                begin: `${IDENT_RE$1}(?=\\s*(-)|$)`,
                 endsParent: true,
                 relevance: 0
               },
@@ -13062,13 +12693,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       ]
     };
 
-    const FUNC_LEAD_IN_RE = '(\\(' +
-      '[^()]*(\\(' +
-      '[^()]*(\\(' +
-      '[^()]*' +
-      '\\)[^()]*)*' +
-      '\\)[^()]*)*' +
-      '\\)|' + hljs.UNDERSCORE_IDENT_RE + ')\\s*=>';
+    const FUNC_LEAD_IN_RE = `(\\([^()]*(\\([^()]*(\\([^()]*\\)[^()]*)*\\)[^()]*)*\\)|${hljs.UNDERSCORE_IDENT_RE})\\s*=>`;
 
     const FUNCTION_VARIABLE = {
       match: [
@@ -13120,7 +12745,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         },
         FUNCTION_VARIABLE,
         { // "value" container
-          begin: '(' + hljs.RE_STARTERS_RE + '|\\b(case|return|throw)\\b)\\s*',
+          begin: `(${hljs.RE_STARTERS_RE}|\\b(case|return|throw)\\b)\\s*`,
           keywords: 'return throw case',
           relevance: 0,
           contains: [
@@ -13201,14 +12826,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
           // we have to count the parens to make sure we actually have the correct
           // bounding ( ).  There could be any number of sub-expressions inside
           // also surrounded by parens.
-          begin: '\\b(?!function)' + hljs.UNDERSCORE_IDENT_RE +
-            '\\(' + // first parens
-            '[^()]*(\\(' +
-              '[^()]*(\\(' +
-                '[^()]*' +
-              '\\)[^()]*)*' +
-            '\\)[^()]*)*' +
-            '\\)\\s*\\{', // end parens
+          begin: `\\b(?!function)${hljs.UNDERSCORE_IDENT_RE}\\([^()]*(\\([^()]*(\\([^()]*\\)[^()]*)*\\)[^()]*)*\\)\\s*\\{`, // end parens
           returnBegin:true,
           label: "func.def",
           contains: [
@@ -13226,7 +12844,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
         // .keyword()
         // $keyword = x
         {
-          match: '\\$' + IDENT_RE$1,
+          match: `\\$${IDENT_RE$1}`,
           relevance: 0
         },
         {
@@ -13329,7 +12947,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     };
     const DECORATOR = {
       className: 'meta',
-      begin: '@' + IDENT_RE$1,
+      begin: `@${IDENT_RE$1}`,
     };
 
     const swapMode = (mode, label, replacement) => {
@@ -13385,9 +13003,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('typescript', hljsGrammar);
   })();/*! `vbnet` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: Visual Basic .NET
@@ -13509,22 +13126,10 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       classNameAliases: { label: 'symbol' },
       keywords: {
         keyword:
-          'addhandler alias aggregate ansi as async assembly auto binary by byref byval ' /* a-b */
-          + 'call case catch class compare const continue custom declare default delegate dim distinct do ' /* c-d */
-          + 'each equals else elseif end enum erase error event exit explicit finally for friend from function ' /* e-f */
-          + 'get global goto group handles if implements imports in inherits interface into iterator ' /* g-i */
-          + 'join key let lib loop me mid module mustinherit mustoverride mybase myclass ' /* j-m */
-          + 'namespace narrowing new next notinheritable notoverridable ' /* n */
-          + 'of off on operator option optional order overloads overridable overrides ' /* o */
-          + 'paramarray partial preserve private property protected public ' /* p */
-          + 'raiseevent readonly redim removehandler resume return ' /* r */
-          + 'select set shadows shared skip static step stop structure strict sub synclock ' /* s */
-          + 'take text then throw to try unicode until using when where while widening with withevents writeonly yield' /* t-y */,
+          "addhandler alias aggregate ansi as async assembly auto binary by byref byval call case catch class compare const continue custom declare default delegate dim distinct do each equals else elseif end enum erase error event exit explicit finally for friend from function get global goto group handles if implements imports in inherits interface into iterator join key let lib loop me mid module mustinherit mustoverride mybase myclass namespace narrowing new next notinheritable notoverridable of off on operator option optional order overloads overridable overrides paramarray partial preserve private property protected public raiseevent readonly redim removehandler resume return select set shadows shared skip static step stop structure strict sub synclock take text then throw to try unicode until using when where while widening with withevents writeonly yield" /* t-y */,
         built_in:
           // Operators https://docs.microsoft.com/dotnet/visual-basic/language-reference/operators
-          'addressof and andalso await directcast gettype getxmlnamespace is isfalse isnot istrue like mod nameof new not or orelse trycast typeof xor '
-          // Type Conversion Functions https://docs.microsoft.com/dotnet/visual-basic/language-reference/functions/type-conversion-functions
-          + 'cbool cbyte cchar cdate cdbl cdec cint clng cobj csbyte cshort csng cstr cuint culng cushort',
+          "addressof and andalso await directcast gettype getxmlnamespace is isfalse isnot istrue like mod nameof new not or orelse trycast typeof xor cbool cbyte cchar cdate cdbl cdec cint clng cobj csbyte cshort csng cstr cuint culng cushort",
         type:
           // Data types https://docs.microsoft.com/dotnet/visual-basic/language-reference/data-types
           'boolean byte char date decimal double integer long object sbyte short single string uinteger ulong ushort',
@@ -13551,9 +13156,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('vbnet', hljsGrammar);
   })();/*! `xml` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: HTML, XML
@@ -13801,9 +13405,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('xml', hljsGrammar);
   })();/*! `xquery` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: XQuery
@@ -14170,9 +13773,8 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
 
     hljs.registerLanguage('xquery', hljsGrammar);
   })();/*! `yaml` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   /*
   Language: YAML
@@ -14258,7 +13860,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
     const ZONE_RE = '([ \\t])*(Z|[-+][0-9][0-9]?(:[0-9][0-9])?)?';
     const TIMESTAMP = {
       className: 'number',
-      begin: '\\b' + DATE_RE + TIME_RE + FRACTION_RE + ZONE_RE + '\\b'
+      begin: `\\b${DATE_RE}${TIME_RE}${FRACTION_RE}${ZONE_RE}\\b`
     };
 
     const VALUE_CONTAINER = {
@@ -14308,28 +13910,28 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       },
       { // named tags
         className: 'type',
-        begin: '!\\w+!' + URI_CHARACTERS
+        begin: `!\\w+!${URI_CHARACTERS}`
       },
       // https://yaml.org/spec/1.2/spec.html#id2784064
       { // verbatim tags
         className: 'type',
-        begin: '!<' + URI_CHARACTERS + ">"
+        begin: `!<${URI_CHARACTERS}>`
       },
       { // primary tags
         className: 'type',
-        begin: '!' + URI_CHARACTERS
+        begin: `!${URI_CHARACTERS}`
       },
       { // secondary tags
         className: 'type',
-        begin: '!!' + URI_CHARACTERS
+        begin: `!!${URI_CHARACTERS}`
       },
       { // fragment id &ref
         className: 'meta',
-        begin: '&' + hljs.UNDERSCORE_IDENT_RE + '$'
+        begin: `&${hljs.UNDERSCORE_IDENT_RE}$`
       },
       { // fragment reference *ref
         className: 'meta',
-        begin: '\\*' + hljs.UNDERSCORE_IDENT_RE + '$'
+        begin: `\\*${hljs.UNDERSCORE_IDENT_RE}$`
       },
       { // array listing
         className: 'bullet',
@@ -14347,7 +13949,7 @@ if (typeof exports === 'object' && typeof module !== 'undefined') { module.expor
       // sit isolated from other words
       {
         className: 'number',
-        begin: hljs.C_NUMBER_RE + '\\b',
+        begin: `${hljs.C_NUMBER_RE}\\b`,
         relevance: 0
       },
       OBJECT,

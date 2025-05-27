@@ -1,7 +1,6 @@
 /*! `css` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   const MODES = (hljs) => {
     return {
@@ -30,15 +29,7 @@
       },
       CSS_NUMBER_MODE: {
         scope: 'number',
-        begin: hljs.NUMBER_RE + '(' +
-          '%|em|ex|ch|rem' +
-          '|vw|vh|vmin|vmax' +
-          '|cm|mm|in|pt|pc|px' +
-          '|deg|grad|rad|turn' +
-          '|s|ms' +
-          '|Hz|kHz' +
-          '|dpi|dpcm|dppx' +
-          ')?',
+        begin: `${hljs.NUMBER_RE}(%|em|ex|ch|rem|vw|vh|vmin|vmax|cm|mm|in|pt|pc|px|deg|grad|rad|turn|s|ms|Hz|kHz|dpi|dpcm|dppx)?`,
         relevance: 0
       },
       CSS_VARIABLE: {
@@ -762,15 +753,15 @@
         },
         {
           className: 'selector-class',
-          begin: '\\.' + IDENT_RE,
+          begin: `\\.${IDENT_RE}`,
           relevance: 0
         },
         modes.ATTRIBUTE_SELECTOR_MODE,
         {
           className: 'selector-pseudo',
           variants: [
-            { begin: ':(' + PSEUDO_CLASSES.join('|') + ')' },
-            { begin: ':(:)?(' + PSEUDO_ELEMENTS.join('|') + ')' }
+            { begin: `:(${PSEUDO_CLASSES.join('|')})` },
+            { begin: `:(:)?(${PSEUDO_ELEMENTS.join('|')})` }
           ]
         },
         // we may actually need this (12/2020)
@@ -782,7 +773,7 @@
         modes.CSS_VARIABLE,
         {
           className: 'attribute',
-          begin: '\\b(' + ATTRIBUTES.join('|') + ')\\b'
+          begin: `\\b(${ATTRIBUTES.join('|')})\\b`
         },
         // attribute values
         {
@@ -850,7 +841,7 @@
         },
         {
           className: 'selector-tag',
-          begin: '\\b(' + TAGS.join('|') + ')\\b'
+          begin: `\\b(${TAGS.join('|')})\\b`
         }
       ]
     };

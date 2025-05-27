@@ -2,16 +2,16 @@
 
 import {
   memo,
-  MouseEvent,
+  type MouseEvent,
   useCallback,
   useEffect,
   useMemo,
   useRef,
 } from 'react';
-import { ArtifactKind, UIArtifact } from './artifact';
+import type { ArtifactKind, UIArtifact } from './artifact';
 import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
-import { Document } from '@/lib/db/schema';
+import type { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
 import useSWR from 'swr';
 import { Editor } from './text-editor';
@@ -280,7 +280,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
           isInline={true}
         />
       ) : document.kind === 'html' ? (
-        <div className="w-full h-full flex justify-center items-center overflow-hidden p-0">
+        <div className="size-full flex justify-center items-center overflow-hidden p-0">
           <iframe
             srcDoc={`
               <html>
@@ -315,7 +315,7 @@ const DocumentContent = ({ document }: { document: Document }) => {
                 <body>${document.content ?? ''}</body>
               </html>
             `}
-            className="w-full h-full border-0"
+            className="size-full border-0"
             sandbox="allow-scripts allow-same-origin"
           />
         </div>

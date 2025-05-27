@@ -12,7 +12,13 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
    */
   guest: {
     maxMessagesPerDay: 30,
-    availableChatModelIds: ['chat-model', 'chat-model-reasoning'],
+    availableChatModelIds: [
+      'chat-model', 
+      'chat-model-reasoning',
+      // Free/accessible models for guests
+      'phi-3-mini-128k-instruct', // Glama AI - smaller model
+      'google/gemini-2.0-flash-exp', // Requesty AI - experimental access
+    ],
   },
 
   /*
@@ -24,30 +30,48 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       // Main models
       'chat-model',
       'chat-model-reasoning',
-      // Google Gemini Models
-      'gemini-2.5-flash-preview-04-17',
-      'gemini-2.5-pro-preview-05-06',
+      // Google Gemini Models (selected only)
       'gemini-2.0-flash',
       'gemini-2.0-flash-lite-preview-02-05',
       'gemini-2.0-flash-thinking-exp-01-21',
       'gemini-2.0-flash-thinking-exp-1219',
-      'gemini-1.5-pro-001',
-      'gemini-1.5-pro-002',
-      'gemini-1.5-flash-001',
-      'gemini-1.5-flash-002',
-      'gemini-1.5-flash-8b-001',
-      'gemini-1.5-flash-8b-exp-0924',
       'gemma-3-27b-it',
-      // Groq Models
-      'llama-4-scout-17b-16e-instruct',
-      'qwen-qwq-32b',
+      // Groq Models - Premium (lower daily limits)
+      'meta-llama/llama-4-scout-17b-16e-instruct',
+      'meta-llama/llama-4-maverick-17b-128e-instruct',
+      'compound-beta',
+      'compound-beta-mini',
       'deepseek-r1-distill-llama-70b',
+      'llama-3.3-70b-versatile',
+      'qwen-qwq-32b',
+      // Groq Models - High Volume (higher daily limits)
+      'llama-3.1-8b-instant',
+      'gemma2-9b-it',
+      'llama3-70b-8192',
+      'llama3-8b-8192',
       // Mistral Models
       'pixtral-12b-2409',
-      // Cohere Models
-      'command-r-plus',
-      'command-r',
-      'command-light',
+      // Cohere Models (128K context, tool support)
+      'command-a-03-2025',
+      'command-nightly',
+      'command-r-plus-04-2024',
+      'command-r-08-2024',
+      // Together.ai Models (200+ open-source models, free options)
+      'meta-llama/Llama-Vision-Free',
+      'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free',
+      'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
+      // Requesty AI Router Models (OpenAI-compatible)
+      'google/gemini-2.0-flash-exp',
+      'gemma-3-27b-it-requesty',
+      // Glama AI Gateway Models (OpenAI-compatible)
+      'phi-3-medium-128k-instruct',
+      'phi-3-mini-128k-instruct',
+      'llama-3.2-11b-vision-instruct',
+      // Chutes AI Models (OpenAI-compatible)
+      'deepseek-ai/DeepSeek-V3-0324',
+      'deepseek-ai/DeepSeek-R1',
+      'Qwen/Qwen3-235B-A22B',
+      'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
       // X.AI Models (Optional - Commented out for now)
       // 'grok-2-vision-1212',
       // 'grok-3-mini-beta',

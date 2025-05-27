@@ -1,13 +1,12 @@
 /*! `kotlin` grammar compiled for Highlight.js 11.10.0 */
-  (function(){
-    var hljsGrammar = (function () {
-  'use strict';
+  (()=> {
+    const hljsGrammar = (() => {
 
   // https://docs.oracle.com/javase/specs/jls/se15/html/jls-3.html#jls-3.10
-  var decimalDigits = '[0-9](_*[0-9])*';
-  var frac = `\\.(${decimalDigits})`;
-  var hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
-  var NUMERIC = {
+  const decimalDigits = '[0-9](_*[0-9])*';
+  const frac = `\\.(${decimalDigits})`;
+  const hexDigits = '[0-9a-fA-F](_*[0-9a-fA-F])*';
+  const NUMERIC = {
     className: 'number',
     variants: [
       // DecimalFloatingPointLiteral
@@ -50,11 +49,7 @@
   function kotlin(hljs) {
     const KEYWORDS = {
       keyword:
-        'abstract as val var vararg get set class object open private protected public noinline '
-        + 'crossinline dynamic final enum if else do while for when throw try catch finally '
-        + 'import package is in fun override companion reified inline lateinit init '
-        + 'interface annotation data sealed internal infix operator out by constructor super '
-        + 'tailrec where const inner suspend typealias external expect actual',
+        "abstract as val var vararg get set class object open private protected public noinline crossinline dynamic final enum if else do while for when throw try catch finally import package is in fun override companion reified inline lateinit init interface annotation data sealed internal infix operator out by constructor super tailrec where const inner suspend typealias external expect actual",
       built_in:
         'Byte Short Char Int Long Boolean Float Double Void Unit Nothing',
       literal:
@@ -72,7 +67,7 @@
     };
     const LABEL = {
       className: 'symbol',
-      begin: hljs.UNDERSCORE_IDENT_RE + '@'
+      begin: `${hljs.UNDERSCORE_IDENT_RE}@`
     };
 
     // for string templates
@@ -84,7 +79,7 @@
     };
     const VARIABLE = {
       className: 'variable',
-      begin: '\\$' + hljs.UNDERSCORE_IDENT_RE
+      begin: `\\$${hljs.UNDERSCORE_IDENT_RE}`
     };
     const STRING = {
       className: 'string',
@@ -122,11 +117,11 @@
 
     const ANNOTATION_USE_SITE = {
       className: 'meta',
-      begin: '@(?:file|property|field|get|set|receiver|param|setparam|delegate)\\s*:(?:\\s*' + hljs.UNDERSCORE_IDENT_RE + ')?'
+      begin: `@(?:file|property|field|get|set|receiver|param|setparam|delegate)\\s*:(?:\\s*${hljs.UNDERSCORE_IDENT_RE})?`
     };
     const ANNOTATION = {
       className: 'meta',
-      begin: '@' + hljs.UNDERSCORE_IDENT_RE,
+      begin: `@${hljs.UNDERSCORE_IDENT_RE}`,
       contains: [
         {
           begin: /\(/,
@@ -199,7 +194,7 @@
           relevance: 5,
           contains: [
             {
-              begin: hljs.UNDERSCORE_IDENT_RE + '\\s*\\(',
+              begin: `${hljs.UNDERSCORE_IDENT_RE}\\s*\\(`,
               returnBegin: true,
               relevance: 0,
               contains: [ hljs.UNDERSCORE_TITLE_MODE ]
