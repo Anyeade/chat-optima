@@ -48,10 +48,10 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'command-r-plus',
       'command-r',
       'command-light',
-      // X.AI Models (Optional)
-      'grok-2-vision-1212',
-      'grok-3-mini-beta',
-      'grok-2-1212',
+      // X.AI Models (Optional - Commented out for now)
+      // 'grok-2-vision-1212',
+      // 'grok-3-mini-beta',
+      // 'grok-2-1212',
     ],
   },
 

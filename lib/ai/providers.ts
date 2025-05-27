@@ -3,7 +3,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from 'ai';
-import { xai } from '@ai-sdk/xai';
+// import { xai } from '@ai-sdk/xai'; // Commented out for now
 import { google } from '@ai-sdk/google';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
@@ -23,7 +23,7 @@ function checkProviderKeys() {
     groq: process.env.GROQ_API_KEY,
     mistral: process.env.MISTRAL_API_KEY,
     cohere: process.env.COHERE_API_KEY,
-    xai: process.env.XAI_API_KEY,
+    // xai: process.env.XAI_API_KEY, // Commented out for now
   };
   
   console.log('Provider API Keys Status:');
@@ -84,9 +84,9 @@ export const myProvider = isTestEnvironment
         'command-light': cohere('command-light'),
 
         // X.AI Models (Optional - requires credits)
-        'grok-2-vision-1212': xai('grok-2-vision-1212'),
-        'grok-3-mini-beta': xai('grok-3-mini-beta'),
-        'grok-2-1212': xai('grok-2-1212'),
+        // 'grok-2-vision-1212': xai('grok-2-vision-1212'),
+        // 'grok-3-mini-beta': xai('grok-3-mini-beta'),
+        // 'grok-2-1212': xai('grok-2-1212'),
       },
       imageModels: {
         'small-model': google.image('imagen-3.0-generate-001'),

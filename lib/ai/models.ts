@@ -121,20 +121,20 @@ export const chatModels: Array<ChatModel> = [
     name: 'Optima Light',
     description: 'HansTech light edition',
   },
-  // X.AI Series (Optional)
-  {
-    id: 'grok-2-vision-1212',
-    name: 'Grok Vision 2',
-    description: 'X.AI vision model',
-  },
-  {
-    id: 'grok-3-mini-beta',
-    name: 'Grok 3 Mini',
-    description: 'X.AI compact model',
-  },
-  {
-    id: 'grok-2-1212',
-    name: 'Grok 2',
-    description: 'X.AI standard model',
-  },
+  // X.AI Series (Optional - Commented out for now)
+  // {
+  //   id: 'grok-2-vision-1212',
+  //   name: 'Grok Vision 2',
+  //   description: 'X.AI vision model',
+  // },
+  // {
+  //   id: 'grok-3-mini-beta',
+  //   name: 'Grok 3 Mini',
+  //   description: 'X.AI compact model',
+  // },
+  // {
+  //   id: 'grok-2-1212',
+  //   name: 'Grok 2',
+  //   description: 'X.AI standard model',
+  // },
 ];
