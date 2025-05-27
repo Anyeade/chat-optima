@@ -241,13 +241,6 @@ export async function POST(request: Request) {
         result.mergeIntoDataStream(dataStream, {
           sendReasoning: true,
         });
-        
-        // Log any errors during streaming
-        result.then((finalResult) => {
-          console.log('✓ Stream completed successfully for model:', selectedChatModel);
-        }).catch((streamError) => {
-          console.error('✗ Stream failed for model:', selectedChatModel, streamError);
-        });
       },
       onError: () => {
         return 'Oops, an error occurred!';
