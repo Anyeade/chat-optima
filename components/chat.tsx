@@ -49,9 +49,13 @@ export function Chat({
         .find(row => row.startsWith('chat-model='))
         ?.split('=')[1];
       
-      if (cookieValue && cookieValue !== selectedChatModel) {
-        console.log('🔄 Model changed from', selectedChatModel, 'to', cookieValue);
-        setSelectedChatModel(cookieValue);
+      if (cookieValue) {
+        // Decode URL-encoded cookie value (fix %2F -> /)
+        const decodedValue = decodeURIComponent(cookieValue);
+        if (decodedValue !== selectedChatModel) {
+          console.log('🔄 Model changed from', selectedChatModel, 'to', decodedValue);
+          setSelectedChatModel(decodedValue);
+        }
       }
     };
 

@@ -75,8 +75,11 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { id, message, selectedChatModel, selectedVisibilityType } =
+    const { id, message, selectedChatModel: rawSelectedChatModel, selectedVisibilityType } =
       requestBody;
+
+    // Decode URL-encoded model ID (fix %2F -> /)
+    const selectedChatModel = decodeURIComponent(rawSelectedChatModel);
 
     const session = await auth();
 
@@ -165,7 +168,16 @@ export async function POST(request: Request) {
           console.log('✓ Successfully created model instance for:', selectedChatModel);
         } catch (error) {
           console.error('✗ Failed to create model instance for:', selectedChatModel, error);
-          throw error;
+          
+          // Fallback to default model
+          try {
+            console.log('🔄 Falling back to default model: artifact-model');
+            modelToUse = myProvider.languageModel('artifact-model');
+            console.log('✓ Successfully created fallback model instance');
+          } catch (fallbackError) {
+            console.error('✗ Fallback model also failed:', fallbackError);
+            throw new Error(`Both selected model (${selectedChatModel}) and fallback model failed. Please check your model configuration.`);
+          }
         }
 
         const result = streamText({

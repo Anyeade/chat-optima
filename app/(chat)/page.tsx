@@ -37,13 +37,16 @@ export default async function Page() {
     );
   }
 
+  // Decode URL-encoded cookie value (fix %2F -> /)
+  const decodedChatModel = decodeURIComponent(modelIdFromCookie.value);
+
   return (
     <>
       <Chat
         key={id}
         id={id}
         initialMessages={[]}
-        initialChatModel={modelIdFromCookie.value}
+        initialChatModel={decodedChatModel}
         initialVisibilityType="private"
         isReadonly={false}
         session={session}

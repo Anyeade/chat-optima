@@ -71,12 +71,15 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     );
   }
 
+  // Decode URL-encoded cookie value (fix %2F -> /)
+  const decodedChatModel = decodeURIComponent(chatModelFromCookie.value);
+
   return (
     <>
       <Chat
         id={chat.id}
         initialMessages={convertToUIMessages(messagesFromDb)}
-        initialChatModel={chatModelFromCookie.value}
+        initialChatModel={decodedChatModel}
         initialVisibilityType={chat.visibility}
         isReadonly={session?.user?.id !== chat.userId}
         session={session}
