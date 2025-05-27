@@ -16,6 +16,29 @@ import {
   titleModel,
 } from './models.test';
 
+// Debug function to check environment variables
+function checkProviderKeys() {
+  const keys = {
+    google: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+    groq: process.env.GROQ_API_KEY,
+    mistral: process.env.MISTRAL_API_KEY,
+    cohere: process.env.COHERE_API_KEY,
+    xai: process.env.XAI_API_KEY,
+  };
+  
+  console.log('Provider API Keys Status:');
+  Object.entries(keys).forEach(([provider, key]) => {
+    console.log(`${provider}: ${key ? '✓ Set' : '✗ Missing'}`);
+  });
+  
+  return keys;
+}
+
+// Check keys on initialization
+if (!isTestEnvironment) {
+  checkProviderKeys();
+}
+
 export const myProvider = isTestEnvironment
   ? customProvider({
       languageModels: {

@@ -147,6 +147,10 @@ export async function POST(request: Request) {
     const streamId = generateUUID();
     await createStreamId({ streamId, chatId: id });
 
+    // Debug logging
+    console.log('Selected Chat Model:', selectedChatModel);
+    console.log('Available models in provider:', Object.keys(myProvider.languageModels || {}));
+    
     const stream = createDataStream({
       execute: (dataStream) => {
         const result = streamText({
@@ -243,6 +247,23 @@ export async function POST(request: Request) {
     }
     
     console.error('Unexpected error in chat route:', error);
+    
+    // Handle specific AI API errors
+    if (error && typeof error === 'object' && 'reason' in error) {
+      if (error.reason === 'maxRetriesExceeded' && 'lastError' in error) {
+        const lastError = error.lastError as any;
+        if (lastError?.statusCode === 429) {
+          return Response.json(
+            { 
+              code: 'rate_limit:chat', 
+              message: 'The AI service is currently unavailable due to rate limits. Please try again later.' 
+            },
+            { status: 429 }
+          );
+        }
+      }
+    }
+    
     return Response.json(
       { 
         code: 'internal_server_error:chat', 
