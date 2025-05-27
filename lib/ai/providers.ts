@@ -8,6 +8,7 @@ import { google } from '@ai-sdk/google';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
 import { cohere } from '@ai-sdk/cohere';
+import { openai } from '@ai-sdk/openai';
 import { isTestEnvironment } from '../constants';
 import {
   artifactModel,
@@ -23,6 +24,7 @@ function checkProviderKeys() {
     groq: process.env.GROQ_API_KEY,
     mistral: process.env.MISTRAL_API_KEY,
     cohere: process.env.COHERE_API_KEY,
+    openai: process.env.OPENAI_API_KEY,
     // xai: process.env.XAI_API_KEY, // Commented out for now
   };
   
@@ -89,6 +91,6 @@ export const myProvider = isTestEnvironment
         // 'grok-2-1212': xai('grok-2-1212'),
       },
       imageModels: {
-        'small-model': google.image('imagen-3.0-generate-001'),
+        'small-model': openai.image('dall-e-3'),
       },
     });
