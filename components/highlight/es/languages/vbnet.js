@@ -1,5 +1,6 @@
 /*! `vbnet` grammar compiled for Highlight.js 11.10.0 */
-const hljsGrammar = (() => {
+var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: Visual Basic .NET
@@ -121,10 +122,22 @@ const hljsGrammar = (() => {
       classNameAliases: { label: 'symbol' },
       keywords: {
         keyword:
-          "addhandler alias aggregate ansi as async assembly auto binary by byref byval call case catch class compare const continue custom declare default delegate dim distinct do each equals else elseif end enum erase error event exit explicit finally for friend from function get global goto group handles if implements imports in inherits interface into iterator join key let lib loop me mid module mustinherit mustoverride mybase myclass namespace narrowing new next notinheritable notoverridable of off on operator option optional order overloads overridable overrides paramarray partial preserve private property protected public raiseevent readonly redim removehandler resume return select set shadows shared skip static step stop structure strict sub synclock take text then throw to try unicode until using when where while widening with withevents writeonly yield" /* t-y */,
+          'addhandler alias aggregate ansi as async assembly auto binary by byref byval ' /* a-b */
+          + 'call case catch class compare const continue custom declare default delegate dim distinct do ' /* c-d */
+          + 'each equals else elseif end enum erase error event exit explicit finally for friend from function ' /* e-f */
+          + 'get global goto group handles if implements imports in inherits interface into iterator ' /* g-i */
+          + 'join key let lib loop me mid module mustinherit mustoverride mybase myclass ' /* j-m */
+          + 'namespace narrowing new next notinheritable notoverridable ' /* n */
+          + 'of off on operator option optional order overloads overridable overrides ' /* o */
+          + 'paramarray partial preserve private property protected public ' /* p */
+          + 'raiseevent readonly redim removehandler resume return ' /* r */
+          + 'select set shadows shared skip static step stop structure strict sub synclock ' /* s */
+          + 'take text then throw to try unicode until using when where while widening with withevents writeonly yield' /* t-y */,
         built_in:
           // Operators https://docs.microsoft.com/dotnet/visual-basic/language-reference/operators
-          "addressof and andalso await directcast gettype getxmlnamespace is isfalse isnot istrue like mod nameof new not or orelse trycast typeof xor cbool cbyte cchar cdate cdbl cdec cint clng cobj csbyte cshort csng cstr cuint culng cushort",
+          'addressof and andalso await directcast gettype getxmlnamespace is isfalse isnot istrue like mod nameof new not or orelse trycast typeof xor '
+          // Type Conversion Functions https://docs.microsoft.com/dotnet/visual-basic/language-reference/functions/type-conversion-functions
+          + 'cbool cbyte cchar cdate cdbl cdec cint clng cobj csbyte cshort csng cstr cuint culng cushort',
         type:
           // Data types https://docs.microsoft.com/dotnet/visual-basic/language-reference/data-types
           'boolean byte char date decimal double integer long object sbyte short single string uinteger ulong ushort',

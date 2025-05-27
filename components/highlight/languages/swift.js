@@ -1,6 +1,7 @@
 /*! `swift` grammar compiled for Highlight.js 11.10.0 */
-  (()=> {
-    const hljsGrammar = (() => {
+  (function(){
+    var hljsGrammar = (function () {
+  'use strict';
 
   /**
    * @param {string} value
@@ -62,7 +63,9 @@
   function either(...args) {
     /** @type { object & {capture?: boolean} }  */
     const opts = stripOptionsFromArgs(args);
-    const joined = `(${opts.capture ? "" : "?:"}${args.map((x) => source(x)).join("|")})`;
+    const joined = '('
+      + (opts.capture ? "" : "?:")
+      + args.map((x) => source(x)).join("|") + ")";
     return joined;
   }
 

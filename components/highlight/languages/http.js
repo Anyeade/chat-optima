@@ -1,6 +1,7 @@
 /*! `http` grammar compiled for Highlight.js 11.10.0 */
-  (()=> {
-    const hljsGrammar = (() => {
+  (function(){
+    var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: HTTP
@@ -47,7 +48,7 @@
       contains: [
         // response
         {
-          begin: `^(?=${VERSION} \\d{3})`,
+          begin: '^(?=' + VERSION + " \\d{3})",
           end: /$/,
           contains: [
             {
@@ -67,7 +68,7 @@
         },
         // request
         {
-          begin: `(?=^[A-Z]+ (.*?) ${VERSION}$)`,
+          begin: '(?=^[A-Z]+ (.*?) ' + VERSION + '$)',
           end: /$/,
           contains: [
             {

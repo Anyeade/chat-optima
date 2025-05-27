@@ -1,5 +1,6 @@
 /*! `perl` grammar compiled for Highlight.js 11.10.0 */
-const hljsGrammar = (() => {
+var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: Perl
@@ -419,7 +420,7 @@ const hljsGrammar = (() => {
       },
       NUMBER,
       { // regexp container
-        begin: `(\\/\\/|${hljs.RE_STARTERS_RE}|\\b(split|return|print|reverse|grep)\\b)\\s*`,
+        begin: '(\\/\\/|' + hljs.RE_STARTERS_RE + '|\\b(split|return|print|reverse|grep)\\b)\\s*',
         keywords: 'split return print reverse grep',
         relevance: 0,
         contains: [

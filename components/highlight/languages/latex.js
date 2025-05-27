@@ -1,6 +1,7 @@
 /*! `latex` grammar compiled for Highlight.js 11.10.0 */
-  (()=> {
-    const hljsGrammar = (() => {
+  (function(){
+    var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: LaTeX
@@ -33,7 +34,7 @@
       '(?:[Ss]igma|varsigma|tau|[Uu]psilon|[Pp]hi|varphi|chi|[Pp]si|[Oo]mega)',
       '(?:frac|sum|prod|lim|infty|times|sqrt|leq|geq|left|right|middle|[bB]igg?)',
       '(?:[lr]angle|q?quad|[lcvdi]?dots|d?dot|hat|tilde|bar)'
-    ].map(word => `${word}(?![a-zA-Z@:_])`));
+    ].map(word => word + '(?![a-zA-Z@:_])'));
     const L3_REGEX = new RegExp([
       // A function \module_function_name:signature or \__module_function_name:signature,
       // where both module and function_name need at least two characters and
@@ -55,7 +56,7 @@
       '(?:hbox|vbox):n',
       '::[a-zA-Z]_unbraced',
       '::[a-zA-Z:]'
-    ].map(pattern => `${pattern}(?![a-zA-Z:_])`).join('|'));
+    ].map(pattern => pattern + '(?![a-zA-Z:_])').join('|'));
     const L2_VARIANTS = [
       { begin: /[a-zA-Z@]+/ }, // control word
       { begin: /[^a-zA-Z@]?/ } // control symbol
@@ -160,27 +161,32 @@
     };
     const ARGUMENT_M = [ ARGUMENT_BRACES ];
     const ARGUMENT_O = [ ARGUMENT_BRACKETS ];
-    const ARGUMENT_AND_THEN = (arg, starts_mode) => ({
+    const ARGUMENT_AND_THEN = function(arg, starts_mode) {
+      return {
         contains: [ SPACE_GOBBLER ],
         starts: {
           relevance: 0,
           contains: arg,
           starts: starts_mode
         }
-      });
-    const CSNAME = (csname, starts_mode) => ({
-        begin: `\\\\${csname}(?![a-zA-Z@:_])`,
+      };
+    };
+    const CSNAME = function(csname, starts_mode) {
+      return {
+        begin: '\\\\' + csname + '(?![a-zA-Z@:_])',
         keywords: {
           $pattern: /\\[a-zA-Z]+/,
-          keyword: `\\${csname}`
+          keyword: '\\' + csname
         },
         relevance: 0,
         contains: [ SPACE_GOBBLER ],
         starts: starts_mode
-      });
-    const BEGIN_ENV = (envname, starts_mode) => hljs.inherit(
+      };
+    };
+    const BEGIN_ENV = function(envname, starts_mode) {
+      return hljs.inherit(
         {
-          begin: `\\\\begin(?=[ \t]*(\\r?\\n[ \t]*)?\\{${envname}\\})`,
+          begin: '\\\\begin(?=[ \t]*(\\r?\\n[ \t]*)?\\{' + envname + '\\})',
           keywords: {
             $pattern: /\\[a-zA-Z]+/,
             keyword: '\\begin'
@@ -189,6 +195,7 @@
         },
         ARGUMENT_AND_THEN(ARGUMENT_M, starts_mode)
       );
+    };
     const VERBATIM_DELIMITED_EQUAL = (innerName = "string") => {
       return hljs.END_SAME_AS_BEGIN({
         className: innerName,
@@ -199,10 +206,12 @@
         endsParent: true
       });
     };
-    const VERBATIM_DELIMITED_ENV = (envname) => ({
+    const VERBATIM_DELIMITED_ENV = function(envname) {
+      return {
         className: 'string',
-        end: `(?=\\\\end\\{${envname}\\})`
-      });
+        end: '(?=\\\\end\\{' + envname + '\\})'
+      };
+    };
 
     const VERBATIM_DELIMITED_BRACES = (innerName = "string") => {
       return {
@@ -248,14 +257,14 @@
         '',
         '\\*'
       ].map(suffix => [
-        BEGIN_ENV(`verbatim${suffix}`, VERBATIM_DELIMITED_ENV(`verbatim${suffix}`)),
-        BEGIN_ENV(`filecontents${suffix}`, ARGUMENT_AND_THEN(ARGUMENT_M, VERBATIM_DELIMITED_ENV(`filecontents${suffix}`))),
+        BEGIN_ENV('verbatim' + suffix, VERBATIM_DELIMITED_ENV('verbatim' + suffix)),
+        BEGIN_ENV('filecontents' + suffix, ARGUMENT_AND_THEN(ARGUMENT_M, VERBATIM_DELIMITED_ENV('filecontents' + suffix))),
         ...[
           '',
           'B',
           'L'
         ].map(prefix =>
-          BEGIN_ENV(`${prefix}Verbatim${suffix}`, ARGUMENT_AND_THEN(ARGUMENT_O, VERBATIM_DELIMITED_ENV(`${prefix}Verbatim${suffix}`)))
+          BEGIN_ENV(prefix + 'Verbatim' + suffix, ARGUMENT_AND_THEN(ARGUMENT_O, VERBATIM_DELIMITED_ENV(prefix + 'Verbatim' + suffix)))
         )
       ])),
       BEGIN_ENV('minted', ARGUMENT_AND_THEN(ARGUMENT_O, ARGUMENT_AND_THEN(ARGUMENT_M, VERBATIM_DELIMITED_ENV('minted')))),

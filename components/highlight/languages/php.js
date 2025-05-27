@@ -1,6 +1,7 @@
 /*! `php` grammar compiled for Highlight.js 11.10.0 */
-  (()=> {
-    const hljsGrammar = (() => {
+  (function(){
+    var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: PHP
@@ -28,7 +29,7 @@
       NOT_PERL_ETC);
     const VARIABLE = {
       scope: 'variable',
-      match: `\\$+${IDENT_RE}`,
+      match: '\\$+' + IDENT_RE,
     };
     const PREPROCESSOR = {
       scope: 'meta',

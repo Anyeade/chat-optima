@@ -1,6 +1,7 @@
 /*! `shell` grammar compiled for Highlight.js 11.10.0 */
-  (()=> {
-    const hljsGrammar = (() => {
+  (function(){
+    var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: Shell Session

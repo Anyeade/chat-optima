@@ -1,5 +1,6 @@
 /*! `xml` grammar compiled for Highlight.js 11.10.0 */
-const hljsGrammar = (() => {
+var hljsGrammar = (function () {
+  'use strict';
 
   /*
   Language: HTML, XML
