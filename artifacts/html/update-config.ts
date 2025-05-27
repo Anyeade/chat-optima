@@ -1,9 +1,11 @@
+type UpdateMethod = 'smart' | 'regex' | 'string' | 'template' | 'diff' | 'regex_block';
+
 export interface UpdateConfig {
   // Primary update method to use
-  primaryMethod: 'smart' | 'regex' | 'string' | 'template' | 'diff' | 'auto';
+  primaryMethod: UpdateMethod | 'auto';
   
   // Fallback methods in order of preference
-  fallbackMethods: Array<'smart' | 'regex' | 'string' | 'template' | 'diff'>;
+  fallbackMethods: UpdateMethod[];
   
   // Enable debugging and logging
   enableDebug: boolean;
@@ -24,12 +26,13 @@ export interface UpdateConfig {
     template: string[];
     diff: string[];
     smart: string[];
+    regex_block: string[];
   };
 }
 
 export const defaultUpdateConfig: UpdateConfig = {
   primaryMethod: 'auto',
-  fallbackMethods: ['string', 'regex', 'smart', 'template', 'diff'],
+  fallbackMethods: ['string', 'regex', 'smart', 'template', 'diff', 'regex_block'],
   enableDebug: true,
   enableClientNotifications: true,
   aiTimeout: 30000,
@@ -39,16 +42,17 @@ export const defaultUpdateConfig: UpdateConfig = {
     string: ['simple', 'text only', 'quick', 'replace text'],
     template: ['section', 'template', 'structure', 'layout'],
     diff: ['diff', 'merge', 'compare', 'intelligent'],
-    smart: ['smart update', 'targeted', 'precise', 'specific change']
+    smart: ['smart update', 'targeted', 'precise', 'specific change'],
+    regex_block: ['regex block', 'block replace', 'complex pattern', 'restructure']
   }
 };
 
 // Alternative configurations for different scenarios
-export const updateConfigs = {
+export const updateConfigs: Record<string, UpdateConfig> = {
   // Fast and simple updates
   performance: {
     ...defaultUpdateConfig,
-    primaryMethod: 'string' as const,
+    primaryMethod: 'string',
     fallbackMethods: ['regex', 'smart'],
     maxContentSizeForSmartUpdate: 50000
   },
@@ -56,7 +60,7 @@ export const updateConfigs = {
   // Most reliable updates
   reliability: {
     ...defaultUpdateConfig,
-    primaryMethod: 'regex' as const,
+    primaryMethod: 'regex',
     fallbackMethods: ['string', 'template', 'diff'],
     enableDebug: true
   },
@@ -64,15 +68,15 @@ export const updateConfigs = {
   // Advanced smart updates
   advanced: {
     ...defaultUpdateConfig,
-    primaryMethod: 'smart' as const,
-    fallbackMethods: ['template', 'diff', 'regex', 'string'],
+    primaryMethod: 'smart',
+    fallbackMethods: ['template', 'diff', 'regex_block', 'regex', 'string'],
     maxContentSizeForSmartUpdate: 200000
   },
   
   // Debug mode with extensive logging
   debug: {
     ...defaultUpdateConfig,
-    primaryMethod: 'auto' as const,
+    primaryMethod: 'auto',
     enableDebug: true,
     enableClientNotifications: true,
     aiTimeout: 60000

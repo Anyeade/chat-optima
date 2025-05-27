@@ -196,9 +196,9 @@ export function CodeBlock({
           aria-label="Copy code"
         >
           {copied ? (
-            <CheckIcon className="text-green-500 w-4 h-4" />
+            <CheckIcon className="text-green-500 size-4" />
           ) : (
-            <CopyIcon className="w-4 h-4" />
+            <CopyIcon className="size-4" />
           )}
         </button>
 
