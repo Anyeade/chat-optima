@@ -159,8 +159,17 @@ export async function POST(request: Request) {
     
     const stream = createDataStream({
       execute: (dataStream) => {
+        let modelToUse;
+        try {
+          modelToUse = myProvider.languageModel(selectedChatModel);
+          console.log('✓ Successfully created model instance for:', selectedChatModel);
+        } catch (error) {
+          console.error('✗ Failed to create model instance for:', selectedChatModel, error);
+          throw error;
+        }
+
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model: modelToUse,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
           maxSteps: 5,          experimental_activeTools: [
@@ -231,6 +240,13 @@ export async function POST(request: Request) {
 
         result.mergeIntoDataStream(dataStream, {
           sendReasoning: true,
+        });
+        
+        // Log any errors during streaming
+        result.then((finalResult) => {
+          console.log('✓ Stream completed successfully for model:', selectedChatModel);
+        }).catch((streamError) => {
+          console.error('✗ Stream failed for model:', selectedChatModel, streamError);
         });
       },
       onError: () => {

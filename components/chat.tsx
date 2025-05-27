@@ -39,6 +39,30 @@ export function Chat({
   autoResume: boolean;
 }) {
   const { mutate } = useSWRConfig();
+  const [selectedChatModel, setSelectedChatModel] = useState(initialChatModel);
+
+  // Listen for model changes from cookie
+  useEffect(() => {
+    const checkModelCookie = () => {
+      const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('chat-model='))
+        ?.split('=')[1];
+      
+      if (cookieValue && cookieValue !== selectedChatModel) {
+        console.log('🔄 Model changed from', selectedChatModel, 'to', cookieValue);
+        setSelectedChatModel(cookieValue);
+      }
+    };
+
+    // Check immediately
+    checkModelCookie();
+
+    // Check periodically for cookie changes
+    const interval = setInterval(checkModelCookie, 1000);
+    
+    return () => clearInterval(interval);
+  }, [selectedChatModel]);
 
   const { visibilityType } = useChatVisibility({
     chatId: id,
@@ -67,7 +91,7 @@ export function Chat({
     experimental_prepareRequestBody: (body) => ({
       id,
       message: body.messages.at(-1),
-      selectedChatModel: initialChatModel,
+      selectedChatModel: selectedChatModel,
       selectedVisibilityType: visibilityType,
     }),
     onFinish: () => {
@@ -121,7 +145,7 @@ export function Chat({
       <div className="flex flex-col min-w-0 h-dvh bg-background">
         <ChatHeader
           chatId={id}
-          selectedModelId={initialChatModel}
+          selectedModelId={selectedChatModel}
           selectedVisibilityType={initialVisibilityType}
           isReadonly={isReadonly}
           session={session}
