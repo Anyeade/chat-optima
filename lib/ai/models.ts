@@ -24,9 +24,9 @@ export const chatModels: Array<ChatModel> = [
     description: 'HansTech flash model',
   },
   {
-    id: 'gemini-2.0-flash-lite',
+    id: 'gemini-1.5-flash-8b',
     name: 'Optima Flash Lite',
-    description: 'HansTech lightweight flash',
+    description: 'HansTech lightweight flash (Gemini 1.5 Flash 8B)',
   },
   // Trio Series (Groq Models)
   {

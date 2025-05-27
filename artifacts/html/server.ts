@@ -1,7 +1,7 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
 import type { DataStreamWriter } from 'ai';
-import { streamText, smoothStream } from 'ai';
+import { streamText, streamObject, smoothStream } from 'ai';
 import { z } from 'zod';
 import { htmlPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import type { Document } from '@/lib/db/schema';

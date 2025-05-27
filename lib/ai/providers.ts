@@ -88,7 +88,7 @@ export const myProvider = isTestEnvironment
 
         // Google Gemini Models (selected only)
         'gemini-2.0-flash': google('gemini-2.0-flash'),
-        'gemini-2.0-flash-lite': google('gemini-2.0-flash-lite'),
+        'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
 
         // Groq Models
         // Premium models (lower daily limits but high token throughput)
