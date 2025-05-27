@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { CopyIcon, CheckIcon } from './icons';
 import './code-block-theme.css';
 
-interface CodeBlockProps {
+interface CodeBlockProps extends React.HTMLAttributes<HTMLElement> {
   node: any;
   inline: boolean;
   className: string;
