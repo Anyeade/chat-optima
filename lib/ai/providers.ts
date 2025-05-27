@@ -88,10 +88,7 @@ export const myProvider = isTestEnvironment
 
         // Google Gemini Models (selected only)
         'gemini-2.0-flash': google('gemini-2.0-flash'),
-        'gemini-2.0-flash-lite-preview-02-05': google('gemini-2.0-flash-lite-preview-02-05'),
-        'gemini-2.0-flash-thinking-exp-01-21': google('gemini-2.0-flash-thinking-exp-01-21'),
-        'gemini-2.0-flash-thinking-exp-1219': google('gemini-2.0-flash-thinking-exp-1219'),
-        'gemma-3-27b-it': google('gemma-3-27b-it'),
+        'gemini-2.0-flash-lite': google('gemini-2.0-flash-lite'),
 
         // Groq Models
         // Premium models (lower daily limits but high token throughput)

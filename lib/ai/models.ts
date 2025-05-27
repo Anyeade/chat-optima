@@ -24,24 +24,9 @@ export const chatModels: Array<ChatModel> = [
     description: 'HansTech flash model',
   },
   {
-    id: 'gemini-2.0-flash-lite-preview-02-05',
+    id: 'gemini-2.0-flash-lite',
     name: 'Optima Flash Lite',
     description: 'HansTech lightweight flash',
-  },
-  {
-    id: 'gemini-2.0-flash-thinking-exp-01-21',
-    name: 'Optima Thinker',
-    description: 'HansTech experimental thinking',
-  },
-  {
-    id: 'gemini-2.0-flash-thinking-exp-1219',
-    name: 'Optima Thinker X',
-    description: 'HansTech experimental model',
-  },
-  {
-    id: 'gemma-3-27b-it',
-    name: 'Optima Gem 3',
-    description: 'HansTech instructive model',
   },
   // Trio Series (Groq Models)
   {

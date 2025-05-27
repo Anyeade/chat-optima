@@ -32,10 +32,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'chat-model-reasoning',
       // Google Gemini Models (selected only)
       'gemini-2.0-flash',
-      'gemini-2.0-flash-lite-preview-02-05',
-      'gemini-2.0-flash-thinking-exp-01-21',
-      'gemini-2.0-flash-thinking-exp-1219',
-      'gemma-3-27b-it',
+      'gemini-2.0-flash-lite',
       // Groq Models - Premium (lower daily limits)
       'meta-llama/llama-4-scout-17b-16e-instruct',
       'meta-llama/llama-4-maverick-17b-128e-instruct',
