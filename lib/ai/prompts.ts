@@ -56,6 +56,9 @@ This is a guide for using artifacts tools: \`createDocument\` and \`updateDocume
 - **Any code under 15 lines unless specifically requested as a document**
 
 **Using \`updateDocument\`:**
+- **🚨 ALWAYS preserve the complete existing document structure**
+- **NEVER create minimal or clean versions** - integrate changes into the full content
+- **MAINTAIN ALL EXISTING CONTENT** while applying the requested modifications
 - Default to full document rewrites for major changes
 - Use targeted updates only for specific, isolated changes
 - Follow user instructions for which parts to modify
@@ -749,32 +752,86 @@ export const updateDocumentPrompt = (
 ) =>
   type === 'text'
     ? `\
-Improve the following contents of the document based on the given prompt.
+You are updating a text document by preserving the complete existing content and integrating the requested changes.
 
+**🚨 CRITICAL INSTRUCTIONS 🚨**
+- **PRESERVE ALL EXISTING CONTENT** - Do not create a minimal or clean version
+- **INTEGRATE CHANGES** into the full document structure
+- **MAINTAIN COMPLETE DOCUMENT** - Include all original sections, headings, and content
+- **APPLY MODIFICATIONS** to the specific parts mentioned in the request
+- **KEEP FORMATTING** - Preserve existing Markdown formatting, structure, and style
+
+**CURRENT COMPLETE DOCUMENT:**
 ${currentContent}
-`
+
+**PROCESS:**
+1. Read and understand the complete document above
+2. Identify what specific changes are being requested
+3. Apply those changes while preserving ALL other content
+4. Output the complete updated document with changes integrated
+
+**Update Request:** `
     : type === 'code'
       ? `\
-Improve the following code snippet based on the given prompt.
+You are updating a code document by preserving the complete existing codebase and integrating the requested changes.
 
+**🚨 CRITICAL INSTRUCTIONS 🚨**
+- **PRESERVE ALL EXISTING CODE** - Do not create a minimal or clean version
+- **INTEGRATE CHANGES** into the full codebase structure
+- **MAINTAIN COMPLETE CODEBASE** - Include all original functions, classes, imports, and logic
+- **APPLY MODIFICATIONS** to the specific parts mentioned in the request
+- **KEEP CODE STRUCTURE** - Preserve existing architecture, patterns, and organization
+- **MAINTAIN FUNCTIONALITY** - Ensure all existing features continue to work
+
+**CURRENT COMPLETE CODEBASE:**
 ${currentContent}
-`
+
+**PROCESS:**
+1. Read and understand the complete codebase above
+2. Identify what specific changes are being requested
+3. Apply those changes while preserving ALL other code
+4. Output the complete updated codebase with changes integrated
+
+**Update Request:** `
       : type === 'sheet'
         ? `\
-Improve the following spreadsheet based on the given prompt.
+You are updating a spreadsheet by preserving the complete existing data structure and integrating the requested changes.
 
+**🚨 CRITICAL INSTRUCTIONS 🚨**
+- **PRESERVE ALL EXISTING DATA** - Do not create a minimal or clean version
+- **INTEGRATE CHANGES** into the full spreadsheet structure
+- **MAINTAIN COMPLETE DATASET** - Include all original rows, columns, and data
+- **APPLY MODIFICATIONS** to the specific parts mentioned in the request
+- **KEEP DATA STRUCTURE** - Preserve existing headers, formatting, and organization
+- **MAINTAIN DATA INTEGRITY** - Ensure all existing data relationships are preserved
+
+**CURRENT COMPLETE SPREADSHEET:**
 ${currentContent}
-`
+
+**PROCESS:**
+1. Read and understand the complete spreadsheet above
+2. Identify what specific changes are being requested
+3. Apply those changes while preserving ALL other data
+4. Output the complete updated spreadsheet with changes integrated
+
+**Update Request:** `
         : type === 'html'
           ? `\
 You are updating an HTML document by reading the current state and rewriting it with the requested changes.
+
+**🚨 CRITICAL INSTRUCTIONS 🚨**
+- **PRESERVE ALL EXISTING CONTENT** - Do not create a minimal or clean version
+- **INTEGRATE CHANGES** into the complete HTML structure
+- **MAINTAIN COMPLETE DOCUMENT** - Include all original sections, components, and content
+- **APPLY MODIFICATIONS** to the specific parts mentioned in the request
+- **KEEP HTML STRUCTURE** - Preserve existing layout, styling, and organization
 
 **PROCESS:**
 1. **Read & Analyze** the current HTML content below
 2. **Apply Changes** based on the user's specific request
 3. **Rewrite Complete Document** with all modifications integrated
 
-**Current HTML Content:**
+**CURRENT COMPLETE HTML DOCUMENT:**
 ${currentContent}
 
 **Update Guidelines:**
@@ -789,4 +846,48 @@ ${currentContent}
 - No explanations or markdown - just the raw HTML
 
 **Update Request:** `
-          : '';
+          : type === 'svg'
+            ? `\
+You are updating an SVG document by preserving the complete existing graphics and integrating the requested changes.
+
+**🚨 CRITICAL INSTRUCTIONS 🚨**
+- **PRESERVE ALL EXISTING GRAPHICS** - Do not create a minimal or clean version
+- **INTEGRATE CHANGES** into the complete SVG structure
+- **MAINTAIN COMPLETE DESIGN** - Include all original elements, paths, and styling
+- **APPLY MODIFICATIONS** to the specific parts mentioned in the request
+- **KEEP SVG STRUCTURE** - Preserve existing viewBox, groups, and organization
+- **MAINTAIN VISUAL INTEGRITY** - Ensure all existing visual elements are preserved
+
+**CURRENT COMPLETE SVG:**
+${currentContent}
+
+**PROCESS:**
+1. Read and understand the complete SVG above
+2. Identify what specific changes are being requested
+3. Apply those changes while preserving ALL other graphics
+4. Output the complete updated SVG with changes integrated
+
+**Update Request:** `
+            : type === 'diagram'
+              ? `\
+You are updating a Mermaid diagram by preserving the complete existing structure and integrating the requested changes.
+
+**🚨 CRITICAL INSTRUCTIONS 🚨**
+- **PRESERVE ALL EXISTING NODES** - Do not create a minimal or clean version
+- **INTEGRATE CHANGES** into the complete diagram structure
+- **MAINTAIN COMPLETE FLOW** - Include all original nodes, connections, and relationships
+- **APPLY MODIFICATIONS** to the specific parts mentioned in the request
+- **KEEP DIAGRAM STRUCTURE** - Preserve existing layout, grouping, and organization
+- **MAINTAIN LOGICAL FLOW** - Ensure all existing connections and relationships are preserved
+
+**CURRENT COMPLETE DIAGRAM:**
+${currentContent}
+
+**PROCESS:**
+1. Read and understand the complete diagram above
+2. Identify what specific changes are being requested
+3. Apply those changes while preserving ALL other elements
+4. Output the complete updated diagram with changes integrated
+
+**Update Request:** `
+              : '';

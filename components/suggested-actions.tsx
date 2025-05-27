@@ -24,6 +24,11 @@ function PureSuggestedActions({
       action: 'What are the advantages of using Next.js?',
     },
     {
+      title: 'Create a modern website',
+      label: 'for a tech startup',
+      action: 'Create a modern website for a tech startup with hero section, features, and pricing',
+    },
+    {
       title: 'Write code to',
       label: `demonstrate djikstra's algorithm`,
       action: `Write code to demonstrate djikstra's algorithm`,
@@ -43,7 +48,7 @@ function PureSuggestedActions({
   return (
     <div
       data-testid="suggested-actions"
-      className="grid sm:grid-cols-2 gap-2 w-full"
+      className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2 w-full"
     >
       {suggestedActions.map((suggestedAction, index) => (
         <motion.div

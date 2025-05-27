@@ -1,6 +1,6 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
-import { svgPrompt } from '@/lib/ai/prompts';
+import { svgPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { streamText, smoothStream } from 'ai';
 
 export const svgDocumentHandler = createDocumentHandler<'svg'>({
@@ -43,12 +43,7 @@ export const svgDocumentHandler = createDocumentHandler<'svg'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel(modelToUse),
-      system: `${svgPrompt}
-
-Update the existing SVG based on the user's request. Preserve existing structure where appropriate and maintain the same high-quality standards.
-
-Current SVG:
-${document.content}`,
+      system: updateDocumentPrompt(document.content, 'svg'),
       prompt: description,
       experimental_transform: smoothStream({ chunking: 'word' }),
     });

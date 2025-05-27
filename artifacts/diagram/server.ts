@@ -1,6 +1,6 @@
 import { myProvider } from '@/lib/ai/providers';
 import { createDocumentHandler } from '@/lib/artifacts/server';
-import { diagramPrompt } from '@/lib/ai/prompts';
+import { diagramPrompt, updateDocumentPrompt } from '@/lib/ai/prompts';
 import { streamText, smoothStream } from 'ai';
 
 export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
@@ -43,12 +43,7 @@ export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel(modelToUse),
-      system: `${diagramPrompt}
-
-Update the existing Mermaid diagram based on the user's request. Preserve existing structure where appropriate and maintain the same high-quality standards.
-
-Current diagram:
-${document.content}`,
+      system: updateDocumentPrompt(document.content, 'diagram'),
       prompt: description,
       experimental_transform: smoothStream({ chunking: 'word' }),
     });
