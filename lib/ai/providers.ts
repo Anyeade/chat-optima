@@ -50,13 +50,10 @@ export const myProvider = isTestEnvironment
     })
   : customProvider({
       languageModels: {
-        'chat-model': xai('grok-2-vision-1212'),
-        'chat-model-reasoning': wrapLanguageModel({
-          model: xai('grok-3-mini-beta'),
-          middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),
-        'title-model': xai('grok-2-1212'),
-        'artifact-model': xai('grok-2-1212'),
+        'chat-model': groq('llama-4-scout-17b-16e-instruct'),
+        'chat-model-reasoning': groq('deepseek-r1-distill-llama-70b'),
+        'title-model': groq('llama-4-scout-17b-16e-instruct'),
+        'artifact-model': groq('llama-4-scout-17b-16e-instruct'),
 
         // Google Gemini Models
         'gemini-2.5-flash-preview-04-17': google('gemini-2.5-flash-preview-04-17'),
@@ -85,8 +82,13 @@ export const myProvider = isTestEnvironment
         'command-r-plus': cohere('command-r-plus'),
         'command-r': cohere('command-r'),
         'command-light': cohere('command-light'),
+
+        // X.AI Models (Optional - requires credits)
+        'grok-2-vision-1212': xai('grok-2-vision-1212'),
+        'grok-3-mini-beta': xai('grok-3-mini-beta'),
+        'grok-2-1212': xai('grok-2-1212'),
       },
       imageModels: {
-        'small-model': xai.image('grok-2-image'),
+        'small-model': google.image('imagen-3.0-generate-001'),
       },
     });

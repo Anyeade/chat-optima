@@ -41,7 +41,7 @@ export function Chat({
   const { mutate } = useSWRConfig();
   const [selectedChatModel, setSelectedChatModel] = useState(initialChatModel);
 
-  // Listen for model changes from cookie
+  // Listen for model changes from cookie and storage events
   useEffect(() => {
     const checkModelCookie = () => {
       const cookieValue = document.cookie
@@ -58,10 +58,30 @@ export function Chat({
     // Check immediately
     checkModelCookie();
 
-    // Check periodically for cookie changes
-    const interval = setInterval(checkModelCookie, 1000);
+    // Listen for storage events (when cookies change)
+    const handleStorageChange = () => {
+      checkModelCookie();
+    };
+
+    // Listen for custom events from model selector
+    const handleModelChange = (event: CustomEvent) => {
+      if (event.detail && event.detail !== selectedChatModel) {
+        console.log('🔄 Model changed via event from', selectedChatModel, 'to', event.detail);
+        setSelectedChatModel(event.detail);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('modelChanged', handleModelChange as EventListener);
+
+    // Check periodically as fallback
+    const interval = setInterval(checkModelCookie, 2000);
     
-    return () => clearInterval(interval);
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('modelChanged', handleModelChange as EventListener);
+      clearInterval(interval);
+    };
   }, [selectedChatModel]);
 
   const { visibilityType } = useChatVisibility({

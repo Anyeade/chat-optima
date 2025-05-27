@@ -84,6 +84,9 @@ export function ModelSelector({
                   startTransition(() => {
                     setOptimisticModelId(id);
                     saveChatModelAsCookie(id);
+                    
+                    // Dispatch custom event to notify chat component
+                    window.dispatchEvent(new CustomEvent('modelChanged', { detail: id }));
                   });
                 }}
                 data-active={id === optimisticModelId}

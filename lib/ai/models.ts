@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL: string = 'gemini-2.0-flash';
+export const DEFAULT_CHAT_MODEL: string = 'llama-4-scout-17b-16e-instruct';
 
 export interface ChatModel {
   id: string;
@@ -10,12 +10,12 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'chat-model',
     name: 'Optima Core',
-    description: 'HansTech flagship model',
+    description: 'HansTech flagship model (Llama 4)',
   },
   {
     id: 'chat-model-reasoning',
     name: 'Optima Reasoning',
-    description: 'HansTech advanced reasoning',
+    description: 'HansTech advanced reasoning (DeepSeek R1)',
   },
   // Optima Series
   {
@@ -120,5 +120,21 @@ export const chatModels: Array<ChatModel> = [
     id: 'command-light',
     name: 'Optima Light',
     description: 'HansTech light edition',
+  },
+  // X.AI Series (Optional)
+  {
+    id: 'grok-2-vision-1212',
+    name: 'Grok Vision 2',
+    description: 'X.AI vision model',
+  },
+  {
+    id: 'grok-3-mini-beta',
+    name: 'Grok 3 Mini',
+    description: 'X.AI compact model',
+  },
+  {
+    id: 'grok-2-1212',
+    name: 'Grok 2',
+    description: 'X.AI standard model',
   },
 ];
