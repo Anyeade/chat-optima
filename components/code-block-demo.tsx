@@ -115,7 +115,7 @@ export default UserComponent;`;
             inline={false}
             className="language-python"
           >
-            {`# Python example with template literals and special characters
+{`# Python example with template literals and special characters
 import json
 from typing import Dict, List
 
@@ -148,7 +148,7 @@ def process_data(data: Dict) -> str:
             Inline Code Examples:
           </h3>
           <p className="text-gray-700 dark:text-gray-300">
-            Here's some inline code: <CodeBlock node={null} inline={true} className="">{`const greeting = "Hello World";`}</CodeBlock> and 
+            Here&apos;s some inline code: <CodeBlock node={null} inline={true} className="">{`const greeting = "Hello World";`}</CodeBlock> and 
             another example: <CodeBlock node={null} inline={true} className="">{`npm install react`}</CodeBlock>. 
             Notice how the inline code adapts to the current theme automatically.
           </p>
