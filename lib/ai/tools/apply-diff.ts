@@ -15,7 +15,7 @@ interface ApplyDiffProps {
 
 export const applyDiff = ({ session, dataStream, selectedChatModel }: ApplyDiffProps) =>
   tool({
-    description: 'Apply precise SEARCH/REPLACE diffs to ANY document or artifact (HTML, CSS, JavaScript, Python, text files, code, etc.). Use this for surgical edits without rewriting entire files. Perfect for updating existing documents with targeted changes like adding features, fixing bugs, styling updates, or content modifications.',
+    description: 'Apply precise SEARCH/REPLACE diffs to ANY document or artifact (HTML, CSS, JavaScript, Python, text files, code, etc.). Use this for surgical edits without rewriting entire files. CAPABILITIES: ADD new content (insert at specific points), EDIT existing content (modify text/code), REMOVE content (delete sections), REORGANIZE structure. Perfect for all document modifications: adding features, fixing bugs, styling updates, content changes, removing sections, or restructuring.',
     parameters: z.object({
       id: z.string().describe('The ID of the document/artifact to update (works with ANY document type: HTML, CSS, JS, Python, text, etc.)'),
       diff: z.string().describe(`The diff to apply in SEARCH/REPLACE format:
@@ -194,15 +194,53 @@ async function applyDiffToContent(originalContent: string, diff: string): Promis
       }
       
       if (!found) {
-        throw new Error(`Search content not found at line ${startLine}: "${searchContent.substring(0, 50)}..."`);
+        // Try fuzzy matching by trimming whitespace
+        for (let i = startLine - 1; i <= lines.length - searchLines.length; i++) {
+          const candidateLines = lines.slice(i, i + searchLines.length);
+          const trimmedCandidate = candidateLines.map(line => line.trim()).join('\n');
+          const trimmedSearch = searchLines.map(line => line.trim()).join('\n');
+          
+          if (trimmedCandidate === trimmedSearch) {
+            // Replace the lines
+            const replaceLines = replaceContent.split('\n');
+            lines.splice(i, searchLines.length, ...replaceLines);
+            updatedContent = lines.join('\n');
+            found = true;
+            break;
+          }
+        }
+        
+        if (!found) {
+          const availableLines = lines.slice(Math.max(0, startLine - 3), startLine + 5);
+          throw new Error(`Search content not found at line ${startLine}.
+Search: "${searchContent.substring(0, 100)}"
+Available content around line ${startLine}:
+${availableLines.map((line, idx) => `${startLine - 2 + idx}: ${line}`).join('\n')}`);
+        }
       }
     } else {
       // String-based replacement
       if (!updatedContent.includes(searchContent)) {
-        throw new Error(`Search content not found: "${searchContent.substring(0, 50)}..."`);
+        // Try fuzzy matching by normalizing whitespace
+        const normalizedContent = updatedContent.replace(/\s+/g, ' ').trim();
+        const normalizedSearch = searchContent.replace(/\s+/g, ' ').trim();
+        
+        if (normalizedContent.includes(normalizedSearch)) {
+          // Find the original text with different whitespace
+          const regex = new RegExp(searchContent.replace(/\s+/g, '\\s+'), 'g');
+          updatedContent = updatedContent.replace(regex, replaceContent);
+        } else {
+          // Show context around potential matches
+          const words = searchContent.split(/\s+/).slice(0, 3).join(' ');
+          const contextMatch = updatedContent.match(new RegExp(`.{0,100}${words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.{0,100}`, 'i'));
+          const context = contextMatch ? contextMatch[0] : 'No similar content found';
+          
+          throw new Error(`Search content not found: "${searchContent.substring(0, 100)}"
+Potential similar content: "${context}"`);
+        }
+      } else {
+        updatedContent = updatedContent.replace(searchContent, replaceContent);
       }
-      
-      updatedContent = updatedContent.replace(searchContent, replaceContent);
     }
   }
 
