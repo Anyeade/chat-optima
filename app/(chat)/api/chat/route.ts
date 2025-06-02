@@ -21,6 +21,7 @@ import { generateUUID, getTrailingMessageId } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
+import { applyDiff } from '@/lib/ai/tools/apply-diff';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { webSearch } from '@/lib/ai/tools/web-search';
@@ -39,10 +40,26 @@ import { after } from 'next/server';
 import type { Chat } from '@/lib/db/schema';
 import { differenceInSeconds } from 'date-fns';
 import { ChatSDKError } from '@/lib/errors';
+// Import sliding window optimization
+import { autoOptimize } from '@/lib/ai/sliding-window';
+import { estimateTokenCount } from '@/lib/ai/context-manager';
+import type { CoreMessage } from 'ai';
 
 export const maxDuration = 60;
 
 let globalStreamContext: ResumableStreamContext | null = null;
+
+// Helper function to calculate total tokens for messages
+async function calculateTotalTokens(messages: CoreMessage[]): Promise<number> {
+  let totalTokens = 0;
+  for (const message of messages) {
+    const content = typeof message.content === 'string'
+      ? message.content
+      : JSON.stringify(message.content);
+    totalTokens += estimateTokenCount(content);
+  }
+  return totalTokens;
+}
 
 function getStreamContext() {
   if (!globalStreamContext) {
@@ -120,8 +137,7 @@ export async function POST(request: Request) {
     const previousMessages = await getMessagesByChatId({ id });
 
     const messages = appendClientMessage({
-      // @ts-expect-error: todo add type conversion from DBMessage[] to UIMessage[]
-      messages: previousMessages,
+      messages: previousMessages as any,
       message,
     });
 
@@ -161,89 +177,212 @@ export async function POST(request: Request) {
     }
     
     const stream = createDataStream({
-      execute: (dataStream) => {
-        let modelToUse;
+      execute: async (dataStream) => {
         try {
-          modelToUse = myProvider.languageModel(selectedChatModel);
-          console.log('✓ Successfully created model instance for:', selectedChatModel);
-        } catch (error) {
-          console.error('✗ Failed to create model instance for:', selectedChatModel, error);
-          throw error;
-        }
+          // Calculate original token count for accurate context condensing display
+          const originalTokenCount = await calculateTotalTokens(messages as CoreMessage[]);
+          
+          // Apply sliding window optimization
+          console.log('🪟 Using Enhanced AI Service with Sliding Window Optimization');
+          const optimizedMessages = await autoOptimize(messages as CoreMessage[], selectedChatModel, 'balance');
+          
+          // Display context condensing like Roo Code extension
+          if (optimizedMessages.compressionApplied) {
+            console.log(`📊 Context condensed: ${originalTokenCount} → ${optimizedMessages.tokenCount}`);
+            console.log(`🔥 Token reduction: ${Math.round(((originalTokenCount - optimizedMessages.tokenCount) / originalTokenCount) * 100)}%`);
+          }
+          
+          // Detailed optimization results
+          console.log(`🪟 Sliding Window Results:
+            ✓ Original messages: ${messages.length} (${originalTokenCount} tokens)
+            ✓ Optimized messages: ${optimizedMessages.messages.length} (${optimizedMessages.tokenCount} tokens)
+            ✓ Messages removed: ${optimizedMessages.removedMessageCount}
+            ✓ Compression applied: ${optimizedMessages.compressionApplied ? 'Yes' : 'No'}
+            ✓ Summary added: ${optimizedMessages.summaryAdded ? 'Yes' : 'No'}`);
 
-        const result = streamText({
-          model: modelToUse,
-          system: systemPrompt({ selectedChatModel, requestHints }),
-          messages,
-          maxSteps: 5,          experimental_activeTools: [
-                'getWeather',
-                'createDocument',
-                'updateDocument',
-                'requestSuggestions',
-                'webSearch',
-                'webpageScreenshot',
-                'webScraper',
-              ],
-          experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,          tools: {
-            getWeather,
-            webSearch,
-            webpageScreenshot,
-            webScraper,
-            createDocument: createDocument({ session, dataStream, selectedChatModel }),
-            updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-          },
-          onFinish: async ({ response }) => {
-            if (session.user?.id) {
-              try {
-                const assistantId = getTrailingMessageId({
-                  messages: response.messages.filter(
-                    (message) => message.role === 'assistant',
-                  ),
-                });
+          // Use the optimized messages for streaming
+          const finalMessages = optimizedMessages.messages;
 
-                if (!assistantId) {
-                  throw new Error('No assistant message found!');
+          let modelToUse;
+          try {
+            modelToUse = myProvider.languageModel(selectedChatModel);
+            console.log('✓ Successfully created model instance for:', selectedChatModel);
+          } catch (error) {
+            console.error('✗ Failed to create model instance for:', selectedChatModel, error);
+            throw error;
+          }
+
+          const result = streamText({
+            model: modelToUse,
+            system: systemPrompt({ selectedChatModel, requestHints }),
+            messages: finalMessages,
+            maxSteps: 5,
+            experimental_activeTools: [
+              'getWeather',
+              'createDocument',
+              'updateDocument',
+              'applyDiff',
+              'requestSuggestions',
+              'webSearch',
+              'webpageScreenshot',
+              'webScraper',
+            ],
+            experimental_transform: smoothStream({ chunking: 'word' }),
+            experimental_generateMessageId: generateUUID,
+            tools: {
+              getWeather,
+              webSearch,
+              webpageScreenshot,
+              webScraper,
+              createDocument: createDocument({ session, dataStream, selectedChatModel }),
+              updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
+              applyDiff: applyDiff({ session, dataStream, selectedChatModel }),
+              requestSuggestions: requestSuggestions({
+                session,
+                dataStream,
+              }),
+            },
+            onFinish: async ({ response }) => {
+              if (session.user?.id) {
+                try {
+                  const assistantId = getTrailingMessageId({
+                    messages: response.messages.filter(
+                      (message) => message.role === 'assistant',
+                    ),
+                  });
+
+                  if (!assistantId) {
+                    throw new Error('No assistant message found!');
+                  }
+
+                  const [, assistantMessage] = appendResponseMessages({
+                    messages: [message],
+                    responseMessages: response.messages,
+                  });
+
+                  await saveMessages({
+                    messages: [
+                      {
+                        id: assistantId,
+                        chatId: id,
+                        role: assistantMessage.role,
+                        parts: assistantMessage.parts,
+                        attachments:
+                          assistantMessage.experimental_attachments ?? [],
+                        createdAt: new Date(),
+                      },
+                    ],
+                  });
+                } catch (_) {
+                  console.error('Failed to save chat');
                 }
-
-                const [, assistantMessage] = appendResponseMessages({
-                  messages: [message],
-                  responseMessages: response.messages,
-                });
-
-                await saveMessages({
-                  messages: [
-                    {
-                      id: assistantId,
-                      chatId: id,
-                      role: assistantMessage.role,
-                      parts: assistantMessage.parts,
-                      attachments:
-                        assistantMessage.experimental_attachments ?? [],
-                      createdAt: new Date(),
-                    },
-                  ],
-                });
-              } catch (_) {
-                console.error('Failed to save chat');
               }
-            }
-          },
-          experimental_telemetry: {
-            isEnabled: isProductionEnvironment,
-            functionId: 'stream-text',
-          },
-        });
+            },
+            experimental_telemetry: {
+              isEnabled: isProductionEnvironment,
+              functionId: 'stream-text',
+            },
+          });
 
-        result.consumeStream();
+          result.consumeStream();
 
-        result.mergeIntoDataStream(dataStream, {
-          sendReasoning: true,
-        });
+          result.mergeIntoDataStream(dataStream, {
+            sendReasoning: true,
+          });
+
+        } catch (enhancedError) {
+          console.error('Enhanced AI optimization error:', enhancedError);
+          
+          // Fallback to basic streamText if optimization fails
+          console.log('⚠️ Falling back to basic streamText without optimization...');
+          
+          let modelToUse;
+          try {
+            modelToUse = myProvider.languageModel(selectedChatModel);
+            console.log('✓ Successfully created fallback model instance for:', selectedChatModel);
+          } catch (modelError) {
+            console.error('✗ Failed to create model instance for:', selectedChatModel, modelError);
+            throw modelError;
+          }
+
+          const fallbackResult = streamText({
+            model: modelToUse,
+            system: systemPrompt({ selectedChatModel, requestHints }),
+            messages,
+            maxSteps: 5,
+            experimental_activeTools: [
+              'getWeather',
+              'createDocument',
+              'updateDocument',
+              'applyDiff',
+              'requestSuggestions',
+              'webSearch',
+              'webpageScreenshot',
+              'webScraper',
+            ],
+            experimental_transform: smoothStream({ chunking: 'word' }),
+            experimental_generateMessageId: generateUUID,
+            tools: {
+              getWeather,
+              webSearch,
+              webpageScreenshot,
+              webScraper,
+              createDocument: createDocument({ session, dataStream, selectedChatModel }),
+              updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
+              applyDiff: applyDiff({ session, dataStream, selectedChatModel }),
+              requestSuggestions: requestSuggestions({
+                session,
+                dataStream,
+              }),
+            },
+            onFinish: async ({ response }) => {
+              if (session.user?.id) {
+                try {
+                  const assistantId = getTrailingMessageId({
+                    messages: response.messages.filter(
+                      (message) => message.role === 'assistant',
+                    ),
+                  });
+
+                  if (!assistantId) {
+                    throw new Error('No assistant message found!');
+                  }
+
+                  const [, assistantMessage] = appendResponseMessages({
+                    messages: [message],
+                    responseMessages: response.messages,
+                  });
+
+                  await saveMessages({
+                    messages: [
+                      {
+                        id: assistantId,
+                        chatId: id,
+                        role: assistantMessage.role,
+                        parts: assistantMessage.parts,
+                        attachments:
+                          assistantMessage.experimental_attachments ?? [],
+                        createdAt: new Date(),
+                      },
+                    ],
+                  });
+                } catch (_) {
+                  console.error('Failed to save chat');
+                }
+              }
+            },
+            experimental_telemetry: {
+              isEnabled: isProductionEnvironment,
+              functionId: 'stream-text',
+            },
+          });
+
+          fallbackResult.consumeStream();
+
+          fallbackResult.mergeIntoDataStream(dataStream, {
+            sendReasoning: true,
+          });
+        }
       },
       onError: () => {
         return 'Oops, an error occurred!';
