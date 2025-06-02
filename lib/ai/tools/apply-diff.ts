@@ -1,11 +1,7 @@
 import { DataStreamWriter, tool } from 'ai';
 import { Session } from 'next-auth';
 import { z } from 'zod';
-import { getDocumentById } from '@/lib/db/queries';
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import { document } from '@/lib/db/schema';
-import { eq } from 'drizzle-orm';
+import { getDocumentById, saveDocument } from '@/lib/db/queries';
 
 interface ApplyDiffProps {
   session: Session;
@@ -60,17 +56,21 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
         // Parse and apply the diff
         const updatedContent = await applyDiffToContent(selectedDocument.content, diff);
         
-        // Update the document content directly
-        const client = postgres(process.env.POSTGRES_URL!);
-        const db = drizzle(client);
-        
-        await db
-          .update(document)
-          .set({
-            content: updatedContent,
-            createdAt: new Date() // Update timestamp to show modification
-          })
-          .where(eq(document.id, id));
+        // Save as new document version (following the same pattern as updateDocument tool)
+        // This maintains version history by creating a new row with same id but new createdAt
+        if (!session?.user?.id) {
+          return {
+            error: 'User session required to save document changes',
+          };
+        }
+
+        await saveDocument({
+          id: selectedDocument.id,
+          title: selectedDocument.title,
+          content: updatedContent,
+          kind: selectedDocument.kind,
+          userId: session.user.id,
+        });
 
         // Log the diff application
         dataStream.writeData({
@@ -103,15 +103,29 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
         };
 
       } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        
+        // Send user-friendly toast notification
         dataStream.writeData({
           type: 'text-delta',
-          content: `❌ Error applying diff: ${error instanceof Error ? error.message : 'Unknown error'}\n`,
+          content: `<div style="max-width: 600px; margin: 8px 0;">
+<details style="border: 1px solid #ef4444; border-radius: 8px; padding: 12px; background: #fef2f2;">
+<summary style="cursor: pointer; font-weight: 600; color: #dc2626; display: flex; align-items: center; gap: 8px;">
+<span>🚨</span> Apply Diff Error - Click to expand
+</summary>
+<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #fecaca; font-size: 14px; color: #991b1b;">
+<strong>Error:</strong> ${errorMessage}
+<br><br>
+<strong>Tip:</strong> Try using shorter, more unique search phrases or check that the content exists in the document.
+</div>
+</details>
+</div>\n`,
         });
 
         dataStream.writeData({ type: 'finish', content: '' });
 
         return {
-          error: `Failed to apply diff: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          error: `Failed to apply diff: ${errorMessage}`,
         };
       }
     },
@@ -211,11 +225,7 @@ async function applyDiffToContent(originalContent: string, diff: string): Promis
         }
         
         if (!found) {
-          const availableLines = lines.slice(Math.max(0, startLine - 3), startLine + 5);
-          throw new Error(`Search content not found at line ${startLine}.
-Search: "${searchContent.substring(0, 100)}"
-Available content around line ${startLine}:
-${availableLines.map((line, idx) => `${startLine - 2 + idx}: ${line}`).join('\n')}`);
+          throw new Error(`Search content not found at line ${startLine}. Check that the content exists and try a shorter, more unique search phrase.`);
         }
       }
     } else {
@@ -235,8 +245,7 @@ ${availableLines.map((line, idx) => `${startLine - 2 + idx}: ${line}`).join('\n'
           const contextMatch = updatedContent.match(new RegExp(`.{0,100}${words.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}.{0,100}`, 'i'));
           const context = contextMatch ? contextMatch[0] : 'No similar content found';
           
-          throw new Error(`Search content not found: "${searchContent.substring(0, 100)}"
-Potential similar content: "${context}"`);
+          throw new Error(`Search content not found. Try using a shorter, more unique search phrase or check that the content exists in the document.`);
         }
       } else {
         updatedContent = updatedContent.replace(searchContent, replaceContent);
