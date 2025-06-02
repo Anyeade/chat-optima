@@ -43,7 +43,7 @@ export const codeDocumentHandler = createDocumentHandler<'code'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel(modelToUse),
-      system: updateDocumentPrompt(document.content, 'code'),
+      system: codePrompt + `\n\n**CURRENT CODE:**\n${document.content}\n\n**Update Request:** `,
       prompt: description,
       experimental_transform: smoothStream({ chunking: 'word' }),
     });

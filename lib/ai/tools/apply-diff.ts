@@ -145,29 +145,41 @@ function parseDiffBlocks(diff: string): Array<{
     replaceContent: string;
   }> = [];
 
-  // Match SEARCH/REPLACE blocks
-  const blockRegex = /<<<<<<< SEARCH\n(.*?)\n=======\n(.*?)\n>>>>>>> REPLACE/gs;
-  let match;
+  // Try multiple regex patterns to be more flexible
+  const patterns = [
+    // Standard format with optional whitespace
+    /<<<<<<< SEARCH\s*\n(.*?)\n\s*=======\s*\n(.*?)\n\s*>>>>>>> REPLACE/gs,
+    // Alternative format without spaces around markers
+    /<<<<<<< SEARCH\n(.*?)\n=======\n(.*?)\n>>>>>>> REPLACE/gs,
+    // More flexible format
+    /<{7} SEARCH\s*\n(.*?)\n={7}\s*\n(.*?)\n>{7} REPLACE/gs
+  ];
 
-  while ((match = blockRegex.exec(diff)) !== null) {
-    const searchSection = match[1];
-    const replaceSection = match[2];
+  for (const blockRegex of patterns) {
+    let match;
+    while ((match = blockRegex.exec(diff)) !== null) {
+      const searchSection = match[1].trim();
+      const replaceSection = match[2].trim();
 
-    // Check for line number
-    const lineMatch = searchSection.match(/^:start_line:(\d+)\n-------\n(.*)/s);
-    
-    if (lineMatch) {
-      blocks.push({
-        startLine: parseInt(lineMatch[1]),
-        searchContent: lineMatch[2],
-        replaceContent: replaceSection,
-      });
-    } else {
-      blocks.push({
-        searchContent: searchSection,
-        replaceContent: replaceSection,
-      });
+      // Check for line number with flexible format
+      const lineMatch = searchSection.match(/^:start_line:\s*(\d+)\s*\n\s*-+\s*\n(.*)/s);
+      
+      if (lineMatch) {
+        blocks.push({
+          startLine: parseInt(lineMatch[1]),
+          searchContent: lineMatch[2].trim(),
+          replaceContent: replaceSection,
+        });
+      } else {
+        blocks.push({
+          searchContent: searchSection,
+          replaceContent: replaceSection,
+        });
+      }
     }
+    
+    // If we found blocks with this pattern, don't try others
+    if (blocks.length > 0) break;
   }
 
   return blocks;
@@ -181,7 +193,19 @@ async function applyDiffToContent(originalContent: string, diff: string): Promis
   const diffBlocks = parseDiffBlocks(diff);
 
   if (diffBlocks.length === 0) {
-    throw new Error('No valid SEARCH/REPLACE blocks found in diff');
+    // Add debugging info to help diagnose the issue
+    const hasSearchMarker = diff.includes('<<<<<<< SEARCH');
+    const hasReplaceMarker = diff.includes('>>>>>>> REPLACE');
+    const hasEquals = diff.includes('=======');
+    
+    let debugInfo = 'Debug info:\n';
+    debugInfo += `- Contains <<<<<<< SEARCH: ${hasSearchMarker}\n`;
+    debugInfo += `- Contains >>>>>>> REPLACE: ${hasReplaceMarker}\n`;
+    debugInfo += `- Contains =======: ${hasEquals}\n`;
+    debugInfo += `- Diff length: ${diff.length} characters\n`;
+    debugInfo += `- First 200 chars: ${diff.substring(0, 200)}...\n`;
+    
+    throw new Error(`No valid SEARCH/REPLACE blocks found in diff.\n\n${debugInfo}\n\nRequired format:\n<<<<<<< SEARCH\n:start_line:X\n-------\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE`);
   }
 
   // Apply each diff block

@@ -43,7 +43,7 @@ export const diagramDocumentHandler = createDocumentHandler<'diagram'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel(modelToUse),
-      system: updateDocumentPrompt(document.content, 'diagram'),
+      system: diagramPrompt + `\n\n**CURRENT DIAGRAM:**\n${document.content}\n\n**Update Request:** `,
       prompt: description,
       experimental_transform: smoothStream({ chunking: 'word' }),
     });
