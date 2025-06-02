@@ -161,6 +161,32 @@ export const contextWindows: Record<string, ContextWindow> = {
     reserveTokens: 4096,
     warningThreshold: 124000,
   },
+  // Llama models
+  'meta-llama/llama-4-scout-17b-16e-instruct': {
+    maxTokens: 32000,
+    reserveTokens: 4096,
+    warningThreshold: 28000,
+  },
+  'meta-llama/llama-3.3-70b-instruct': {
+    maxTokens: 128000,
+    reserveTokens: 8192,
+    warningThreshold: 120000,
+  },
+  'meta-llama/llama-3.1-405b-instruct': {
+    maxTokens: 128000,
+    reserveTokens: 8192,
+    warningThreshold: 120000,
+  },
+  'meta-llama/llama-3.1-70b-instruct': {
+    maxTokens: 128000,
+    reserveTokens: 8192,
+    warningThreshold: 120000,
+  },
+  'meta-llama/llama-3.1-8b-instruct': {
+    maxTokens: 128000,
+    reserveTokens: 4096,
+    warningThreshold: 124000,
+  },
 };
 
 /**

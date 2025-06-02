@@ -183,26 +183,40 @@ export async function POST(request: Request) {
           // Calculate original token count for accurate context condensing display
           const originalTokenCount = await calculateTotalTokens(messages as CoreMessage[]);
           
-          // Apply sliding window optimization
+          // Apply sliding window optimization with error handling
           console.log('🪟 Using Enhanced AI Service with Sliding Window Optimization');
-          const optimizedMessages = await autoOptimize(messages as CoreMessage[], selectedChatModel, 'balance');
+          let optimizedMessages;
+          let finalMessages = messages as CoreMessage[];
           
-          // Display context condensing like Roo Code extension
-          if (optimizedMessages.compressionApplied) {
-            console.log(`📊 Context condensed: ${originalTokenCount} → ${optimizedMessages.tokenCount}`);
-            console.log(`🔥 Token reduction: ${Math.round(((originalTokenCount - optimizedMessages.tokenCount) / originalTokenCount) * 100)}%`);
-          }
-          
-          // Detailed optimization results
-          console.log(`🪟 Sliding Window Results:
-            ✓ Original messages: ${messages.length} (${originalTokenCount} tokens)
-            ✓ Optimized messages: ${optimizedMessages.messages.length} (${optimizedMessages.tokenCount} tokens)
-            ✓ Messages removed: ${optimizedMessages.removedMessageCount}
-            ✓ Compression applied: ${optimizedMessages.compressionApplied ? 'Yes' : 'No'}
-            ✓ Summary added: ${optimizedMessages.summaryAdded ? 'Yes' : 'No'}`);
+          try {
+            optimizedMessages = await autoOptimize(messages as CoreMessage[], selectedChatModel, 'balance');
+            
+            // Validate the result
+            if (optimizedMessages && optimizedMessages.messages && Array.isArray(optimizedMessages.messages)) {
+              // Display context condensing like Roo Code extension
+              if (optimizedMessages.compressionApplied) {
+                console.log(`📊 Context condensed: ${originalTokenCount} → ${optimizedMessages.tokenCount}`);
+                console.log(`🔥 Token reduction: ${Math.round(((originalTokenCount - optimizedMessages.tokenCount) / originalTokenCount) * 100)}%`);
+              }
+              
+              // Detailed optimization results
+              console.log(`🪟 Sliding Window Results:
+                ✓ Original messages: ${messages.length} (${originalTokenCount} tokens)
+                ✓ Optimized messages: ${optimizedMessages.messages.length} (${optimizedMessages.tokenCount} tokens)
+                ✓ Messages removed: ${optimizedMessages.removedMessageCount}
+                ✓ Compression applied: ${optimizedMessages.compressionApplied ? 'Yes' : 'No'}
+                ✓ Summary added: ${optimizedMessages.summaryAdded ? 'Yes' : 'No'}`);
 
-          // Use the optimized messages for streaming
-          const finalMessages = optimizedMessages.messages;
+              // Use the optimized messages for streaming
+              finalMessages = optimizedMessages.messages;
+            } else {
+              console.warn('⚠️ Sliding window optimization returned invalid result, using original messages');
+              finalMessages = messages as CoreMessage[];
+            }
+          } catch (optimizationError) {
+            console.warn('⚠️ Sliding window optimization failed, using original messages:', optimizationError);
+            finalMessages = messages as CoreMessage[];
+          }
 
           let modelToUse;
           try {
