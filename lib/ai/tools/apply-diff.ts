@@ -205,7 +205,20 @@ async function applyDiffToContent(originalContent: string, diff: string): Promis
     debugInfo += `- Diff length: ${diff.length} characters\n`;
     debugInfo += `- First 200 chars: ${diff.substring(0, 200)}...\n`;
     
-    throw new Error(`No valid SEARCH/REPLACE blocks found in diff.\n\n${debugInfo}\n\nRequired format:\n<<<<<<< SEARCH\n:start_line:X\n-------\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE`);
+    // Provide specific guidance based on what's missing
+    let guidance = '\n🔧 COMMON FIXES:\n';
+    if (hasSearchMarker && !hasEquals) {
+      guidance += '- Add "=======" separator between search and replace sections\n';
+    }
+    if (hasSearchMarker && !hasReplaceMarker) {
+      guidance += '- Add ">>>>>>> REPLACE" at the end of your diff block\n';
+    }
+    if (!hasSearchMarker) {
+      guidance += '- Start with "<<<<<<< SEARCH" marker\n';
+    }
+    guidance += '- Ensure ALL three markers are present: <<<<<<< SEARCH, =======, >>>>>>> REPLACE\n';
+    
+    throw new Error(`No valid SEARCH/REPLACE blocks found in diff.\n\n${debugInfo}${guidance}\n\nRequired format:\n<<<<<<< SEARCH\n:start_line:X\n-------\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE`);
   }
 
   // Apply each diff block
