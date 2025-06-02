@@ -32,9 +32,33 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
       description: z.string().optional().describe('Optional description of the changes being made (e.g., "Added new button", "Fixed styling issue", "Updated function logic", "Modified content")'),
     }),
     execute: async ({ id, diff, description }) => {
+      // Show loading indicator
+      dataStream.writeData({
+        type: 'text-delta',
+        content: `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; margin: 8px 0;">
+<div style="width: 16px; height: 16px; border: 2px solid #f59e0b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+<span style="color: #92400e; font-weight: 500;">🔧 Applying diff changes...</span>
+</div>
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>\n`,
+      });
+
       const selectedDocument = await getDocumentById({ id });
 
       if (!selectedDocument) {
+        dataStream.writeData({
+          type: 'text-delta',
+          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
+<span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
+</div>\n`,
+        });
+        
+        dataStream.writeData({ type: 'finish', content: '' });
+        
         return {
           error: 'Document not found',
         };
@@ -72,16 +96,24 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
           userId: session.user.id,
         });
 
+        // Show success indicator
+        dataStream.writeData({
+          type: 'text-delta',
+          content: `<div style="padding: 8px 12px; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; margin: 8px 0;">
+<span style="color: #15803d; font-weight: 500;">✅ Diff applied successfully</span>
+</div>\n`,
+        });
+
         // Log the diff application
         dataStream.writeData({
           type: 'text-delta',
-          content: `🔧 Applied diff to ${selectedDocument.title}\n`,
+          content: `**🔧 Applied diff to ${selectedDocument.title}**\n\n`,
         });
 
         if (description) {
           dataStream.writeData({
             type: 'text-delta',
-            content: `📝 Changes: ${description}\n`,
+            content: `📝 **Changes made:** ${description}\n\n`,
           });
         }
 
@@ -89,7 +121,7 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
         const diffBlocks = parseDiffBlocks(diff);
         dataStream.writeData({
           type: 'text-delta',
-          content: `✅ Successfully applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}\n`,
+          content: `📊 **Summary:** Successfully applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}\n\n`,
         });
 
         dataStream.writeData({ type: 'finish', content: '' });
