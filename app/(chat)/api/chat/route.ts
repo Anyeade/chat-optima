@@ -190,27 +190,38 @@ export async function POST(request: Request) {
           
           try {
             optimizedMessages = await autoOptimize(messages as CoreMessage[], selectedChatModel, 'balance');
-            
-            // Validate the result
-            if (optimizedMessages && optimizedMessages.messages && Array.isArray(optimizedMessages.messages)) {
+              // Validate the result with comprehensive checks
+            if (optimizedMessages && 
+                optimizedMessages.messages && 
+                Array.isArray(optimizedMessages.messages) &&
+                optimizedMessages.messages.length >= 0 &&
+                typeof optimizedMessages.tokenCount === 'number') {
+              
               // Display context condensing like Roo Code extension
               if (optimizedMessages.compressionApplied) {
                 console.log(`📊 Context condensed: ${originalTokenCount} → ${optimizedMessages.tokenCount}`);
                 console.log(`🔥 Token reduction: ${Math.round(((originalTokenCount - optimizedMessages.tokenCount) / originalTokenCount) * 100)}%`);
               }
               
-              // Detailed optimization results
+              // Detailed optimization results with safe property access
               console.log(`🪟 Sliding Window Results:
                 ✓ Original messages: ${messages.length} (${originalTokenCount} tokens)
                 ✓ Optimized messages: ${optimizedMessages.messages.length} (${optimizedMessages.tokenCount} tokens)
-                ✓ Messages removed: ${optimizedMessages.removedMessageCount}
+                ✓ Messages removed: ${optimizedMessages.removedMessageCount || 0}
                 ✓ Compression applied: ${optimizedMessages.compressionApplied ? 'Yes' : 'No'}
                 ✓ Summary added: ${optimizedMessages.summaryAdded ? 'Yes' : 'No'}`);
 
               // Use the optimized messages for streaming
               finalMessages = optimizedMessages.messages;
             } else {
-              console.warn('⚠️ Sliding window optimization returned invalid result, using original messages');
+              console.warn('⚠️ Sliding window optimization returned invalid result:', {
+                hasOptimizedMessages: !!optimizedMessages,
+                hasMessages: !!(optimizedMessages?.messages),
+                isArray: Array.isArray(optimizedMessages?.messages),
+                messagesLength: optimizedMessages?.messages?.length,
+                tokenCount: optimizedMessages?.tokenCount
+              });
+              console.warn('⚠️ Using original messages instead');
               finalMessages = messages as CoreMessage[];
             }
           } catch (optimizationError) {

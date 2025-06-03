@@ -46,7 +46,6 @@ export class SlidingWindowOptimizer {
     
     this.importanceCache = new Map();
   }
-
   /**
    * Apply sliding window optimization to message array
    */
@@ -55,27 +54,74 @@ export class SlidingWindowOptimizer {
     modelId: string,
     config: Partial<SlidingWindowConfig> = {}
   ): Promise<WindowSlice> {
-    const finalConfig = { ...this.defaultConfig, ...config };
-    const modelWindow = contextWindows[modelId] || contextWindows['default'];
-    finalConfig.maxTokens = Math.min(finalConfig.maxTokens, modelWindow.maxTokens * 0.8); // Use 80% of model limit
+    try {
+      // Input validation
+      if (!messages || !Array.isArray(messages)) {
+        console.warn('⚠️ Invalid messages array provided to optimizeMessages, returning fallback');
+        return {
+          messages: [],
+          tokenCount: 0,
+          compressionApplied: false,
+          removedMessageCount: 0,
+          summaryAdded: false,
+        };
+      }
 
-    // Step 1: Calculate current token usage
-    const totalTokens = await this.calculateTotalTokens(messages);
-    
-    if (totalTokens <= finalConfig.maxTokens) {
+      if (messages.length === 0) {
+        return {
+          messages: [],
+          tokenCount: 0,
+          compressionApplied: false,
+          removedMessageCount: 0,
+          summaryAdded: false,
+        };
+      }
+
+      const finalConfig = { ...this.defaultConfig, ...config };
+      const modelWindow = contextWindows[modelId] || contextWindows['default'];
+      finalConfig.maxTokens = Math.min(finalConfig.maxTokens, modelWindow.maxTokens * 0.8); // Use 80% of model limit
+
+      // Step 1: Calculate current token usage
+      const totalTokens = await this.calculateTotalTokens(messages);
+      
+      if (totalTokens <= finalConfig.maxTokens) {
+        return {
+          messages,
+          tokenCount: totalTokens,
+          compressionApplied: false,
+          removedMessageCount: 0,
+          summaryAdded: false,
+        };
+      }
+
+      // Step 2: Apply sliding window optimization
+      const result = await this.applyOptimization(messages, finalConfig, totalTokens);
+      
+      // Validate result before returning
+      if (!result || !result.messages || !Array.isArray(result.messages)) {
+        console.warn('⚠️ applyOptimization returned invalid result, using original messages');
+        return {
+          messages,
+          tokenCount: totalTokens,
+          compressionApplied: false,
+          removedMessageCount: 0,
+          summaryAdded: false,
+        };
+      }
+
+      return result;
+    } catch (error) {
+      console.error('⚠️ Error in optimizeMessages:', error);
+      // Return safe fallback
       return {
-        messages,
-        tokenCount: totalTokens,
+        messages: messages || [],
+        tokenCount: 0,
         compressionApplied: false,
         removedMessageCount: 0,
         summaryAdded: false,
       };
     }
-
-    // Step 2: Apply sliding window optimization
-    return this.applyOptimization(messages, finalConfig, totalTokens);
   }
-
   /**
    * Apply multiple optimization strategies
    */
@@ -84,46 +130,79 @@ export class SlidingWindowOptimizer {
     config: SlidingWindowConfig,
     currentTokens: number
   ): Promise<WindowSlice> {
-    let optimizedMessages = [...messages];
-    let removedCount = 0;
-    let summaryAdded = false;
+    try {
+      let optimizedMessages = [...messages];
+      let removedCount = 0;
+      let summaryAdded = false;
 
-    // Strategy 1: Preserve critical messages
-    const { preserved, removable } = this.categorizeMessages(optimizedMessages, config);
+      // Strategy 1: Preserve critical messages
+      const { preserved, removable } = this.categorizeMessages(optimizedMessages, config);
 
-    // Strategy 2: Calculate message importance
-    const messageImportance = await this.calculateMessageImportance(removable);
+      // Strategy 2: Calculate message importance
+      const messageImportance = await this.calculateMessageImportance(removable);
 
-    // Strategy 3: Apply sliding window with smart removal
-    const targetTokens = Math.floor(config.maxTokens * config.compressionRatio);
-    const { optimized, removed } = await this.applySlidingWindow(
-      preserved,
-      messageImportance,
-      targetTokens
-    );
+      // Strategy 3: Apply sliding window with smart removal
+      const targetTokens = Math.floor(config.maxTokens * config.compressionRatio);
+      const slidingResult = await this.applySlidingWindow(
+        preserved,
+        messageImportance,
+        targetTokens
+      );
 
-    optimizedMessages = optimized;
-    removedCount = removed.length;
-
-    // Strategy 4: Add summary if significant content removed
-    if (config.enableSmartSummarization && removed.length > 2) {
-      const summary = await this.generateConversationSummary(removed);
-      if (summary) {
-        optimizedMessages = this.insertSummary(optimizedMessages, summary, config);
-        summaryAdded = true;
+      // Validate sliding window result
+      if (!slidingResult || !slidingResult.optimized || !Array.isArray(slidingResult.optimized)) {
+        console.warn('⚠️ applySlidingWindow returned invalid result');
+        return {
+          messages: messages,
+          tokenCount: currentTokens,
+          compressionApplied: false,
+          removedMessageCount: 0,
+          summaryAdded: false,
+        };
       }
+
+      optimizedMessages = slidingResult.optimized;
+      removedCount = slidingResult.removed?.length || 0;
+
+      // Strategy 4: Add summary if significant content removed
+      if (config.enableSmartSummarization && slidingResult.removed && slidingResult.removed.length > 2) {
+        try {
+          const summary = await this.generateConversationSummary(slidingResult.removed);
+          if (summary && optimizedMessages) {
+            optimizedMessages = this.insertSummary(optimizedMessages, summary, config);
+            summaryAdded = true;
+          }
+        } catch (summaryError) {
+          console.warn('⚠️ Error generating conversation summary:', summaryError);
+        }
+      }
+
+      // Strategy 5: Final token count verification
+      let finalTokenCount;
+      try {
+        finalTokenCount = await this.calculateTotalTokens(optimizedMessages);
+      } catch (tokenError) {
+        console.warn('⚠️ Error calculating final token count:', tokenError);
+        finalTokenCount = currentTokens;
+      }
+
+      return {
+        messages: optimizedMessages || messages,
+        tokenCount: finalTokenCount,
+        compressionApplied: true,
+        removedMessageCount: removedCount,
+        summaryAdded,
+      };
+    } catch (error) {
+      console.error('⚠️ Error in applyOptimization:', error);
+      return {
+        messages: messages,
+        tokenCount: currentTokens,
+        compressionApplied: false,
+        removedMessageCount: 0,
+        summaryAdded: false,
+      };
     }
-
-    // Strategy 5: Final token count verification
-    const finalTokenCount = await this.calculateTotalTokens(optimizedMessages);
-
-    return {
-      messages: optimizedMessages,
-      tokenCount: finalTokenCount,
-      compressionApplied: true,
-      removedMessageCount: removedCount,
-      summaryAdded,
-    };
   }
 
   /**
@@ -258,7 +337,6 @@ export class SlidingWindowOptimizer {
 
     return reasons;
   }
-
   /**
    * Apply sliding window with intelligent message selection
    */
@@ -267,33 +345,69 @@ export class SlidingWindowOptimizer {
     removableMessages: MessageImportance[],
     targetTokens: number
   ): Promise<{ optimized: CoreMessage[]; removed: CoreMessage[] }> {
-    // Sort removable messages by importance (descending)
-    const sortedByImportance = removableMessages.sort((a, b) => b.importance - a.importance);
-    
-    const optimized: CoreMessage[] = [...preservedMessages];
-    const removed: CoreMessage[] = [];
-    
-    let currentTokens = await this.calculateTotalTokens(preservedMessages);
-
-    // Add messages in order of importance until we hit token limit
-    for (const messageInfo of sortedByImportance) {
-      const potentialTokens = currentTokens + messageInfo.tokenCount;
-      
-      if (potentialTokens <= targetTokens) {
-        optimized.push(messageInfo.message);
-        currentTokens = potentialTokens;
-      } else {
-        removed.push(messageInfo.message);
+    try {
+      // Input validation
+      if (!Array.isArray(preservedMessages)) {
+        console.warn('⚠️ preservedMessages is not an array');
+        return { optimized: [], removed: [] };
       }
+
+      if (!Array.isArray(removableMessages)) {
+        console.warn('⚠️ removableMessages is not an array');
+        return { optimized: [...preservedMessages], removed: [] };
+      }
+
+      // Sort removable messages by importance (descending)
+      const sortedByImportance = removableMessages.sort((a, b) => b.importance - a.importance);
+      
+      const optimized: CoreMessage[] = [...preservedMessages];
+      const removed: CoreMessage[] = [];
+      
+      let currentTokens;
+      try {
+        currentTokens = await this.calculateTotalTokens(preservedMessages);
+      } catch (error) {
+        console.warn('⚠️ Error calculating preserved messages tokens:', error);
+        currentTokens = 0;
+      }
+
+      // Add messages in order of importance until we hit token limit
+      for (const messageInfo of sortedByImportance) {
+        if (!messageInfo || !messageInfo.message) {
+          console.warn('⚠️ Invalid messageInfo encountered');
+          continue;
+        }
+
+        const potentialTokens: number = currentTokens + (messageInfo.tokenCount || 0);
+        
+        if (potentialTokens <= targetTokens) {
+          optimized.push(messageInfo.message);
+          currentTokens = potentialTokens;
+        } else {
+          removed.push(messageInfo.message);
+        }
+      }
+
+      // Sort optimized messages back to chronological order
+      let chronologicalOrder;
+      try {
+        chronologicalOrder = this.sortChronologically(optimized);
+      } catch (error) {
+        console.warn('⚠️ Error sorting chronologically:', error);
+        chronologicalOrder = optimized;
+      }
+
+      return {
+        optimized: chronologicalOrder || optimized,
+        removed: removed || [],
+      };
+    } catch (error) {
+      console.error('⚠️ Error in applySlidingWindow:', error);
+      return { 
+        optimized: preservedMessages || [], 
+        removed: [] 
+      };
     }
-
-    // Sort optimized messages back to chronological order
-    const chronologicalOrder = this.sortChronologically(optimized);
-
-    return {
-      optimized: chronologicalOrder,
-      removed,
-    };
   }
 
   /**
