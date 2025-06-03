@@ -181,6 +181,7 @@ export async function POST(request: Request) {
                 'createDocument',
                 'updateDocument',
                 'requestSuggestions',
+                'readDoc',
                 'webSearch',
                 'webpageScreenshot',
                 'webScraper',
