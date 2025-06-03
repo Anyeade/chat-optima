@@ -47,6 +47,11 @@ export interface TokenCountResult {
  * More accurate token counting would require tiktoken or similar
  */
 export function estimateTokenCount(text: string): number {
+  // Safety check for undefined/null text
+  if (!text || typeof text !== 'string') {
+    return 0;
+  }
+  
   // Rough approximation: 1 token ≈ 4 characters for English text
   // This is a simplified approach - real implementations should use tiktoken
   return Math.ceil(text.length / 4);
@@ -58,11 +63,16 @@ export function estimateTokenCount(text: string): number {
 export function countMessageTokens(message: CoreMessage): number {
   let tokens = 0;
   
+  // Safety check for undefined message
+  if (!message || !message.content) {
+    return 3; // Just return role overhead
+  }
+  
   if (typeof message.content === 'string') {
     tokens += estimateTokenCount(message.content);
   } else if (Array.isArray(message.content)) {
     for (const part of message.content) {
-      if (part.type === 'text') {
+      if (part.type === 'text' && part.text) {
         tokens += estimateTokenCount(part.text);
       } else if (part.type === 'image') {
         // Rough estimate for image tokens (varies by model)
@@ -410,10 +420,14 @@ export class ContextManager {
     const assistantResponses: string[] = [];
 
     for (const message of messages) {
-      const content = typeof message.content === 'string' 
-        ? message.content 
-        : Array.isArray(message.content) 
-          ? message.content.filter(p => p.type === 'text').map(p => p.text).join(' ')
+      const content = typeof message.content === 'string'
+        ? message.content
+        : Array.isArray(message.content)
+          ? message.content
+              .filter(p => p.type === 'text')
+              .map(p => (p as any).text)
+              .filter(text => text)
+              .join(' ')
           : '';
 
       if (message.role === 'user') {

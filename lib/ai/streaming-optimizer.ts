@@ -1,8 +1,6 @@
 import { streamText } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
-import { fastResponseService } from './fast-response';
-import { responseCache } from './cache';
-import { slidingWindowOptimizer, autoOptimize } from './sliding-window';
+import { autoOptimize } from './sliding-window';
 import type { CoreMessage } from 'ai';
 import type { UserType } from '@/app/(auth)/auth';
 
@@ -121,7 +119,7 @@ export class StreamingOptimizer {
     messageId: string
   ): Promise<StreamingResult | null> {
     const lastMessage = messages[messages.length - 1];
-    if (!lastMessage || typeof lastMessage.content !== 'string') return null;
+    if (!lastMessage?.content || typeof lastMessage.content !== 'string') return null;
 
     const content = lastMessage.content.toLowerCase().trim();
     
@@ -215,7 +213,7 @@ export class StreamingOptimizer {
     const recentMessages = messages.slice(-maxContextMessages);
 
     // Ensure system message is preserved if it exists
-    const systemMessage = messages.find(m => m.role === 'system');
+    const systemMessage = messages.find(m => m?.role === 'system');
     if (systemMessage && !recentMessages.includes(systemMessage)) {
       return [systemMessage, ...recentMessages.slice(1)];
     }
