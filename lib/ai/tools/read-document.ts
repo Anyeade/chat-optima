@@ -28,13 +28,13 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       if (!selectedDocument) {
         dataStream.writeData({
           type: 'tool-call',
-          toolName: 'read_document',
+          toolName: 'readDocument',
           args: { title: `Document ${id}`, type: 'read' },
         });
         
         dataStream.writeData({
           type: 'tool-result',
-          toolName: 'read_document',
+          toolName: 'readDocument',
           result: { error: 'Document not found' },
           isError: true,
         });
@@ -47,7 +47,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       // Show loading state with the document name
       dataStream.writeData({
         type: 'tool-call',
-        toolName: 'read_document',
+        toolName: 'readDocument',
         args: { title: selectedDocument.title, type: 'read' },
       });
 
@@ -55,7 +55,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       if (selectedDocument.content === null || selectedDocument.content.trim() === '') {
         dataStream.writeData({
           type: 'tool-result',
-          toolName: 'read_document',
+          toolName: 'readDocument',
           result: { error: 'Document is empty' },
           isError: true,
         });
@@ -85,7 +85,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
 
         dataStream.writeData({
           type: 'tool-result',
-          toolName: 'read_document',
+          toolName: 'readDocument',
           result: resultData,
           isStreaming: false,
         });
@@ -100,7 +100,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         // Send error using React component system
         dataStream.writeData({
           type: 'tool-result',
-          toolName: 'read_document',
+          toolName: 'readDocument',
           result: { error: errorMessage },
           isError: true,
         });
