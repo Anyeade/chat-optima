@@ -1,12 +1,12 @@
 import { memo } from 'react';
 
 import type { ArtifactKind } from './artifact';
-import { FileIcon, LoaderIcon, MessageIcon, PencilEditIcon, SearchIcon, CodeIcon } from './icons';
+import { FileIcon, LoaderIcon, MessageIcon, PencilEditIcon } from './icons';
 import { toast } from 'sonner';
 import { useArtifact } from '@/hooks/use-artifact';
 
 const getActionText = (
-  type: 'create' | 'update' | 'request-suggestions' | 'read-document' | 'apply-diff',
+  type: 'create' | 'update' | 'request-suggestions',
   tense: 'present' | 'past',
 ) => {
   switch (type) {
@@ -18,17 +18,13 @@ const getActionText = (
       return tense === 'present'
         ? 'Adding suggestions'
         : 'Added suggestions to';
-    case 'read-document':
-      return tense === 'present' ? 'Reading' : 'Read';
-    case 'apply-diff':
-      return tense === 'present' ? 'Applying changes' : 'Applied changes to';
     default:
       return null;
   }
 };
 
 interface DocumentToolResultProps {
-  type: 'create' | 'update' | 'request-suggestions' | 'read-document' | 'apply-diff';
+  type: 'create' | 'update' | 'request-suggestions';
   result: { id: string; title: string; kind: ArtifactKind };
   isReadonly: boolean;
 }
@@ -79,10 +75,6 @@ function PureDocumentToolResult({
           <PencilEditIcon />
         ) : type === 'request-suggestions' ? (
           <MessageIcon />
-        ) : type === 'read-document' ? (
-          <SearchIcon />
-        ) : type === 'apply-diff' ? (
-          <CodeIcon />
         ) : null}
       </div>
       <div className="text-left">
@@ -95,7 +87,7 @@ function PureDocumentToolResult({
 export const DocumentToolResult = memo(PureDocumentToolResult, () => true);
 
 interface DocumentToolCallProps {
-  type: 'create' | 'update' | 'request-suggestions' | 'read-document' | 'apply-diff';
+  type: 'create' | 'update' | 'request-suggestions';
   args: { title: string };
   isReadonly: boolean;
 }
@@ -143,10 +135,6 @@ function PureDocumentToolCall({
             <PencilEditIcon />
           ) : type === 'request-suggestions' ? (
             <MessageIcon />
-          ) : type === 'read-document' ? (
-            <SearchIcon />
-          ) : type === 'apply-diff' ? (
-            <CodeIcon />
           ) : null}
         </div>
 

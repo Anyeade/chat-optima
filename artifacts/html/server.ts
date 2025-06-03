@@ -43,7 +43,7 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel(modelToUse),
-      system: htmlPrompt + `\n\n**CURRENT HTML:**\n${document.content}\n\n**Update Request:** `,
+      system: updateDocumentPrompt(document.content, 'html'),
       prompt: description,
       experimental_transform: smoothStream({ chunking: 'word' }),
     });

@@ -159,7 +159,9 @@ const PurePreviewMessage = ({
                 const { toolName, toolCallId, state } = toolInvocation;
 
                 if (state === 'call') {
-                  const { args } = toolInvocation;                  return (
+                  const { args } = toolInvocation;
+
+                  return (
                     <div
                       key={toolCallId}
                       className={cx({
@@ -182,25 +184,15 @@ const PurePreviewMessage = ({
                           args={args}
                           isReadonly={isReadonly}
                         />
-                      ) : toolName === 'read-document' ? (
-                        <DocumentToolCall
-                          type="read-document"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'apply-diff' ? (
-                        <DocumentToolCall
-                          type="apply-diff"
-                          args={args}
-                          isReadonly={isReadonly}
-                        />
                       ) : null}
                     </div>
                   );
                 }
 
                 if (state === 'result') {
-                  const { result } = toolInvocation;                  return (
+                  const { result } = toolInvocation;
+
+                  return (
                     <div key={toolCallId}>
                       {toolName === 'getWeather' ? (
                         <Weather weatherAtLocation={result} />
@@ -220,20 +212,7 @@ const PurePreviewMessage = ({
                           type="request-suggestions"
                           result={result}
                           isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'read-document' ? (
-                        <DocumentToolResult
-                          type="read-document"
-                          result={result}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'apply-diff' ? (
-                        <DocumentToolResult
-                          type="apply-diff"
-                          result={result}
-                          isReadonly={isReadonly}
-                        />
-                      ) : toolName === 'webSearch' ? (
+                        />                      ) : toolName === 'webSearch' ? (
                         <WebSearch searchResults={result} />
                       ) : toolName === 'webpageScreenshot' ? (
                         <WebpageScreenshot screenshotResults={result} />

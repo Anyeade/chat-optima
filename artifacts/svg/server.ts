@@ -43,7 +43,7 @@ export const svgDocumentHandler = createDocumentHandler<'svg'>({
 
     const { fullStream } = streamText({
       model: myProvider.languageModel(modelToUse),
-      system: svgPrompt + `\n\n**CURRENT SVG:**\n${document.content}\n\n**Update Request:** `,
+      system: updateDocumentPrompt(document.content, 'svg'),
       prompt: description,
       experimental_transform: smoothStream({ chunking: 'word' }),
     });

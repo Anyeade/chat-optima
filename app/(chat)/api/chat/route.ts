@@ -21,8 +21,6 @@ import { generateUUID, getTrailingMessageId } from '@/lib/utils';
 import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
-import { applyDiff } from '@/lib/ai/tools/apply-diff';
-import { readDocument } from '@/lib/ai/tools/read-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { webSearch } from '@/lib/ai/tools/web-search';
@@ -122,7 +120,8 @@ export async function POST(request: Request) {
     const previousMessages = await getMessagesByChatId({ id });
 
     const messages = appendClientMessage({
-      messages: previousMessages as any,
+      // @ts-expect-error: todo add type conversion from DBMessage[] to UIMessage[]
+      messages: previousMessages,
       message,
     });
 
@@ -160,10 +159,9 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error('Failed to resolve model:', selectedChatModel, error);
     }
-      const stream = createDataStream({
-      execute: async (dataStream) => {
-        console.log('🚀 Using Direct AI Service (no optimization)');
-        
+    
+    const stream = createDataStream({
+      execute: (dataStream) => {
         let modelToUse;
         try {
           modelToUse = myProvider.languageModel(selectedChatModel);
@@ -177,29 +175,23 @@ export async function POST(request: Request) {
           model: modelToUse,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,
-          experimental_activeTools: [
-            'getWeather',
-            'createDocument',
-            'updateDocument',
-            'applyDiff',
-            'readDocument',
-            'requestSuggestions',
-            'webSearch',
-            'webpageScreenshot',
-            'webScraper',
-          ],
+          maxSteps: 5,          experimental_activeTools: [
+                'getWeather',
+                'createDocument',
+                'updateDocument',
+                'requestSuggestions',
+                'webSearch',
+                'webpageScreenshot',
+                'webScraper',
+              ],
           experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,
-          tools: {
+          experimental_generateMessageId: generateUUID,          tools: {
             getWeather,
             webSearch,
             webpageScreenshot,
             webScraper,
             createDocument: createDocument({ session, dataStream, selectedChatModel }),
             updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
-            applyDiff: applyDiff({ session, dataStream, selectedChatModel }),
-            readDocument: readDocument({ session, dataStream, selectedChatModel }),
             requestSuggestions: requestSuggestions({
               session,
               dataStream,
