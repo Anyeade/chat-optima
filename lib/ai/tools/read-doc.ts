@@ -51,7 +51,7 @@ Always read the full document content first to understand context before making 
 
 export const readDoc = ({ session, dataStream, selectedChatModel }: ReadDocProps) =>
   tool({
-    description: 'Read a document and intelligently make changes using diff-based updates. Can autonomously read document content, understand context, and apply targeted changes.',
+    description: 'Read a document and intelligently make changes using diff-based updates. Can autonomously read document content, understand context, and apply targeted changes. CRITICAL: When modifying, ALWAYS preserve ALL existing content - never replace the entire document with just modifications. The result must be the COMPLETE document with changes integrated.',
     parameters: z.object({
       id: z.string().describe('The ID of the document to read and potentially modify'),
       action: z.enum(['read', 'modify']).describe('Whether to just read the document or read and modify it'),
@@ -121,6 +121,13 @@ export const readDoc = ({ session, dataStream, selectedChatModel }: ReadDocProps
 
         const systemPrompt = `${diffFormatPrompt}
 
+**🚨 CRITICAL CONTENT PRESERVATION RULES 🚨**
+- NEVER replace the entire document with just modifications
+- ALWAYS preserve ALL existing content when making changes
+- INTEGRATE changes into the full existing document structure
+- The result must be the COMPLETE document with modifications applied
+- Think: "Add to" or "Update within" NOT "Replace with"
+
 **CURRENT DOCUMENT CONTENT:**
 \`\`\`
 ${documentContent}
@@ -135,7 +142,7 @@ You have full access to the document content above. Use it to understand context
 
 **INSTRUCTIONS:** ${instructions}
 
-Based on the document content and instructions, provide the modified document using the exact diff format specified above when making changes. Always preserve the document's existing structure and style unless explicitly asked to change it.`;
+Based on the document content and instructions, provide the COMPLETE modified document with ALL existing content preserved and the requested changes integrated. Use the exact diff format specified above when making changes. Always preserve the document's existing structure and style unless explicitly asked to change it.`;
 
         const { fullStream } = streamText({
           model: myProvider.languageModel(modelToUse),

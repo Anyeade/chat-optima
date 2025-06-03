@@ -67,6 +67,14 @@ Capabilities:
 - Requires document ID or can search by title
 - Examples: "Read the last document", "Update the introduction section", "Analyze document abc123"
 
+**🚨 CRITICAL: Document Modification Rules**
+- NEVER replace entire document with just modifications
+- ALWAYS preserve ALL existing content when modifying
+- INTEGRATE changes into the full existing document structure
+- READ the full document first, then apply targeted changes
+- The result must be the COMPLETE document with modifications integrated
+- Think: "Add to" or "Update within" NOT "Replace with"
+
 Default: Use code blocks for snippets/examples, artifacts for complete projects.
 `;
 
