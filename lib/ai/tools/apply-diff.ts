@@ -1,5 +1,5 @@
-import { DataStreamWriter, tool } from 'ai';
-import { Session } from 'next-auth';
+import { type DataStreamWriter, tool } from 'ai';
+import type { Session } from 'next-auth';
 import { z } from 'zod';
 import { getDocumentById, saveDocument } from '@/lib/db/queries';
 
@@ -32,32 +32,26 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
       description: z.string().optional().describe('Optional description of the changes being made (e.g., "Added new button", "Fixed styling issue", "Updated function logic", "Modified content")'),
     }),
     execute: async ({ id, diff, description }) => {
-      // Show loading indicator
+      // Show tool call start
       dataStream.writeData({
-        type: 'text-delta',
-        content: `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; margin: 8px 0;">
-<div style="width: 16px; height: 16px; border: 2px solid #f59e0b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-<span style="color: #92400e; font-weight: 500;">🔧 Applying diff changes...</span>
-</div>
-<style>
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>\n`,
+        type: 'tool-call',
+        toolCallId: `apply-diff-${Date.now()}`,
+        toolName: 'apply-diff',
+        args: { id, diff, description: description || '' },
       });
 
       const selectedDocument = await getDocumentById({ id });
 
       if (!selectedDocument) {
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
-</div>\n`,
+          type: 'tool-result',
+          toolCallId: `apply-diff-${Date.now()}`,
+          toolName: 'apply-diff',
+          args: { id, diff, description: description || '' },
+          result: {
+            error: 'Document not found',
+          },
         });
-        
-        dataStream.writeData({ type: 'finish', content: '' });
         
         return {
           error: 'Document not found',
@@ -96,35 +90,37 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
           userId: session.user.id,
         });
 
-        // Show success indicator
-        dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; margin: 8px 0;">
-<span style="color: #15803d; font-weight: 500;">✅ Diff applied successfully</span>
-</div>\n`,
-        });
-
-        // Log the diff application
-        dataStream.writeData({
-          type: 'text-delta',
-          content: `**🔧 Applied diff to ${selectedDocument.title}**\n\n`,
-        });
-
-        if (description) {
-          dataStream.writeData({
-            type: 'text-delta',
-            content: `📝 **Changes made:** ${description}\n\n`,
-          });
-        }
-
         // Show diff summary
         const diffBlocks = parseDiffBlocks(diff);
+        
+        // Show tool result
         dataStream.writeData({
-          type: 'text-delta',
-          content: `📊 **Summary:** Successfully applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}\n\n`,
+          type: 'tool-result',
+          toolCallId: `apply-diff-${Date.now()}`,
+          toolName: 'apply-diff',
+          args: { id, diff, description: description || '' },
+          result: {
+            id,
+            title: selectedDocument.title,
+            kind: selectedDocument.kind,
+            content: 'The document has been updated successfully with precise diff changes.',
+            changesApplied: diffBlocks.length,
+          },
         });
 
-        dataStream.writeData({ type: 'finish', content: '' });
+        // Show detailed information as text
+        let resultText = `**🔧 Applied diff to ${selectedDocument.title}**\n\n`;
+        
+        if (description) {
+          resultText += `📝 **Changes made:** ${description}\n\n`;
+        }
+        
+        resultText += `📊 **Summary:** Successfully applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}\n\n`;
+        
+        dataStream.writeData({
+          type: 'text-delta',
+          content: resultText,
+        });
 
         return {
           id,
@@ -137,24 +133,21 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         
-        // Send user-friendly toast notification
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="max-width: 600px; margin: 8px 0;">
-<details style="border: 1px solid #ef4444; border-radius: 8px; padding: 12px; background: #fef2f2;">
-<summary style="cursor: pointer; font-weight: 600; color: #dc2626; display: flex; align-items: center; gap: 8px;">
-<span>🚨</span> Apply Diff Error - Click to expand
-</summary>
-<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #fecaca; font-size: 14px; color: #991b1b;">
-<strong>Error:</strong> ${errorMessage}
-<br><br>
-<strong>Tip:</strong> Try using shorter, more unique search phrases or check that the content exists in the document.
-</div>
-</details>
-</div>\n`,
+          type: 'tool-result',
+          toolCallId: `apply-diff-${Date.now()}`,
+          toolName: 'apply-diff',
+          args: { id, diff, description: description || '' },
+          result: {
+            error: `Failed to apply diff: ${errorMessage}`,
+          },
         });
 
-        dataStream.writeData({ type: 'finish', content: '' });
+        // Show detailed error information as text
+        dataStream.writeData({
+          type: 'text-delta',
+          content: `🚨 **Apply Diff Error**\n\n**Error:** ${errorMessage}\n\n**Tip:** Try using shorter, more unique search phrases or check that the content exists in the document.\n\n`,
+        });
 
         return {
           error: `Failed to apply diff: ${errorMessage}`,
@@ -180,11 +173,11 @@ function parseDiffBlocks(diff: string): Array<{
   // Try multiple regex patterns to be more flexible
   const patterns = [
     // Standard format with optional whitespace
-    /<<<<<<< SEARCH\s*\n(.*?)\n\s*=======\s*\n(.*?)\n\s*>>>>>>> REPLACE/gs,
+    /<<<<<<< SEARCH\s*\n([\s\S]*?)\n\s*=======\s*\n([\s\S]*?)\n\s*>>>>>>> REPLACE/g,
     // Alternative format without spaces around markers
-    /<<<<<<< SEARCH\n(.*?)\n=======\n(.*?)\n>>>>>>> REPLACE/gs,
+    /<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> REPLACE/g,
     // More flexible format
-    /<{7} SEARCH\s*\n(.*?)\n={7}\s*\n(.*?)\n>{7} REPLACE/gs
+    /<{7} SEARCH\s*\n([\s\S]*?)\n={7}\s*\n([\s\S]*?)\n>{7} REPLACE/g
   ];
 
   for (const blockRegex of patterns) {
@@ -194,11 +187,11 @@ function parseDiffBlocks(diff: string): Array<{
       const replaceSection = match[2].trim();
 
       // Check for line number with flexible format
-      const lineMatch = searchSection.match(/^:start_line:\s*(\d+)\s*\n\s*-+\s*\n(.*)/s);
+      const lineMatch = searchSection.match(/^:start_line:\s*(\d+)\s*\n\s*-+\s*\n([\s\S]*)/);
       
       if (lineMatch) {
         blocks.push({
-          startLine: parseInt(lineMatch[1]),
+          startLine: Number.parseInt(lineMatch[1]),
           searchContent: lineMatch[2].trim(),
           replaceContent: replaceSection,
         });

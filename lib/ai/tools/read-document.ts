@@ -1,5 +1,5 @@
-import { DataStreamWriter, tool } from 'ai';
-import { Session } from 'next-auth';
+import { type DataStreamWriter, tool } from 'ai';
+import type { Session } from 'next-auth';
 import { z } from 'zod';
 import { getDocumentById } from '@/lib/db/queries';
 
@@ -17,32 +17,26 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       focus: z.string().optional().describe('Optional: specific section, element, or aspect to focus on (e.g., "navigation area", "styling", "functions", "main content")'),
     }),
     execute: async ({ id, focus }) => {
-      // Show loading indicator
+      // Show tool call start
       dataStream.writeData({
-        type: 'text-delta',
-        content: `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px; margin: 8px 0;">
-<div style="width: 16px; height: 16px; border: 2px solid #0ea5e9; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-<span style="color: #0369a1; font-weight: 500;">📖 Reading document...</span>
-</div>
-<style>
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>\n`,
+        type: 'tool-call',
+        toolCallId: `read-document-${Date.now()}`,
+        toolName: 'read-document',
+        args: { id, focus: focus || '' },
       });
 
       const selectedDocument = await getDocumentById({ id });
 
       if (!selectedDocument) {
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
-</div>\n`,
+          type: 'tool-result',
+          toolCallId: `read-document-${Date.now()}`,
+          toolName: 'read-document',
+          args: { id, focus: focus || '' },
+          result: {
+            error: 'Document not found',
+          },
         });
-        
-        dataStream.writeData({ type: 'finish', content: '' });
         
         return {
           error: 'Document not found',
@@ -52,13 +46,14 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       // Check if document has content
       if (selectedDocument.content === null || selectedDocument.content.trim() === '') {
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document is empty</span>
-</div>\n`,
+          type: 'tool-result',
+          toolCallId: `read-document-${Date.now()}`,
+          toolName: 'read-document',
+          args: { id, focus: focus || '' },
+          result: {
+            error: 'Document has no content to read',
+          },
         });
-        
-        dataStream.writeData({ type: 'finish', content: '' });
         
         return {
           error: 'Document has no content to read',
@@ -70,26 +65,27 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         const content = selectedDocument.content;
         const analysis = analyzeDocumentContent(content, selectedDocument.kind, focus);
 
-        // Show success indicator
+        // Show tool result with analysis
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; margin: 8px 0;">
-<span style="color: #15803d; font-weight: 500;">✅ Document read successfully</span>
-</div>\n`,
+          type: 'tool-result',
+          toolCallId: `read-document-${Date.now()}`,
+          toolName: 'read-document',
+          args: { id, focus: focus || '' },
+          result: {
+            id,
+            title: selectedDocument.title,
+            kind: selectedDocument.kind,
+            content: content,
+            analysis: analysis,
+            summary: `Successfully read ${selectedDocument.title} (${selectedDocument.kind}). Ready for precise modifications using applyDiff tool.`,
+          },
         });
 
-        // Show document analysis
+        // Show document analysis as text
         dataStream.writeData({
           type: 'text-delta',
-          content: `**📋 Document Analysis: ${selectedDocument.title}**\n\n`,
+          content: `**📋 Document Analysis: ${selectedDocument.title}**\n\n${analysis}`,
         });
-
-        dataStream.writeData({
-          type: 'text-delta',
-          content: analysis,
-        });
-
-        dataStream.writeData({ type: 'finish', content: '' });
 
         return {
           id,
@@ -104,13 +100,14 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
-<span style="color: #dc2626; font-weight: 500;">❌ Error reading document: ${errorMessage}</span>
-</div>\n`,
+          type: 'tool-result',
+          toolCallId: `read-document-${Date.now()}`,
+          toolName: 'read-document',
+          args: { id, focus: focus || '' },
+          result: {
+            error: `Failed to read document: ${errorMessage}`,
+          },
         });
-
-        dataStream.writeData({ type: 'finish', content: '' });
 
         return {
           error: `Failed to read document: ${errorMessage}`,
@@ -162,9 +159,9 @@ function analyzeHtmlContent(content: string): string {
   let analysis = '**🌐 HTML Structure:**\n';
   
   // Find key HTML elements
-  const headMatch = content.match(/<head[^>]*>(.*?)<\/head>/s);
-  const bodyMatch = content.match(/<body[^>]*>(.*?)<\/body>/s);
-  const titleMatch = content.match(/<title[^>]*>(.*?)<\/title>/s);
+  const headMatch = content.match(/<head[^>]*>([\s\S]*?)<\/head>/);
+  const bodyMatch = content.match(/<body[^>]*>([\s\S]*?)<\/body>/);
+  const titleMatch = content.match(/<title[^>]*>(.*?)<\/title>/);
   
   if (titleMatch) {
     analysis += `- Title: "${titleMatch[1].trim()}"\n`;
