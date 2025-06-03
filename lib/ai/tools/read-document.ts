@@ -17,19 +17,10 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       focus: z.string().optional().describe('Optional: specific section, element, or aspect to focus on (e.g., "navigation area", "styling", "functions", "main content")'),
     }),
     execute: async ({ id, focus }) => {
-      // Show loading indicator
+      // Use the same stylish UI pattern as createDocument/updateDocument
       dataStream.writeData({
-        type: 'text-delta',
-        content: `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f0f9ff; border: 1px solid #0ea5e9; border-radius: 6px; margin: 8px 0;">
-<div style="width: 16px; height: 16px; border: 2px solid #0ea5e9; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-<span style="color: #0369a1; font-weight: 500;">📖 Reading document...</span>
-</div>
-<style>
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-</style>\n`,
+        type: 'clear',
+        content: 'Reading document...',
       });
 
       const selectedDocument = await getDocumentById({ id });
@@ -37,7 +28,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       if (!selectedDocument) {
         dataStream.writeData({
           type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
+          content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
 <span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
 </div>\n`,
         });
@@ -45,7 +36,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         dataStream.writeData({ type: 'finish', content: '' });
         
         return {
-          error: 'Document not found',
+          success: false
         };
       }
 
@@ -53,7 +44,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       if (selectedDocument.content === null || selectedDocument.content.trim() === '') {
         dataStream.writeData({
           type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
+          content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
 <span style="color: #dc2626; font-weight: 500;">❌ Document is empty</span>
 </div>\n`,
         });
@@ -61,7 +52,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         dataStream.writeData({ type: 'finish', content: '' });
         
         return {
-          error: 'Document has no content to read',
+          success: false
         };
       }
 
@@ -92,12 +83,7 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         dataStream.writeData({ type: 'finish', content: '' });
 
         return {
-          id,
-          title: selectedDocument.title,
-          kind: selectedDocument.kind,
-          content: content,
-          analysis: analysis,
-          summary: `Successfully read ${selectedDocument.title} (${selectedDocument.kind}). Ready for precise modifications using applyDiff tool.`,
+          success: true
         };
 
       } catch (error) {
@@ -105,15 +91,16 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         
         dataStream.writeData({
           type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
-<span style="color: #dc2626; font-weight: 500;">❌ Error reading document: ${errorMessage}</span>
+          content: `<div style="width: 300px; height: 80px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: auto; font-size: 12px;">
+<span style="color: #dc2626; font-weight: 500;">❌ Error reading document</span><br/>
+<span style="color: #dc2626; overflow-wrap: break-word;">${errorMessage}</span>
 </div>\n`,
         });
 
         dataStream.writeData({ type: 'finish', content: '' });
 
         return {
-          error: `Failed to read document: ${errorMessage}`,
+          success: false
         };
       }
     },
