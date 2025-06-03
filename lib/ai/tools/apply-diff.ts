@@ -32,46 +32,49 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
       description: z.string().optional().describe('Optional description of the changes being made (e.g., "Added new button", "Fixed styling issue", "Updated function logic", "Modified content")'),
     }),
     execute: async ({ id, diff, description }) => {
-      // Use the same stylish UI pattern as createDocument/updateDocument
+      // Clear previous content and show loading state
       dataStream.writeData({
         type: 'clear',
-        content: 'Applying diff changes...',
+        content: '',
       });
 
       const selectedDocument = await getDocumentById({ id });
 
       if (!selectedDocument) {
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
-</div>\n`,
+          type: 'tool-call',
+          toolName: 'apply_diff',
+          args: { title: `Document ${id}`, type: 'apply-diff' },
         });
         
-        dataStream.writeData({ type: 'finish', content: '' });
+        dataStream.writeData({
+          type: 'tool-result',
+          toolName: 'apply_diff',
+          result: { error: 'Document not found' },
+          isError: true,
+        });
         
-        // Return minimal response to prevent JSON display
         return {
           success: false
         };
       }
 
+      // Show loading state with the document name
       dataStream.writeData({
-        type: 'clear',
-        content: selectedDocument.title,
+        type: 'tool-call',
+        toolName: 'apply_diff',
+        args: { title: selectedDocument.title, type: 'apply-diff' },
       });
 
       try {
         // Check if document has content
         if (selectedDocument.content === null) {
           dataStream.writeData({
-            type: 'text-delta',
-            content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document has no content to apply diff to</span>
-</div>\n`,
+            type: 'tool-result',
+            toolName: 'apply_diff',
+            result: { error: 'Document has no content to apply diff to' },
+            isError: true,
           });
-          
-          dataStream.writeData({ type: 'finish', content: '' });
           
           return {
             success: false
@@ -85,13 +88,11 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
         // This maintains version history by creating a new row with same id but new createdAt
         if (!session?.user?.id) {
           dataStream.writeData({
-            type: 'text-delta',
-            content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
-<span style="color: #dc2626; font-weight: 500;">❌ User session required to save document changes</span>
-</div>\n`,
+            type: 'tool-result',
+            toolName: 'apply_diff',
+            result: { error: 'User session required to save document changes' },
+            isError: true,
           });
-          
-          dataStream.writeData({ type: 'finish', content: '' });
           
           return {
             success: false
@@ -106,29 +107,25 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
           userId: session.user.id,
         });
 
-        // Show success message and summary
-        dataStream.writeData({
-          type: 'text-delta',
-          content: `✅ **Applied diff to ${selectedDocument.title}**\n\n`,
-        });
-
+        // Show success result
+        const diffBlocks = parseDiffBlocks(diff);
+        let summary = `Applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}`;
         if (description) {
-          dataStream.writeData({
-            type: 'text-delta',
-            content: `📝 **Changes made:** ${description}\n\n`,
-          });
+          summary += `: ${description}`;
         }
 
-        // Show diff summary
-        const diffBlocks = parseDiffBlocks(diff);
         dataStream.writeData({
-          type: 'text-delta',
-          content: `📊 **Summary:** Successfully applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}\n\n`,
+          type: 'tool-result',
+          toolName: 'apply_diff',
+          result: {
+            id: selectedDocument.id,
+            title: selectedDocument.title,
+            kind: selectedDocument.kind,
+            summary
+          },
+          isStreaming: false,
         });
 
-        dataStream.writeData({ type: 'finish', content: '' });
-
-        // Return minimal response to prevent JSON display
         return {
           success: true
         };
@@ -136,18 +133,14 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         
-        // Send user-friendly error message
+        // Send error using React component system
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="width: 300px; height: 80px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: auto; font-size: 12px;">
-<span style="color: #dc2626; font-weight: 500;">🚨 Apply Diff Error</span><br/>
-<span style="color: #dc2626; overflow-wrap: break-word;">${errorMessage}</span>
-</div>\n`,
+          type: 'tool-result',
+          toolName: 'apply_diff',
+          result: { error: errorMessage },
+          isError: true,
         });
 
-        dataStream.writeData({ type: 'finish', content: '' });
-
-        // Return minimal response to prevent JSON display
         return {
           success: false
         };

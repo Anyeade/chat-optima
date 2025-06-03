@@ -17,39 +17,48 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       focus: z.string().optional().describe('Optional: specific section, element, or aspect to focus on (e.g., "navigation area", "styling", "functions", "main content")'),
     }),
     execute: async ({ id, focus }) => {
-      // Use the same stylish UI pattern as createDocument/updateDocument
+      // Clear previous content and show loading state
       dataStream.writeData({
         type: 'clear',
-        content: 'Reading document...',
+        content: '',
       });
 
       const selectedDocument = await getDocumentById({ id });
 
       if (!selectedDocument) {
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
-</div>\n`,
+          type: 'tool-call',
+          toolName: 'read_document',
+          args: { title: `Document ${id}`, type: 'read' },
         });
         
-        dataStream.writeData({ type: 'finish', content: '' });
+        dataStream.writeData({
+          type: 'tool-result',
+          toolName: 'read_document',
+          result: { error: 'Document not found' },
+          isError: true,
+        });
         
         return {
           success: false
         };
       }
 
+      // Show loading state with the document name
+      dataStream.writeData({
+        type: 'tool-call',
+        toolName: 'read_document',
+        args: { title: selectedDocument.title, type: 'read' },
+      });
+
       // Check if document has content
       if (selectedDocument.content === null || selectedDocument.content.trim() === '') {
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="width: 300px; height: 60px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: hidden; display: flex; align-items: center; font-size: 14px;">
-<span style="color: #dc2626; font-weight: 500;">❌ Document is empty</span>
-</div>\n`,
+          type: 'tool-result',
+          toolName: 'read_document',
+          result: { error: 'Document is empty' },
+          isError: true,
         });
-        
-        dataStream.writeData({ type: 'finish', content: '' });
         
         return {
           success: false
@@ -61,26 +70,25 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         const content = selectedDocument.content;
         const analysis = analyzeDocumentContent(content, selectedDocument.kind, focus);
 
-        // Show success indicator
-        dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="padding: 8px 12px; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; margin: 8px 0;">
-<span style="color: #15803d; font-weight: 500;">✅ Document read successfully</span>
-</div>\n`,
-        });
+        // Show success result with analysis
+        const resultData: any = {
+          id: selectedDocument.id,
+          title: selectedDocument.title,
+          kind: selectedDocument.kind,
+          analysis
+        };
+        
+        // Only add focus if it exists
+        if (focus) {
+          resultData.focus = focus;
+        }
 
-        // Show document analysis
         dataStream.writeData({
-          type: 'text-delta',
-          content: `**📋 Document Analysis: ${selectedDocument.title}**\n\n`,
+          type: 'tool-result',
+          toolName: 'read_document',
+          result: resultData,
+          isStreaming: false,
         });
-
-        dataStream.writeData({
-          type: 'text-delta',
-          content: analysis,
-        });
-
-        dataStream.writeData({ type: 'finish', content: '' });
 
         return {
           success: true
@@ -89,15 +97,13 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         
+        // Send error using React component system
         dataStream.writeData({
-          type: 'text-delta',
-          content: `<div style="width: 300px; height: 80px; padding: 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin: 8px 0; overflow: auto; font-size: 12px;">
-<span style="color: #dc2626; font-weight: 500;">❌ Error reading document</span><br/>
-<span style="color: #dc2626; overflow-wrap: break-word;">${errorMessage}</span>
-</div>\n`,
+          type: 'tool-result',
+          toolName: 'read_document',
+          result: { error: errorMessage },
+          isError: true,
         });
-
-        dataStream.writeData({ type: 'finish', content: '' });
 
         return {
           success: false
