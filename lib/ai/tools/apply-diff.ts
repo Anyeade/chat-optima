@@ -32,52 +32,48 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
       description: z.string().optional().describe('Optional description of the changes being made (e.g., "Added new button", "Fixed styling issue", "Updated function logic", "Modified content")'),
     }),
     execute: async ({ id, diff, description }) => {
-      // Clear previous content and show loading state
+      // Show loading indicator
       dataStream.writeData({
-        type: 'clear',
-        content: '',
+        type: 'text-delta',
+        content: `<div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #fef3c7; border: 1px solid #f59e0b; border-radius: 6px; margin: 8px 0;">
+<div style="width: 16px; height: 16px; border: 2px solid #f59e0b; border-top: 2px solid transparent; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+<span style="color: #92400e; font-weight: 500;">🔧 Applying diff changes...</span>
+</div>
+<style>
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>\n`,
       });
 
       const selectedDocument = await getDocumentById({ id });
 
       if (!selectedDocument) {
         dataStream.writeData({
-          type: 'tool-call',
-          toolName: 'apply_diff',
-          args: { title: `Document ${id}`, type: 'apply-diff' },
+          type: 'text-delta',
+          content: `<div style="padding: 8px 12px; background: #fef2f2; border: 1px solid #ef4444; border-radius: 6px; margin: 8px 0;">
+<span style="color: #dc2626; font-weight: 500;">❌ Document not found</span>
+</div>\n`,
         });
         
-        dataStream.writeData({
-          type: 'tool-result',
-          toolName: 'apply_diff',
-          result: { error: 'Document not found' },
-          isError: true,
-        });
+        dataStream.writeData({ type: 'finish', content: '' });
         
         return {
-          success: false
+          error: 'Document not found',
         };
       }
 
-      // Show loading state with the document name
       dataStream.writeData({
-        type: 'tool-call',
-        toolName: 'apply_diff',
-        args: { title: selectedDocument.title, type: 'apply-diff' },
+        type: 'clear',
+        content: selectedDocument.title,
       });
 
       try {
         // Check if document has content
         if (selectedDocument.content === null) {
-          dataStream.writeData({
-            type: 'tool-result',
-            toolName: 'apply_diff',
-            result: { error: 'Document has no content to apply diff to' },
-            isError: true,
-          });
-          
           return {
-            success: false
+            error: 'Document has no content to apply diff to',
           };
         }
 
@@ -87,15 +83,8 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
         // Save as new document version (following the same pattern as updateDocument tool)
         // This maintains version history by creating a new row with same id but new createdAt
         if (!session?.user?.id) {
-          dataStream.writeData({
-            type: 'tool-result',
-            toolName: 'apply_diff',
-            result: { error: 'User session required to save document changes' },
-            isError: true,
-          });
-          
           return {
-            success: false
+            error: 'User session required to save document changes',
           };
         }
 
@@ -107,42 +96,68 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
           userId: session.user.id,
         });
 
-        // Show success result
-        const diffBlocks = parseDiffBlocks(diff);
-        let summary = `Applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}`;
-        if (description) {
-          summary += `: ${description}`;
-        }
-
+        // Show success indicator
         dataStream.writeData({
-          type: 'tool-result',
-          toolName: 'apply_diff',
-          result: {
-            id: selectedDocument.id,
-            title: selectedDocument.title,
-            kind: selectedDocument.kind,
-            summary
-          },
-          isStreaming: false,
+          type: 'text-delta',
+          content: `<div style="padding: 8px 12px; background: #f0fdf4; border: 1px solid #22c55e; border-radius: 6px; margin: 8px 0;">
+<span style="color: #15803d; font-weight: 500;">✅ Diff applied successfully</span>
+</div>\n`,
         });
 
+        // Log the diff application
+        dataStream.writeData({
+          type: 'text-delta',
+          content: `**🔧 Applied diff to ${selectedDocument.title}**\n\n`,
+        });
+
+        if (description) {
+          dataStream.writeData({
+            type: 'text-delta',
+            content: `📝 **Changes made:** ${description}\n\n`,
+          });
+        }
+
+        // Show diff summary
+        const diffBlocks = parseDiffBlocks(diff);
+        dataStream.writeData({
+          type: 'text-delta',
+          content: `📊 **Summary:** Successfully applied ${diffBlocks.length} change${diffBlocks.length > 1 ? 's' : ''}\n\n`,
+        });
+
+        dataStream.writeData({ type: 'finish', content: '' });
+
         return {
-          success: true
+          id,
+          title: selectedDocument.title,
+          kind: selectedDocument.kind,
+          content: 'The document has been updated successfully with precise diff changes.',
+          changesApplied: diffBlocks.length,
         };
 
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         
-        // Send error using React component system
+        // Send user-friendly toast notification
         dataStream.writeData({
-          type: 'tool-result',
-          toolName: 'apply_diff',
-          result: { error: errorMessage },
-          isError: true,
+          type: 'text-delta',
+          content: `<div style="max-width: 600px; margin: 8px 0;">
+<details style="border: 1px solid #ef4444; border-radius: 8px; padding: 12px; background: #fef2f2;">
+<summary style="cursor: pointer; font-weight: 600; color: #dc2626; display: flex; align-items: center; gap: 8px;">
+<span>🚨</span> Apply Diff Error - Click to expand
+</summary>
+<div style="margin-top: 8px; padding-top: 8px; border-top: 1px solid #fecaca; font-size: 14px; color: #991b1b;">
+<strong>Error:</strong> ${errorMessage}
+<br><br>
+<strong>Tip:</strong> Try using shorter, more unique search phrases or check that the content exists in the document.
+</div>
+</details>
+</div>\n`,
         });
 
+        dataStream.writeData({ type: 'finish', content: '' });
+
         return {
-          success: false
+          error: `Failed to apply diff: ${errorMessage}`,
         };
       }
     },

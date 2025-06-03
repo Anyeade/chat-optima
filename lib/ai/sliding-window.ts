@@ -162,13 +162,9 @@ export class SlidingWindowOptimizer {
   private async calculateMessageImportance(messages: CoreMessage[]): Promise<MessageImportance[]> {
     return Promise.all(
       messages.map(async (message, index) => {
-        const content = message?.content;
-        const contentString = typeof content === 'string'
-          ? content
-          : content
-            ? JSON.stringify(content)
-            : '';
-        const tokenCount = estimateTokenCount(contentString);
+        const tokenCount = estimateTokenCount(
+          typeof message.content === 'string' ? message.content : JSON.stringify(message.content)
+        );
         const importance = this.calculateImportanceScore(message, index, messages.length);
         
         return {
@@ -191,10 +187,8 @@ export class SlidingWindowOptimizer {
     totalMessages: number
   ): number {
     let score = 0.5; // Base score
-    const content = message?.content && typeof message.content === 'string'
-      ? message.content
-      : '';
-    const cacheKey = `${message?.role || 'unknown'}:${content.substring(0, 50)}`;
+    const content = typeof message.content === 'string' ? message.content : '';
+    const cacheKey = `${message.role}:${content.substring(0, 50)}`;
 
     // Check cache first
     if (this.importanceCache.has(cacheKey)) {
@@ -254,11 +248,9 @@ export class SlidingWindowOptimizer {
    */
   private getImportanceReasons(message: CoreMessage, score: number): string[] {
     const reasons: string[] = [];
-    const content = message?.content && typeof message.content === 'string'
-      ? message.content
-      : '';
+    const content = typeof message.content === 'string' ? message.content : '';
 
-    if (message?.role === 'system') reasons.push('system-message');
+    if (message.role === 'system') reasons.push('system-message');
     if (content.length > 200) reasons.push('long-content');
     if (content.includes('?')) reasons.push('contains-question');
     if (score > 0.7) reasons.push('high-importance');
@@ -329,8 +321,7 @@ export class SlidingWindowOptimizer {
     
     // Add key topics if detectable
     const allContent = removedMessages
-      .map(m => m?.content && typeof m.content === 'string' ? m.content : '')
-      .filter(content => content.length > 0)
+      .map(m => typeof m.content === 'string' ? m.content : '')
       .join(' ');
     
     const topics = this.extractKeyTopics(allContent);
@@ -406,9 +397,6 @@ export class SlidingWindowOptimizer {
   private async calculateTotalTokens(messages: CoreMessage[]): Promise<number> {
     let totalTokens = 0;
     for (const message of messages) {
-      if (!message?.content) {
-        continue;
-      }
       const content = typeof message.content === 'string'
         ? message.content
         : JSON.stringify(message.content);
