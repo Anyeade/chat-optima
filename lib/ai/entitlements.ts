@@ -16,7 +16,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'chat-model', 
       'chat-model-reasoning',
       // Google Gemini Models (basic access)
-      'gemini-1.5-flash-8b', // Lightweight model for guests
+      'gemini-2.0-flash-lite', // Lightweight model for guests
       // Free/accessible models for guests
       'phi-3-mini-128k-instruct', // Glama AI - smaller model
       'google/gemini-2.0-flash-exp', // Requesty AI - experimental access
@@ -34,8 +34,9 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'chat-model-reasoning',
       // Google Gemini Models
       'gemini-2.0-flash',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-8b',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash-exp',
+      'gemini-2.0-flash-thinking-exp-01-21',
       // Groq Models - Premium (lower daily limits)
       'meta-llama/llama-4-scout-17b-16e-instruct',
       'meta-llama/llama-4-maverick-17b-128e-instruct',

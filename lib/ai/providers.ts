@@ -5,7 +5,6 @@ import {
 } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 // import { xai } from '@ai-sdk/xai'; // Commented out for now
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
 import { cohere } from '@ai-sdk/cohere';
@@ -38,9 +37,11 @@ const chutesAI = createOpenAICompatible({
   apiKey: process.env.CHUTES_AI_API_KEY || 'dummy-key', // Some providers may not require auth
 });
 
-// Create Google Generative AI provider with explicit API key
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+// Google Gemini (OpenAI-compatible endpoint)
+const googleAI = createOpenAICompatible({
+  name: 'google-ai',
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai',
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy-key',
 });
 
 // Debug function to check environment variables
@@ -87,11 +88,13 @@ export const myProvider = isTestEnvironment
         'chat-model-reasoning': wrapLanguageModel({
           model: groq('deepseek-r1-distill-llama-70b'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),        'title-model': groq('llama3-70b-8192'), // High volume model with tool support
-        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),        // Google Gemini Models (using cost-effective Flash models only)
-        'gemini-2.0-flash': google('gemini-2.0-flash'),
-        'gemini-1.5-flash': google('gemini-1.5-flash'),
-        'gemini-1.5-flash-8b': google('gemini-1.5-flash-8b'),
+        }),        'title-model': groq('llama3-70b-8192'), // High volume model with tool support        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),
+
+        // Google Gemini Models (OpenAI-compatible endpoint)
+        'gemini-2.0-flash': googleAI('gemini-2.0-flash'),
+        'gemini-2.0-flash-lite': googleAI('gemini-2.0-flash-lite'), 
+        'gemini-2.0-flash-exp': googleAI('gemini-2.0-flash-exp'),
+        'gemini-2.0-flash-thinking-exp-01-21': googleAI('gemini-2.0-flash-thinking-exp-01-21'),
 
         // Groq Models
         // Premium models (lower daily limits but high token throughput)

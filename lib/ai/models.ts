@@ -21,17 +21,22 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'gemini-2.0-flash',
     name: 'Optima Flash 2.0',
-    description: 'HansTech flash model (Gemini 2.0 Flash)',
+    description: 'Google Gemini 2.0 Flash - Latest multimodal model',
   },
   {
-    id: 'gemini-1.5-flash',
-    name: 'Optima Flash 1.5',
-    description: 'HansTech flash model (Gemini 1.5 Flash)',
+    id: 'gemini-2.0-flash-lite',
+    name: 'Optima Flash 2.0 Lite',
+    description: 'Google Gemini 2.0 Flash Lite - Lightweight version',
   },
   {
-    id: 'gemini-1.5-flash-8b',
-    name: 'Optima Flash Lite',
-    description: 'HansTech lightweight flash (Gemini 1.5 Flash 8B)',
+    id: 'gemini-2.0-flash-exp',
+    name: 'Optima Flash 2.0 Experimental',
+    description: 'Google Gemini 2.0 Flash Experimental - Cutting-edge features',
+  },
+  {
+    id: 'gemini-2.0-flash-thinking-exp-01-21',
+    name: 'Optima Flash 2.0 Thinking',
+    description: 'Google Gemini 2.0 Flash with advanced reasoning',
   },
   // Trio Series (Groq Models)
   {
