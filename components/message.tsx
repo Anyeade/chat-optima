@@ -14,6 +14,7 @@ import { Weather } from './weather';
 import { WebSearch } from './web-search';
 import { WebpageScreenshot } from './webpage-screenshot';
 import { WebScraper } from './web-scraper';
+import { ReadDocToolCall, ReadDocToolResult } from './read-doc';
 import equal from 'fast-deep-equal';
 import { cn, sanitizeText } from '@/lib/utils';
 import { Button } from './ui/button';
@@ -184,6 +185,12 @@ const PurePreviewMessage = ({
                           args={args}
                           isReadonly={isReadonly}
                         />
+                      ) : toolName === 'readDoc' ? (
+                        <ReadDocToolCall
+                          action={args.action || 'read'}
+                          args={args}
+                          isReadonly={isReadonly}
+                        />
                       ) : null}
                     </div>
                   );
@@ -212,7 +219,14 @@ const PurePreviewMessage = ({
                           type="request-suggestions"
                           result={result}
                           isReadonly={isReadonly}
-                        />                      ) : toolName === 'webSearch' ? (
+                        />
+                      ) : toolName === 'readDoc' ? (
+                        <ReadDocToolResult
+                          action={result.action || 'read'}
+                          result={result}
+                          isReadonly={isReadonly}
+                        />
+                      ) : toolName === 'webSearch' ? (
                         <WebSearch searchResults={result} />
                       ) : toolName === 'webpageScreenshot' ? (
                         <WebpageScreenshot screenshotResults={result} />

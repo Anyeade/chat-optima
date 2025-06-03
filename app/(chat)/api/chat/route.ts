@@ -22,6 +22,7 @@ import { generateTitleFromUserMessage } from '../../actions';
 import { createDocument } from '@/lib/ai/tools/create-document';
 import { updateDocument } from '@/lib/ai/tools/update-document';
 import { requestSuggestions } from '@/lib/ai/tools/request-suggestions';
+import { readDoc } from '@/lib/ai/tools/read-doc';
 import { getWeather } from '@/lib/ai/tools/get-weather';
 import { webSearch } from '@/lib/ai/tools/web-search';
 import { webpageScreenshotApi as webpageScreenshot } from '@/lib/ai/tools/webpage-screenshot-api';
@@ -196,6 +197,7 @@ export async function POST(request: Request) {
               session,
               dataStream,
             }),
+            readDoc: readDoc({ session, dataStream, selectedChatModel }),
           },
           onFinish: async ({ response }) => {
             if (session.user?.id) {
