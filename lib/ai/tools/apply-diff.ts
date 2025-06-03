@@ -98,13 +98,10 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
           type: 'tool-result',
           toolCallId: `apply-diff-${Date.now()}`,
           toolName: 'apply-diff',
-          args: { id, diff, description: description || '' },
-          result: {
+          args: { id, diff, description: description || '' },          result: {
             id,
             title: selectedDocument.title,
             kind: selectedDocument.kind,
-            content: 'The document has been updated successfully with precise diff changes.',
-            changesApplied: diffBlocks.length,
           },
         });
 
@@ -120,14 +117,10 @@ Multiple SEARCH/REPLACE blocks can be used in a single diff.`),
         dataStream.writeData({
           type: 'text-delta',
           content: resultText,
-        });
-
-        return {
+        });        return {
           id,
           title: selectedDocument.title,
           kind: selectedDocument.kind,
-          content: 'The document has been updated successfully with precise diff changes.',
-          changesApplied: diffBlocks.length,
         };
 
       } catch (error) {
@@ -243,7 +236,7 @@ async function applyDiffToContent(originalContent: string, diff: string): Promis
     }
     guidance += '- Ensure ALL three markers are present: <<<<<<< SEARCH, =======, >>>>>>> REPLACE\n';
     
-    throw new Error(`No valid SEARCH/REPLACE blocks found in diff.\n\n${debugInfo}${guidance}\n\nRequired format:\n<<<<<<< SEARCH\n:start_line:X\n-------\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE`);
+    throw new Error(`No valid SEARCH/REPLACE blocks found in diff.\n\n${debugInfo}${guidance}\n\nRequired format:\n<<<<<<< SEARCH\n:start_line:X\n-------\nexact text to find\n=======\nreplacement text\n>>>>>>> REPLACE\n\nExample for adding navigation:\n<<<<<<< SEARCH\n:start_line:8\n-------\n<body>\n    <header>\n=======\n<body>\n    <nav class="navbar">\n        <div>Logo</div>\n    </nav>\n    <header>\n>>>>>>> REPLACE`);
   }
 
   // Apply each diff block
@@ -316,4 +309,51 @@ async function applyDiffToContent(originalContent: string, diff: string): Promis
   }
 
   return updatedContent;
+}
+
+/**
+ * Utility function to validate diff format during development
+ * This can help debug diff generation issues
+ */
+export function validateDiffFormat(diff: string): {
+  isValid: boolean;
+  issues: string[];
+  suggestions: string[];
+} {
+  const issues: string[] = [];
+  const suggestions: string[] = [];
+  
+  const hasSearchMarker = diff.includes('<<<<<<< SEARCH');
+  const hasReplaceMarker = diff.includes('>>>>>>> REPLACE');
+  const hasEquals = diff.includes('=======');
+  const hasLineNumber = diff.includes(':start_line:');
+  const hasSeparator = diff.includes('-------');
+  
+  if (!hasSearchMarker) {
+    issues.push('Missing <<<<<<< SEARCH marker at the beginning');
+    suggestions.push('Start your diff with "<<<<<<< SEARCH"');
+  }
+  
+  if (!hasEquals) {
+    issues.push('Missing ======= separator between search and replace sections');
+    suggestions.push('Add "=======" between the search content and replacement content');
+  }
+  
+  if (!hasReplaceMarker) {
+    issues.push('Missing >>>>>>> REPLACE marker at the end');
+    suggestions.push('End your diff with ">>>>>>> REPLACE"');
+  }
+  
+  if (hasSearchMarker && hasEquals && hasReplaceMarker && !hasLineNumber) {
+    suggestions.push('Consider adding ":start_line:X" for more precise line-based matching');
+  }
+  
+  if (hasLineNumber && !hasSeparator) {
+    issues.push('Missing ------- separator after line number');
+    suggestions.push('Add "-------" after the ":start_line:X" directive');
+  }
+  
+  const isValid = hasSearchMarker && hasReplaceMarker && hasEquals;
+  
+  return { isValid, issues, suggestions };
 }

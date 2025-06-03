@@ -85,15 +85,10 @@ export const readDocument = ({ session, dataStream, selectedChatModel }: ReadDoc
         dataStream.writeData({
           type: 'text-delta',
           content: `**📋 Document Analysis: ${selectedDocument.title}**\n\n${analysis}`,
-        });
-
-        return {
+        });        return {
           id,
           title: selectedDocument.title,
           kind: selectedDocument.kind,
-          content: content,
-          analysis: analysis,
-          summary: `Successfully read ${selectedDocument.title} (${selectedDocument.kind}). Ready for precise modifications using applyDiff tool.`,
         };
 
       } catch (error) {

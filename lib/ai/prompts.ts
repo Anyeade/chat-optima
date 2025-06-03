@@ -54,7 +54,7 @@ export const artifactsPrompt = `
 - Search text must match EXACTLY (including spaces/newlines)
 - Use SHORT, UNIQUE search phrases (5-20 words)
 - Copy search text character-by-character from document
-- EXACT FORMAT: Seven less-than signs, SEARCH, line number with colon prefix, dashes, exact text, seven equals, replacement, seven greater-than signs, REPLACE
+- **EXACT FORMAT:** \`<<<<<<< SEARCH\`, line number with \`:start_line:\`, dashes, exact text, \`=======\`, replacement, \`>>>>>>> REPLACE\`
 
 **EXAMPLES:**
 - ADD: Search "## Conclusion", replace with "## New Section\\n\\nContent here\\n\\n## Conclusion"
@@ -62,12 +62,13 @@ export const artifactsPrompt = `
 - REMOVE: Search "unwanted section\\n\\nNext section", replace with "Next section"
 
 **COMPLETE EXAMPLE for adding a navigation menu:**
-Seven less-than signs SEARCH
-colon start_line colon 5
+\`\`\`
+<<<<<<< SEARCH
+:start_line:5
 -------
 <body>
     <header>
-Seven equals signs
+=======
 <body>
     <nav class="navbar">
         <div class="nav-brand">Logo</div>
@@ -77,7 +78,8 @@ Seven equals signs
         </ul>
     </nav>
     <header>
-Seven greater-than signs REPLACE`;
+>>>>>>> REPLACE
+\`\`\``;
 
 export const textPrompt = `
 You are a professional writing assistant creating well-structured text documents.
