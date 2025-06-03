@@ -17,11 +17,16 @@ export const chatModels: Array<ChatModel> = [
     name: 'Optima Reasoning',
     description: 'HansTech advanced reasoning (DeepSeek R1)',
   },
-  // Optima Series (selected Google models only)
+  // Optima Series (Google Gemini models)
   {
     id: 'gemini-2.0-flash',
     name: 'Optima Flash 2.0',
-    description: 'HansTech flash model',
+    description: 'HansTech flash model (Gemini 2.0 Flash)',
+  },
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Optima Flash 1.5',
+    description: 'HansTech flash model (Gemini 1.5 Flash)',
   },
   {
     id: 'gemini-1.5-flash-8b',

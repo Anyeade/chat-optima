@@ -36,7 +36,17 @@
 
 ## Model Providers
 
-This template ships with [xAI](https://x.ai) `grok-2-1212` as the default chat model. However, with the [AI SDK](https://sdk.vercel.ai/docs), you can switch LLM providers to [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://sdk.vercel.ai/providers/ai-sdk-providers) with just a few lines of code.
+This template supports multiple AI providers including:
+
+- **[Google Generative AI](https://ai.google.dev/)** - Gemini 2.0 Flash, Gemini 1.5 Pro, Gemini 1.5 Flash, and Gemini 1.5 Flash 8B models
+- **[xAI](https://x.ai)** - Grok models (currently commented out)
+- **[Groq](https://groq.com)** - Llama, DeepSeek, and other high-performance models
+- **[Cohere](https://cohere.com/)** - Command models with 128K context
+- **[Mistral AI](https://mistral.ai/)** - Pixtral models
+- **[Together.ai](https://together.ai/)** - 200+ open-source models
+- **[OpenAI](https://openai.com)** - GPT models and DALL-E (for image generation)
+
+With the [AI SDK](https://sdk.vercel.ai/docs), you can easily switch between providers or add new ones with just a few lines of code.
 
 ## Deploy Your Own
 
