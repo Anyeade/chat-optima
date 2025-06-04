@@ -18,11 +18,15 @@ export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps)
   // Add null checks and default values
   const { 
     url = '', 
+    originalUrl,
     timestamp = new Date().toISOString(), 
     screenshotUrl = '', 
     width = 640, 
     analysis = '' 
   } = screenshotResults || {};
+
+  // Use original URL for display if available, otherwise use the cleaned URL
+  const displayUrl = originalUrl || url;
 
   return (
     <div className="flex flex-col gap-4 rounded-2xl p-4 bg-secondary max-w-[700px]">
@@ -37,20 +41,18 @@ export function WebpageScreenshot({ screenshotResults }: WebpageScreenshotProps)
         </div>        <div className="text-xs text-muted-foreground">
           {timestamp ? new Date(timestamp).toLocaleString() : 'Unknown date'}
         </div>
-      </div>
-
-      <div className="text-sm text-muted-foreground">
-        <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
-          {url}
+      </div>      <div className="text-sm text-muted-foreground">
+        <a href={displayUrl} target="_blank" rel="noopener noreferrer" className="underline">
+          {displayUrl}
         </a>
       </div>
 
       <div className="overflow-hidden rounded-md border">
-        <a href={url} target="_blank" rel="noopener noreferrer">
+        <a href={displayUrl} target="_blank" rel="noopener noreferrer">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={screenshotUrl} 
-            alt={`Screenshot of ${url}`}            className={cn(
+            alt={`Screenshot of ${displayUrl}`}className={cn(
               "w-full object-cover",
               {
                 "max-w-[320px]": width === 320,
