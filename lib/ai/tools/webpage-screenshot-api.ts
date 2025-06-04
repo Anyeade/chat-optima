@@ -7,16 +7,64 @@ import screenshotmachine from 'screenshotmachine';
  * Webpage screenshot tool that uses Screenshot Machine API service
  */
 export const webpageScreenshotApi = tool({
-  description: 'Capture a screenshot of a website to show the user its visual content and layout',
-  parameters: z.object({
-    url: z.string().url().describe('The URL of the website to capture a screenshot of. Must be a valid URL with http:// or https:// prefix.'),
+  description: 'Capture a screenshot of a website to show the user its visual content and layout',  parameters: z.object({
+    url: z.string()
+      .min(1, 'URL is required')
+      .refine(
+        (val) => {
+          // Try to validate the URL, allowing for spaces that we'll encode
+          try {
+            // First try direct validation
+            new URL(val);
+            return true;
+          } catch {
+            // If that fails, try with space encoding
+            try {
+              const encoded = val.replace(/\s+/g, '%20');
+              new URL(encoded);
+              return true;
+            } catch {
+              return false;
+            }
+          }
+        },
+        'Must be a valid URL with http:// or https:// prefix. Spaces in URLs will be automatically encoded.'
+      )
+      .describe('The URL of the website to capture a screenshot of. Must be a valid URL with http:// or https:// prefix.'),
     width: z.number().int().min(320).max(1920).default(1024)
       .describe('The width of the screenshot in pixels. Defaults to 1024x768.'),
     fullPage: z.boolean().default(true)
       .describe('Whether to capture the full page or just the visible area.')
-  }),  execute: async ({ url, width, fullPage }) => {
+  }),execute: async ({ url, width, fullPage }) => {
     try {
-      console.log(`Capturing screenshot for: ${url} at width ${width}px`);
+      // Clean and validate the URL
+      let cleanUrl = url.trim();
+      
+      // If URL contains spaces, try to encode them
+      if (cleanUrl.includes(' ')) {
+        // Split URL into parts to encode only the path portion
+        try {
+          const urlObj = new URL(cleanUrl);
+          // Encode only the pathname to handle spaces
+          urlObj.pathname = encodeURIComponent(urlObj.pathname.substring(1)); // Remove leading slash before encoding
+          if (urlObj.pathname && !urlObj.pathname.startsWith('/')) {
+            urlObj.pathname = '/' + urlObj.pathname;
+          }
+          cleanUrl = urlObj.toString();
+        } catch {
+          // If URL parsing fails, try simple space replacement
+          cleanUrl = cleanUrl.replace(/\s+/g, '%20');
+        }
+      }
+      
+      // Validate the cleaned URL
+      try {
+        new URL(cleanUrl);
+      } catch {
+        throw new Error(`Invalid URL provided: ${url}. Please provide a valid URL with http:// or https:// prefix.`);
+      }
+      
+      console.log(`Capturing screenshot for: ${cleanUrl} at width ${width}px`);
       
       // Screenshot Machine API configuration
       const customerKey = 'f82442'; // Your customer key
@@ -24,7 +72,7 @@ export const webpageScreenshotApi = tool({
       
       // Configure screenshot options according to the API documentation
       const options = {
-        url: url,
+        url: cleanUrl,
         dimension: `${width}x${fullPage ? 'full' : '768'}`, // Width x height (use 'full' for full page)
         device: 'desktop',
         format: 'png',
@@ -64,10 +112,10 @@ export const webpageScreenshotApi = tool({
       }
       
       const uploadData = await uploadResponse.json();
-      
-      // Format the results
+        // Format the results
       const formattedResults = {
-        url,
+        url: cleanUrl, // Use the cleaned URL
+        originalUrl: url, // Keep original URL for reference
         timestamp: new Date().toISOString(),
         screenshotUrl: uploadData.url,
         width,
@@ -93,7 +141,8 @@ export const webpageScreenshotApi = tool({
         error: 'Failed to capture website screenshot',
         message: typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error),
         timestamp: new Date().toISOString(),
-        url
+        url: url,
+        originalUrl: url
       };
     }
   }
