@@ -37,6 +37,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'gemini-2.0-flash-lite',
       'gemini-2.0-flash-exp',
       'gemini-2.0-flash-thinking-exp-01-21',
+      'gemma-3-27b-it',
       // Groq Models - Premium (lower daily limits)
       'meta-llama/llama-4-scout-17b-16e-instruct',
       'meta-llama/llama-4-maverick-17b-128e-instruct',

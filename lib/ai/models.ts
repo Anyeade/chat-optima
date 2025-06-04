@@ -38,6 +38,11 @@ export const chatModels: Array<ChatModel> = [
     name: 'Optima Flash 2.0 Thinking',
     description: 'Google Gemini 2.0 Flash with advanced reasoning',
   },
+  {
+    id: 'gemma-3-27b-it',
+    name: 'Optima Gemma 3',
+    description: 'Google Gemma 3 27B - Instructive model',
+  },
   // Trio Series (Groq Models)
   {
     id: 'meta-llama/llama-4-scout-17b-16e-instruct',

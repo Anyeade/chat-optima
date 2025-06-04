@@ -92,7 +92,7 @@ export const myProvider = isTestEnvironment
         'gemini-2.0-flash-lite': googleAI('gemini-2.0-flash-lite'), 
         'gemini-2.0-flash-exp': googleAI('gemini-2.0-flash-exp'),
         'gemini-2.0-flash-thinking-exp-01-21': googleAI('gemini-2.0-flash-thinking-exp-01-21'),
-        'gemma-3-27b-i': googleAI('gemma-3-27b-i'),
+        'gemma-3-27b-it': googleAI('gemma-3-27b-it'),
 
         // Groq Models
         // Premium models (lower daily limits but high token throughput)
