@@ -17,6 +17,7 @@ import {
   reasoningModel,
   titleModel,
 } from './models.test';
+import { createChutesImageModel } from './chutes-image';
 
 // Create OpenAI-compatible providers
 const requestyAI = createOpenAICompatible({
@@ -144,14 +145,10 @@ export const myProvider = isTestEnvironment
         'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
           model: chutesAI('deepseek-ai/DeepSeek-R1'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),        'Qwen/Qwen3-235B-A22B': chutesAI('Qwen/Qwen3-235B-A22B'),        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),
-
-        // X.AI Models (Grok series)
-        'grok-2-vision-1212': xai('grok-2-vision-1212'),
-        'grok-3-mini-beta': xai('grok-3-mini-beta'),
-        'grok-2-1212': xai('grok-2-1212'),
-      },
+        }),        'Qwen/Qwen3-235B-A22B': chutesAI('Qwen/Qwen3-235B-A22B'),        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),        // X.AI Models (Grok series)
+        'grok-3-mini-beta': xai('grok-3-mini-beta'),      },
       imageModels: {
         'small-model': openai.image('dall-e-3'),
+        'chutes-image': createChutesImageModel(),
       },
     });

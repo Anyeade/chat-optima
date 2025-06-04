@@ -192,18 +192,8 @@ export const chatModels: Array<ChatModel> = [
   },
   // X.AI Series (Grok Models)
   {
-    id: 'grok-2-vision-1212',
-    name: 'Optima Grok Vision 2',
-    description: 'X.AI Grok 2 with vision capabilities',
-  },
-  {
     id: 'grok-3-mini-beta',
     name: 'Optima Grok 3 Mini',
     description: 'X.AI Grok 3 Mini - Compact and efficient',
-  },
-  {
-    id: 'grok-2-1212',
-    name: 'Optima Grok 2',
-    description: 'X.AI Grok 2 - Advanced reasoning model',
   },
 ];
