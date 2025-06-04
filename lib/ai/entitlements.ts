@@ -73,10 +73,10 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'deepseek-ai/DeepSeek-R1',
       'Qwen/Qwen3-235B-A22B',
       'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
-      // X.AI Models (Optional - Commented out for now)
-      // 'grok-2-vision-1212',
-      // 'grok-3-mini-beta',
-      // 'grok-2-1212',
+      // X.AI Models (Grok series)
+      'grok-2-vision-1212',
+      'grok-3-mini-beta',
+      'grok-2-1212',
     ],
   },
 

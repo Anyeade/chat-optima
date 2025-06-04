@@ -185,20 +185,20 @@ export const chatModels: Array<ChatModel> = [
     name: 'Chutes Llama 4 Maverick',
     description: 'Llama 4 Maverick 17B FP8 optimized via Chutes AI',
   },
-  // X.AI Series (Optional - Commented out for now)
-  // {
-  //   id: 'grok-2-vision-1212',
-  //   name: 'Grok Vision 2',
-  //   description: 'X.AI vision model',
-  // },
-  // {
-  //   id: 'grok-3-mini-beta',
-  //   name: 'Grok 3 Mini',
-  //   description: 'X.AI compact model',
-  // },
-  // {
-  //   id: 'grok-2-1212',
-  //   name: 'Grok 2',
-  //   description: 'X.AI standard model',
-  // },
+  // X.AI Series (Grok Models)
+  {
+    id: 'grok-2-vision-1212',
+    name: 'Optima Grok Vision 2',
+    description: 'X.AI Grok 2 with vision capabilities',
+  },
+  {
+    id: 'grok-3-mini-beta',
+    name: 'Optima Grok 3 Mini',
+    description: 'X.AI Grok 3 Mini - Compact and efficient',
+  },
+  {
+    id: 'grok-2-1212',
+    name: 'Optima Grok 2',
+    description: 'X.AI Grok 2 - Advanced reasoning model',
+  },
 ];

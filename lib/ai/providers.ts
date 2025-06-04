@@ -4,7 +4,7 @@ import {
   wrapLanguageModel,
 } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
-// import { xai } from '@ai-sdk/xai'; // Commented out for now
+import { xai } from '@ai-sdk/xai';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
 import { cohere } from '@ai-sdk/cohere';
@@ -54,10 +54,9 @@ function checkProviderKeys() {
     openai: process.env.OPENAI_API_KEY,
     togetherai: process.env.TOGETHER_AI_API_KEY,
     requestyai: process.env.REQUESTY_AI_API_KEY,
-    glamaai: process.env.GLAMA_AI_API_KEY,
-    chutesai: process.env.CHUTES_AI_API_KEY,
+    glamaai: process.env.GLAMA_AI_API_KEY,    chutesai: process.env.CHUTES_AI_API_KEY,
     chutesimage: process.env.CHUTES_IMAGE_API_TOKEN,
-    // xai: process.env.XAI_API_KEY, // Commented out for now
+    xai: process.env.XAI_API_KEY,
   };
   
   console.log('Provider API Keys Status:');
@@ -146,13 +145,12 @@ export const myProvider = isTestEnvironment
         'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
           model: chutesAI('deepseek-ai/DeepSeek-R1'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),        'Qwen/Qwen3-235B-A22B': chutesAI('Qwen/Qwen3-235B-A22B'),
-        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),
+        }),        'Qwen/Qwen3-235B-A22B': chutesAI('Qwen/Qwen3-235B-A22B'),        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),
 
-        // X.AI Models (Optional - requires credits)
-        // 'grok-2-vision-1212': xai('grok-2-vision-1212'),
-        // 'grok-3-mini-beta': xai('grok-3-mini-beta'),
-        // 'grok-2-1212': xai('grok-2-1212'),
+        // X.AI Models (Grok series)
+        'grok-2-vision-1212': xai('grok-2-vision-1212'),
+        'grok-3-mini-beta': xai('grok-3-mini-beta'),
+        'grok-2-1212': xai('grok-2-1212'),
       },
       imageModels: {
         'small-model': openai.image('dall-e-3'),
