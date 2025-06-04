@@ -11,47 +11,9 @@ interface ReadDocProps {
   selectedChatModel: string;
 }
 
-const diffFormatPrompt = `
-You are an AI document assistant with autonomous read and edit capabilities. When making changes to documents, you MUST use the specific diff format below.
-
-**applyDiff CRITICAL FORMAT:**
-- MUST include line number and ------- separator
-- Search text must match EXACTLY (including spaces/newlines)
-- Use SHORT, UNIQUE search phrases (5-20 words)
-- Copy search text character-by-character from document
-- **EXACT FORMAT:** \`<<<<<<< SEARCH\`, line number with \`:start_line:\`, dashes, exact text, \`=======\`, replacement, \`>>>>>>> REPLACE\`
-
-**EXAMPLES:**
-- ADD: Search "## Conclusion", replace with "## New Section\\n\\nContent here\\n\\n## Conclusion"
-- EDIT: Search "old paragraph text", replace with "updated paragraph text"
-- REMOVE: Search "unwanted section\\n\\nNext section", replace with "Next section"
-
-**COMPLETE EXAMPLE for adding a navigation menu:**
-\`\`\`
-<<<<<<< SEARCH
-:start_line:5
--------
-<body>
-    <header>
-=======
-<body>
-    <nav class="navbar">
-        <div class="nav-brand">Logo</div>
-        <ul class="nav-menu">
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About</a></li>
-        </ul>
-    </nav>
-    <header>
->>>>>>> REPLACE
-\`\`\`
-
-Always read the full document content first to understand context before making any changes.
-`;
-
 export const readDoc = ({ session, dataStream, selectedChatModel }: ReadDocProps) =>
   tool({
-    description: 'Read a document and intelligently make changes using diff-based updates. Can autonomously read document content, understand context, and apply targeted changes. CRITICAL: When modifying, ALWAYS preserve ALL existing content - never replace the entire document with just modifications. The result must be the COMPLETE document with changes integrated.',
+    description: 'Read a document and intelligently make changes while preserving output format requirements. Can autonomously read document content, understand context, and apply targeted changes. CRITICAL: When modifying, ALWAYS preserve ALL existing content and follow document-specific output requirements (e.g., pure HTML for HTML documents, no markdown formatting). The result must be the COMPLETE document with changes integrated.',
     parameters: z.object({
       id: z.string().describe('The ID of the document to read and potentially modify'),
       action: z.enum(['read', 'modify']).describe('Whether to just read the document or read and modify it'),
@@ -117,9 +79,53 @@ export const readDoc = ({ session, dataStream, selectedChatModel }: ReadDocProps
         let modifiedContent = '';
 
         // Use selectedChatModel if provided, fallback to artifact-model
-        const modelToUse = selectedChatModel || 'artifact-model';
+        const modelToUse = selectedChatModel || 'artifact-model';        // Get the appropriate output requirements based on document type
+        const getOutputRequirement = (documentKind: string) => {
+          switch (documentKind) {
+            case 'html':
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE HTML CODE (no explanations, no markdown, no code blocks)
+- START with <!DOCTYPE html>, END with </html>
+- NO TEXT BEFORE/AFTER HTML
+- NO TRIPLE BACKTICKS anywhere`;
+            case 'code':
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE CODE (no explanations, no markdown, no code blocks)
+- NO TEXT BEFORE/AFTER CODE
+- NO TRIPLE BACKTICKS anywhere
+- NO CODE BLOCKS after createDocument/updateDocument`;
+            case 'text':
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE MARKDOWN TEXT (no explanations, no code blocks)
+- NO TEXT BEFORE/AFTER CONTENT
+- NO TRIPLE BACKTICKS anywhere
+- NO CODE BLOCKS after createDocument/updateDocument`;
+            case 'svg':
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE SVG CODE (no explanations, no markdown)
+- START with <svg>, END with </svg>
+- NO TEXT BEFORE/AFTER SVG`;
+            case 'diagram':
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE MERMAID CODE (no explanations, no markdown)
+- START with diagram type (flowchart TD, etc.)
+- NO TEXT BEFORE/AFTER MERMAID`;
+            case 'sheet':
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE CSV DATA (no explanations, no code blocks)
+- NO TEXT BEFORE/AFTER CSV
+- NO TRIPLE BACKTICKS anywhere
+- NO CODE BLOCKS after createDocument/updateDocument`;
+            default:
+              return `**🚨 OUTPUT REQUIREMENT 🚨**
+- OUTPUT ONLY PURE CONTENT (no explanations, no code blocks)
+- NO TEXT BEFORE/AFTER CONTENT
+- NO TRIPLE BACKTICKS anywhere
+- NO CODE BLOCKS after createDocument/updateDocument`;
+          }
+        };
 
-        const systemPrompt = `${diffFormatPrompt}
+        const systemPrompt = `${getOutputRequirement(document.kind)}
 
 **🚨 CRITICAL CONTENT PRESERVATION RULES 🚨**
 - NEVER replace the entire document with just modifications
@@ -129,9 +135,7 @@ export const readDoc = ({ session, dataStream, selectedChatModel }: ReadDocProps
 - Think: "Add to" or "Update within" NOT "Replace with"
 
 **CURRENT DOCUMENT CONTENT:**
-\`\`\`
 ${documentContent}
-\`\`\`
 
 **DOCUMENT INFO:**
 - Title: ${document.title}
@@ -142,13 +146,11 @@ You have full access to the document content above. Use it to understand context
 
 **INSTRUCTIONS:** ${instructions}
 
-Based on the document content and instructions, provide the COMPLETE modified document with ALL existing content preserved and the requested changes integrated. Use the exact diff format specified above when making changes. Always preserve the document's existing structure and style unless explicitly asked to change it.`;
-
-        const { fullStream } = streamText({
+Based on the document content and instructions, provide the COMPLETE modified document with ALL existing content preserved and the requested changes integrated. Always preserve the document's existing structure and style unless explicitly asked to change it.`;        const { fullStream } = streamText({
           model: myProvider.languageModel(modelToUse),
           system: systemPrompt,
           experimental_transform: smoothStream({ chunking: 'word' }),
-          prompt: `Please read the document content provided and apply the requested changes: ${instructions}`,
+          prompt: instructions,
         });
 
         for await (const delta of fullStream) {
