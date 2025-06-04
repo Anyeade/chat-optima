@@ -6,6 +6,7 @@ import { ExternalLinkIcon } from './icons';
 interface WebpageScreenshotProps {
   screenshotResults: {
     url: string;
+    originalUrl?: string;
     timestamp: string;
     screenshotUrl: string;
     width: number;
