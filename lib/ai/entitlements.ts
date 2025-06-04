@@ -75,9 +75,7 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'Qwen/Qwen3-235B-A22B',
       'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
       // X.AI Models (Grok series)
-      'grok-2-vision-1212',
       'grok-3-mini-beta',
-      'grok-2-1212',
     ],
   },
 

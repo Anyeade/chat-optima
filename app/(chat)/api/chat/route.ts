@@ -86,9 +86,11 @@ export async function POST(request: Request) {
 
     if (!session?.user) {
       return new ChatSDKError('unauthorized:chat').toResponse();
+    }    const userType: UserType = session.user.type;    // Validate that the user has access to the selected model
+    const userEntitlements = entitlementsByUserType[userType];
+    if (!userEntitlements.availableChatModelIds.includes(selectedChatModel)) {
+      return new ChatSDKError('forbidden:chat').toResponse();
     }
-
-    const userType: UserType = session.user.type;
 
     const messageCount = await getMessageCountByUserId({
       id: session.user.id,
@@ -146,22 +148,8 @@ export async function POST(request: Request) {
           createdAt: new Date(),
         },
       ],
-    });
-
-    const streamId = generateUUID();
-    await createStreamId({ streamId, chatId: id });
-
-    // Debug logging
-    console.log('Selected Chat Model:', selectedChatModel);
-    
-    try {
-      const selectedModel = myProvider.languageModel(selectedChatModel);
-      console.log('Model provider resolved successfully for:', selectedChatModel);
-    } catch (error) {
-      console.error('Failed to resolve model:', selectedChatModel, error);
-    }
-    
-    const stream = createDataStream({
+    });    const streamId = generateUUID();
+    await createStreamId({ streamId, chatId: id });    const stream = createDataStream({
       execute: (dataStream) => {
         let modelToUse;
         try {
@@ -169,25 +157,25 @@ export async function POST(request: Request) {
           console.log('✓ Successfully created model instance for:', selectedChatModel);
         } catch (error) {
           console.error('✗ Failed to create model instance for:', selectedChatModel, error);
-          throw error;
-        }
-
-        const result = streamText({
+          throw new Error(`Invalid model: ${selectedChatModel}`);
+        }        const result = streamText({
           model: modelToUse,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
-          maxSteps: 5,          experimental_activeTools: [
-                'getWeather',
-                'createDocument',
-                'updateDocument',
-                'requestSuggestions',
-                'readDoc',
-                'webSearch',
-                'webpageScreenshot',
-                'webScraper',
-              ],
+          maxSteps: 5,
+          experimental_activeTools: [
+            'getWeather',
+            'createDocument', 
+            'updateDocument',
+            'requestSuggestions',
+            'readDoc',
+            'webSearch',
+            'webpageScreenshot',
+            'webScraper',
+          ],
           experimental_transform: smoothStream({ chunking: 'word' }),
-          experimental_generateMessageId: generateUUID,          tools: {
+          experimental_generateMessageId: generateUUID,
+          tools: {
             getWeather,
             webSearch,
             webpageScreenshot,

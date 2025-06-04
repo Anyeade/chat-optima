@@ -69,26 +69,26 @@ export async function generateChutesImage(prompt: string): Promise<{ base64: str
   }
 }
 
-// Create a custom image model that implements ImageModelV1 interface
+// Create a custom image model that mimics the AI SDK interface
 export const chutesImageModel = {
   modelId: 'chutes-infiniteyou',
   provider: 'chutes-ai',
-  specificationVersion: 'v1' as const,
-  maxImagesPerCall: 1,
-  doGenerate: async (options: { prompt: string; n?: number }) => {
+  generate: async (options: { prompt: string; n?: number }) => {
     const { prompt } = options;
     
     try {
       const result = await generateChutesImage(prompt);
       
       return {
-        images: [result.base64], // Array of base64 strings
-        warnings: [], // Array of warnings (empty for now)
-        response: {
-          id: `chutes-${Date.now()}`,
-          timestamp: new Date(),
-          modelId: 'chutes-infiniteyou',
-          headers: undefined,
+        image: {
+          base64: result.base64,
+          url: `data:image/png;base64,${result.base64}`,
+        },
+        finishReason: 'stop' as const,
+        usage: {
+          promptTokens: 0,
+          completionTokens: 0,
+          totalTokens: 0,
         },
       };
     } catch (error) {

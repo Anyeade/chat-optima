@@ -23,7 +23,7 @@ export const postRequestBodySchema = z.object({
       )
       .optional(),
   }),
-  selectedChatModel: z.string(), // Accept any model ID registered in providers.ts
+  selectedChatModel: z.string().min(1).max(200), // Accept any model ID registered in providers.ts
   selectedVisibilityType: z.enum(['public', 'private']),
 });
 
