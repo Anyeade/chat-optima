@@ -77,20 +77,13 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
     }
 
     if (metadata?.isPreview) {
-      let htmlToRender = getCombinedHtml() || content;
-      
-      // Fix double-escaped quotes that can occur during JSON serialization
-      htmlToRender = htmlToRender
-        .replace(/\\"/g, '"')
-        .replace(/\\'/g, "'")
-        .replace(/\\\\/g, '\\');
-      
+      const htmlToRender = getCombinedHtml() || content;
       return (
         <div className="w-full h-full">
           <iframe
             srcDoc={htmlToRender}
             className="w-full h-full border-0"
-            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+            sandbox="allow-scripts"
           />
         </div>
       );
@@ -218,10 +211,10 @@ ${getCombinedHtml()}`;
       description: 'Toggle File Explorer',
       onClick: ({ metadata, setMetadata }) => {
         const newShowFileExplorer = !(metadata?.showFileExplorer ?? true);
-        setMetadata((prev) => ({
-          ...prev,
+        setMetadata({
+          ...metadata,
           showFileExplorer: newShowFileExplorer,
-        }));
+        });
       }
     },
     {
@@ -229,10 +222,10 @@ ${getCombinedHtml()}`;
       description: 'Toggle Preview',
       onClick: ({ metadata, setMetadata }) => {
         const newIsPreview = !(metadata?.isPreview ?? false);
-        setMetadata((prev) => ({
-          ...prev,
+        setMetadata({
+          ...metadata,
           isPreview: newIsPreview,
-        }));
+        });
       }
     },
     {
