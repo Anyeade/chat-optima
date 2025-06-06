@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDownIcon, LoaderIcon } from './icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Markdown } from './markdown';
@@ -15,6 +15,18 @@ export function MessageReasoning({
   reasoning,
 }: MessageReasoningProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+
+  // Auto-collapse when reasoning completes
+  useEffect(() => {
+    if (isLoading === false && isExpanded === true) {
+      // Add a small delay to allow users to see the completion
+      const timer = setTimeout(() => {
+        setIsExpanded(false);
+      }, 1000); // 1 second delay
+
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading, isExpanded]);
 
   const variants = {
     collapsed: {
