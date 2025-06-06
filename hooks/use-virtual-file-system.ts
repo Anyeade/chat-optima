@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { VirtualFile, VirtualFileSystem } from '@/components/file-explorer';
 import { nanoid } from 'nanoid';
 
@@ -214,12 +214,19 @@ export function useVirtualFileSystem(initialContent?: string) {
       activeFileId: processedFiles.find(f => f.isEntry)?.id || processedFiles[0]?.id || ''
     };
   }, []);
-
   const [fileSystem, setFileSystem] = useState<VirtualFileSystem>(() => 
     initializeFileSystem(initialContent)
   );
   
   const [fileExplorerExpanded, setFileExplorerExpanded] = useState(true);
+
+  // Re-initialize file system when content changes (e.g., when loading from database)
+  useEffect(() => {
+    if (initialContent !== undefined) {
+      const newFileSystem = initializeFileSystem(initialContent);
+      setFileSystem(newFileSystem);
+    }
+  }, [initialContent, initializeFileSystem]);
 
   const createFile = useCallback((name: string, extension: VirtualFile['extension']) => {
     // Ensure the name has the correct extension
@@ -347,11 +354,29 @@ export function useVirtualFileSystem(initialContent?: string) {
 
     return html;
   }, [getMainHtmlFile, getCssFile, getJsFile]);
-
   const toggleFileExplorer = useCallback(() => {
     setFileExplorerExpanded(prev => !prev);
   }, []);
 
+  // Generate FILE_SYSTEM format for saving
+  const generateFileSystemContent = useCallback(() => {
+    const fileSystemData = {
+      files: fileSystem.files.map(file => ({
+        id: file.id,
+        name: file.name,
+        extension: file.extension,
+        content: file.content,
+        type: file.type,
+        isEntry: file.isEntry
+      }))
+    };
+
+    return `/** FILE_SYSTEM */
+${JSON.stringify(fileSystemData, null, 2)}
+/** END_FILE_SYSTEM */
+
+${getCombinedHtml()}`;
+  }, [fileSystem, getCombinedHtml]);
   return {
     fileSystem,
     fileExplorerExpanded,
@@ -365,6 +390,7 @@ export function useVirtualFileSystem(initialContent?: string) {
     getCssFile,
     getJsFile,
     getCombinedHtml,
-    toggleFileExplorer
+    toggleFileExplorer,
+    generateFileSystemContent
   };
 }

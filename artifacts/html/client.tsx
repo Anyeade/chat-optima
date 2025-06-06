@@ -2,7 +2,7 @@ import { Artifact } from '@/components/create-artifact';
 import { DiffView } from '@/components/diffview';
 import { DocumentSkeleton } from '@/components/document-skeleton';
 import { CodeEditor } from '@/components/code-editor';
-import { FileExplorer } from '@/components/file-explorer';
+import { FileExplorer, VirtualFile } from '@/components/file-explorer';
 import { useVirtualFileSystem } from '@/hooks/use-virtual-file-system';
 import { toast } from 'sonner';
 import {
@@ -59,7 +59,8 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
       updateFileContent,
       getActiveFile,
       getCombinedHtml,
-      toggleFileExplorer
+      toggleFileExplorer,
+      generateFileSystemContent
     } = useVirtualFileSystem(content);
 
     const activeFile = getActiveFile();
@@ -92,16 +93,74 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
       if (activeFile) {
         updateFileContent(activeFile.id, newContent);
         
-        // If we're editing the main HTML file, also save to the artifact
-        if (activeFile.extension === 'html' && activeFile.isEntry) {
-          onSaveContent(newContent, false);
+        // Check if we're working with a multi-file project (FILE_SYSTEM format)
+        const isMultiFileProject = content.includes('/** FILE_SYSTEM */');
+        
+        if (isMultiFileProject) {
+          // Create updated file system with the new content
+          const updatedFileSystem = {
+            files: fileSystem.files.map(file => 
+              file.id === activeFile.id 
+                ? { ...file, content: newContent }
+                : file
+            )
+          };
+          
+          const fileSystemContent = `/** FILE_SYSTEM */
+${JSON.stringify(updatedFileSystem, null, 2)}
+/** END_FILE_SYSTEM */
+
+${getCombinedHtml()}`;
+          
+          onSaveContent(fileSystemContent, false);
         } else {
-          // For CSS/JS files, save the combined HTML
-          const combined = getCombinedHtml();
-          if (combined) {
-            onSaveContent(combined, false);
+          // For single-file projects, save normally
+          if (activeFile.extension === 'html' && activeFile.isEntry) {
+            onSaveContent(newContent, false);
+          } else {
+            // For CSS/JS files, save the combined HTML
+            const combined = getCombinedHtml();
+            if (combined) {
+              onSaveContent(combined, false);
+            }
           }
         }
+      }
+    };
+
+    const handleFileCreate = (name: string, extension: VirtualFile['extension']) => {
+      createFile(name, extension);
+      
+      // If we're in a multi-file project, save the updated structure
+      const isMultiFileProject = content.includes('/** FILE_SYSTEM */');
+      if (isMultiFileProject) {
+        setTimeout(() => {
+          onSaveContent(generateFileSystemContent(), false);
+        }, 0);
+      }
+    };
+
+    const handleFileDelete = (fileId: string) => {
+      deleteFile(fileId);
+      
+      // If we're in a multi-file project, save the updated structure
+      const isMultiFileProject = content.includes('/** FILE_SYSTEM */');
+      if (isMultiFileProject) {
+        setTimeout(() => {
+          onSaveContent(generateFileSystemContent(), false);
+        }, 0);
+      }
+    };
+
+    const handleFileRename = (fileId: string, newName: string) => {
+      renameFile(fileId, newName);
+      
+      // If we're in a multi-file project, save the updated structure
+      const isMultiFileProject = content.includes('/** FILE_SYSTEM */');
+      if (isMultiFileProject) {
+        setTimeout(() => {
+          onSaveContent(generateFileSystemContent(), false);
+        }, 0);
       }
     };
 
@@ -112,9 +171,9 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
             <FileExplorer
               fileSystem={fileSystem}
               onFileSelect={selectFile}
-              onFileCreate={createFile}
-              onFileDelete={deleteFile}
-              onFileRename={renameFile}
+              onFileCreate={handleFileCreate}
+              onFileDelete={handleFileDelete}
+              onFileRename={handleFileRename}
               isExpanded={fileExplorerExpanded}
               onToggleExpanded={toggleFileExplorer}
             />
@@ -152,10 +211,10 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
       description: 'Toggle File Explorer',
       onClick: ({ metadata, setMetadata }) => {
         const newShowFileExplorer = !(metadata?.showFileExplorer ?? true);
-        setMetadata({
-          ...metadata,
+        setMetadata((prev) => ({
+          ...prev,
           showFileExplorer: newShowFileExplorer,
-        });
+        }));
       }
     },
     {
@@ -163,10 +222,10 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
       description: 'Toggle Preview',
       onClick: ({ metadata, setMetadata }) => {
         const newIsPreview = !(metadata?.isPreview ?? false);
-        setMetadata({
-          ...metadata,
+        setMetadata((prev) => ({
+          ...prev,
           isPreview: newIsPreview,
-        });
+        }));
       }
     },
     {
