@@ -77,13 +77,20 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
     }
 
     if (metadata?.isPreview) {
-      const htmlToRender = getCombinedHtml() || content;
+      let htmlToRender = getCombinedHtml() || content;
+      
+      // Fix double-escaped quotes that can occur during JSON serialization
+      htmlToRender = htmlToRender
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'")
+        .replace(/\\\\/g, '\\');
+      
       return (
         <div className="w-full h-full">
           <iframe
             srcDoc={htmlToRender}
             className="w-full h-full border-0"
-            sandbox="allow-scripts"
+            sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
           />
         </div>
       );
