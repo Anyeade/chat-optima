@@ -9,7 +9,7 @@ import {
   useRef,
 } from 'react';
 import type { ArtifactKind, UIArtifact } from './artifact';
-import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from './icons';
+import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon, CodeIcon } from './icons';
 import { cn, fetcher } from '@/lib/utils';
 import type { Document } from '@/lib/db/schema';
 import { InlineDocumentSkeleton } from './document-skeleton';
@@ -21,7 +21,6 @@ import { useArtifact } from '@/hooks/use-artifact';
 import equal from 'fast-deep-equal';
 import { SpreadsheetEditor } from './sheet-editor';
 import { ImageEditor } from './image-editor';
-import { useVirtualFileSystem } from '@/hooks/use-virtual-file-system';
 
 interface DocumentPreviewProps {
   isReadonly: boolean;
@@ -235,64 +234,6 @@ const DocumentHeader = memo(PureDocumentHeader, (prevProps, nextProps) => {
   return true;
 });
 
-// Component to handle HTML content with FILE_SYSTEM structure
-const HtmlPreview = ({ content }: { content: string }) => {
-  const { getCombinedHtml } = useVirtualFileSystem(content);
-  
-  const getHtmlContent = () => {
-    // If content contains FILE_SYSTEM structure, extract the combined HTML
-    if (content.includes('/** FILE_SYSTEM */')) {
-      const combinedHtml = getCombinedHtml();
-      return combinedHtml || content;
-    }
-    
-    // Otherwise, return content as-is
-    return content;
-  };
-
-  return (
-    <div className="size-full flex justify-center items-center overflow-hidden p-0">
-      <iframe
-        srcDoc={`
-          <html>
-            <head>
-              <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-              <style>
-                body {
-                  margin: 0;
-                  padding: 8px;
-                  width: 100%;
-                  height: 100vh;
-                  overflow-x: hidden;
-                  word-break: break-word;
-                  word-wrap: break-word;
-                  font-family: system-ui, -apple-system, sans-serif;
-                }
-                * {
-                  box-sizing: border-box;
-                  max-width: 100%;
-                }
-                img, video, iframe, table {
-                  max-width: 100%;
-                  height: auto;
-                }
-                pre, code {
-                  white-space: pre-wrap;
-                  word-wrap: break-word;
-                  overflow-wrap: break-word;
-                }
-              </style>
-            </head>
-            <body>${getHtmlContent()}</body>
-          </html>
-        `}
-        className="size-full border-0"
-        sandbox="allow-scripts allow-same-origin"
-      />
-    </div>
-  );
-};
-
 const DocumentContent = ({ document }: { document: Document }) => {
   const { artifact } = useArtifact();
 
@@ -337,9 +278,16 @@ const DocumentContent = ({ document }: { document: Document }) => {
           currentVersionIndex={0}
           status={artifact.status}
           isInline={true}
-        />
-      ) : document.kind === 'html' ? (
-        <HtmlPreview content={document.content ?? ''} />
+        />      ) : document.kind === 'html' ? (
+        <div className="size-full flex justify-center items-center overflow-hidden p-4">
+          <div className="flex flex-col items-center gap-3 text-muted-foreground">
+            <CodeIcon size={32} />
+            <div className="text-sm text-center">
+              <div className="font-medium">HTML Document</div>
+              <div className="text-xs opacity-70">Click the fullscreen icon to view</div>
+            </div>
+          </div>
+        </div>
       ) : null}
     </div>
   );
