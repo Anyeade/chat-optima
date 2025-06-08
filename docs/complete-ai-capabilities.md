@@ -12,7 +12,7 @@ Your AI system is a comprehensive development platform with advanced artifact ge
 - **Smart Layout Analysis**: Prevents repetitive templates, creates purpose-driven layouts
 - **Enhanced CDN Stack**: Tailwind CSS, Alpine.js, Lucide Icons, AOS, Chart.js, Particles.js, GSAP, Typed.js
 - **Domain-Specific Components**: SaaS, e-commerce, portfolio, landing pages, business sites
-- **Real-Time Preview**: Live reload with hot reloading capability (preview server ready)
+- **Production-Ready Output**: Single-file HTML with embedded functionality
 - **Professional Quality**: Production-ready, mobile-first, interactive websites
 - **AI-Driven Suggestions**: Component recommendations based on project analysis
 
