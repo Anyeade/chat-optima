@@ -8,19 +8,30 @@ Your AI system is a comprehensive development platform with advanced artifact ge
 
 ## 🎨 **ARTIFACT GENERATION CAPABILITIES**
 
-### **1. HTML Websites & Web Apps** (`artifacts/html/`)
+### **1. HTML - Universal App Creator** (`artifacts/html/`) ⭐ *UNLIMITED CREATION POWER*
+- **🚀 ANY KIND OF APP/WEBSITE/COMPONENT**: Can create literally anything using HTML technology
+- **🌐 Full Web Applications**: SaaS platforms, dashboards, admin panels, productivity tools
+- **🛒 E-commerce Solutions**: Complete online stores, product catalogs, checkout systems
+- **📊 Data Visualization**: Interactive charts, analytics dashboards, reporting tools
+- **🎮 Interactive Components**: Games, calculators, forms, widgets, utilities, tools
+- **📱 Mobile-Ready Apps**: Progressive web apps, mobile-first experiences
+- **🎨 Creative Projects**: Art galleries, design showcases, interactive stories
+- **📚 Educational Tools**: Learning platforms, quizzes, tutorials, courses
+- **🏢 Business Applications**: CRM interfaces, project management, team collaboration
+- **🔧 Development Tools**: Code editors, API testers, documentation generators
 - **Smart Layout Analysis**: Prevents repetitive templates, creates purpose-driven layouts
 - **Enhanced CDN Stack**: Tailwind CSS, Alpine.js, Lucide Icons, AOS, Chart.js, Particles.js, GSAP, Typed.js
-- **Domain-Specific Components**: SaaS, e-commerce, portfolio, landing pages, business sites
 - **Production-Ready Output**: Single-file HTML with embedded functionality
-- **Professional Quality**: Production-ready, mobile-first, interactive websites
+- **Professional Quality**: Production-ready, mobile-first, interactive experiences
 - **AI-Driven Suggestions**: Component recommendations based on project analysis
 
 ### **2. Code Generation** (`artifacts/code/`)
-- **Multi-Language Support**: JavaScript, TypeScript, Python, React, Vue, etc.
-- **Full Applications**: Complete codebases with proper structure
-- **Framework Integration**: Next.js, Express, FastAPI, etc.
-- **Best Practices**: Clean code, proper documentation, error handling
+- **Backend Languages**: Python, PHP, Java, C#, C++, C, Go, Rust, Ruby, etc.
+- **Desktop Applications**: WPF, WinForms, Qt, Electron backend logic
+- **Multi-file Projects**: Complex applications with multiple files/modules
+- **Server-side Logic**: APIs, microservices, databases, system programming
+- **NOT for**: Single-file HTML/CSS/JS solutions (use HTML artifact instead)
+- **Best Practices**: Clean code, proper documentation, scalable architecture
 
 ### **3. SVG Graphics** (`artifacts/svg/`)
 - **Interactive Graphics**: Animated SVGs with JavaScript integration

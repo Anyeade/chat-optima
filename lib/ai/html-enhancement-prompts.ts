@@ -1,4 +1,7 @@
 // Enhanced HTML artifact system with optimized CDN integration and component libraries
+// IMPORTANT: This HTML artifact system can create ANY kind of app, website, or component
+// Including: Web applications, interactive dashboards, games, tools, utilities, landing pages,
+// e-commerce stores, portfolios, business sites, educational platforms, and any web-based solution
 
 export const ENHANCED_CDN_STACK = `
 <!-- Ultra-Fast CDN Stack for Rapid Prototyping -->
