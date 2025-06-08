@@ -25,7 +25,7 @@ export const htmlArtifact = new Artifact<'html', HTMLArtifactMetadata>({
   initialize: async ({ setMetadata }) => {
     setMetadata((currentMetadata) => ({
       isPreview: false,
-      showFileExplorer: true,
+      showFileExplorer: false, // Disabled file explorer
     }));
   },
   onStreamPart: ({ streamPart, setArtifact }) => {
@@ -166,7 +166,8 @@ ${getCombinedHtml()}`;
 
     return (
       <div className="flex w-full h-full">
-        {metadata?.showFileExplorer && (
+        {/* File Explorer disabled - commented out */}
+        {/* {metadata?.showFileExplorer && (
           <div className="w-64 h-full border-r">
             <FileExplorer
               fileSystem={fileSystem}
@@ -178,45 +179,35 @@ ${getCombinedHtml()}`;
               onToggleExpanded={toggleFileExplorer}
             />
           </div>
-        )}
+        )} */}
         
         <div className="flex-1 h-full">
-          {activeFile ? (
-            <div className="p-4 w-full h-full">
-              <div className="mb-2 text-sm text-muted-foreground">
-                Editing: {activeFile.name}
-              </div>
-              <CodeEditor
-                content={activeFile.content}
-                language={activeFile.extension === 'html' ? 'html' : activeFile.extension === 'css' ? 'css' : 'javascript'}
-                onSaveContent={handleFileContentSave}
-                isCurrentVersion={isCurrentVersion}
-              />
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-muted-foreground">            <div className="text-center">
-              <FileIcon size={48} />
-              <p>No file selected</p>
-              <p className="text-sm">Create a file or select one from the explorer</p>
-            </div>
-            </div>
-          )}
+          {/* Show simple code editor for HTML content */}
+          <div className="p-4 w-full h-full">
+            <CodeEditor
+              content={content}
+              language="html"
+              onSaveContent={(newContent) => onSaveContent(newContent, false)}
+              isCurrentVersion={isCurrentVersion}
+            />
+          </div>
         </div>
       </div>
     );
   },
   actions: [
-    {
-      icon: <FileIcon size={18} />,
-      description: 'Toggle File Explorer',
-      onClick: ({ metadata, setMetadata }) => {
-        const newShowFileExplorer = !(metadata?.showFileExplorer ?? true);
-        setMetadata({
-          ...metadata,
-          showFileExplorer: newShowFileExplorer,
-        });
-      }
-    },
+    // File Explorer toggle disabled
+    // {
+    //   icon: <FileIcon size={18} />,
+    //   description: 'Toggle File Explorer',
+    //   onClick: ({ metadata, setMetadata }) => {
+    //     const newShowFileExplorer = !(metadata?.showFileExplorer ?? true);
+    //     setMetadata({
+    //       ...metadata,
+    //       showFileExplorer: newShowFileExplorer,
+    //     });
+    //   }
+    // },
     {
       icon: <EyeIcon size={18} />,
       description: 'Toggle Preview',
