@@ -52,8 +52,10 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'llama3-70b-8192',
       'llama3-8b-8192',      // Mistral Models
       'pixtral-12b-2409',
-      'mistral-small-3-1',
+      'mistral-small-2503',
       'devstral-small-2505',
+      'open-codestral-mamba',
+      'open-mistral-nemo',
       // Cohere Models (128K context, tool support)
       'command-a-03-2025',
       'command-nightly',

@@ -103,16 +103,24 @@ export const chatModels: Array<ChatModel> = [
     id: 'pixtral-12b-2409',
     name: 'Optima Fast',
     description: 'HansTech fast model',
-  },
-  {
-    id: 'mistral-small-3-1',
-    name: 'Optima Small 3.1',
-    description: 'Mistral Small 3.1 - Compact and efficient',
-  },
-  {
+  },  {
+    id: 'mistral-small-2503',
+    name: 'Optima Small 2503',
+    description: 'Mistral Small 2503 - Compact and efficient',
+  },  {
     id: 'devstral-small-2505',
     name: 'Optima DevStral Small',
     description: 'DevStral Small 2505 - Specialized for development',
+  },
+  {
+    id: 'open-codestral-mamba',
+    name: 'Optima Codestral Mamba',
+    description: 'Open Codestral Mamba - Advanced code generation',
+  },
+  {
+    id: 'open-mistral-nemo',
+    name: 'Optima Mistral Nemo',
+    description: 'Open Mistral Nemo - Versatile open model',
   },
   // Optima Command Series (Cohere - 128K context, tool support)
   {
