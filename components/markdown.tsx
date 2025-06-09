@@ -28,7 +28,7 @@ const components: Partial<Components> = {
   },
   ul: ({ node, children, ...props }) => {
     return (
-      <ul className="list-decimal list-outside ml-4" {...props}>
+      <ul className="list-disc list-outside ml-4" {...props}>
         {children}
       </ul>
     );
@@ -93,6 +93,50 @@ const components: Partial<Components> = {
       <h6 className="text-sm font-semibold mt-6 mb-2" {...props}>
         {children}
       </h6>
+    );
+  },
+  table: ({ node, children, ...props }) => {
+    return (
+      <div className="overflow-x-auto my-4">
+        <table className="min-w-full border-collapse border border-gray-300 bg-white rounded-lg shadow-sm" {...props}>
+          {children}
+        </table>
+      </div>
+    );
+  },
+  thead: ({ node, children, ...props }) => {
+    return (
+      <thead className="bg-gray-50" {...props}>
+        {children}
+      </thead>
+    );
+  },
+  tbody: ({ node, children, ...props }) => {
+    return (
+      <tbody className="divide-y divide-gray-200" {...props}>
+        {children}
+      </tbody>
+    );
+  },
+  tr: ({ node, children, ...props }) => {
+    return (
+      <tr className="hover:bg-gray-50 transition-colors" {...props}>
+        {children}
+      </tr>
+    );
+  },
+  th: ({ node, children, ...props }) => {
+    return (
+      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200" {...props}>
+        {children}
+      </th>
+    );
+  },
+  td: ({ node, children, ...props }) => {
+    return (
+      <td className="px-4 py-3 text-sm text-gray-900 border-b border-gray-200" {...props}>
+        {children}
+      </td>
     );
   },
 };

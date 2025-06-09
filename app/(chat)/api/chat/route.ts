@@ -27,6 +27,7 @@ import { getWeather } from '@/lib/ai/tools/get-weather';
 import { webSearch } from '@/lib/ai/tools/web-search';
 import { webpageScreenshotApi as webpageScreenshot } from '@/lib/ai/tools/webpage-screenshot-api';
 import { webScraper } from '@/lib/ai/tools/web-scraper';
+import { pexelsSearch } from '@/lib/ai/tools/pexels-search';
 import { isProductionEnvironment } from '@/lib/constants';
 import { myProvider } from '@/lib/ai/providers';
 import { entitlementsByUserType } from '@/lib/ai/entitlements';
@@ -165,13 +166,14 @@ export async function POST(request: Request) {
           maxSteps: 5,
           experimental_activeTools: [
             'getWeather',
-            'createDocument', 
+            'createDocument',
             'updateDocument',
             'requestSuggestions',
             'readDoc',
             'webSearch',
             'webpageScreenshot',
             'webScraper',
+            'pexelsSearch',
           ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
@@ -180,6 +182,7 @@ export async function POST(request: Request) {
             webSearch,
             webpageScreenshot,
             webScraper,
+            pexelsSearch,
             createDocument: createDocument({ session, dataStream, selectedChatModel }),
             updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
             requestSuggestions: requestSuggestions({
