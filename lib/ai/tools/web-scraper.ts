@@ -1,6 +1,5 @@
-import { tool } from 'ai';
+import { tool, type DataStreamWriter } from 'ai';
 import { z } from 'zod';
-import type { DataStreamWriter } from '@ai-sdk/ui-utils';
 
 // TODO: Move this to environment variables in production
 const ANYAPI_KEY = 'qlh3lj31a5onoqdu7arq9opupumimjo8uisbq6f3ga8pumabumj7n';

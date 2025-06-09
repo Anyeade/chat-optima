@@ -1,8 +1,7 @@
 // Alternative implementation using screenshotmachine-nodejs package
-import { tool } from 'ai';
+import { tool, type DataStreamWriter } from 'ai';
 import { z } from 'zod';
 import screenshotmachine from 'screenshotmachine';
-import type { DataStreamWriter } from '@ai-sdk/ui-utils';
 
 /**
  * Webpage screenshot tool that uses Screenshot Machine API service
