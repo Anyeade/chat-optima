@@ -51,3 +51,70 @@ export async function updateChatVisibility({
 }) {
   await updateChatVisiblityById({ chatId, visibility });
 }
+
+export async function generatePromptSuggestions() {
+  const { text: suggestions } = await generateText({
+    model: myProvider.languageModel('title-model'),
+    system: `Generate 5 diverse and engaging prompt suggestions for an AI chat interface.
+    Each suggestion should be:
+    - Actionable and specific
+    - Appealing to different use cases (coding, creative writing, analysis, problem-solving, general knowledge)
+    - Between 30-80 characters long
+    - Written as direct commands or questions
+    
+    Return the suggestions as a JSON array of objects with this format:
+    [
+      {"title": "Create a modern website", "label": "for a tech startup", "action": "Create a modern website for a tech startup with hero section, features, and pricing"},
+      {"title": "Write code to", "label": "demonstrate dijkstra's algorithm", "action": "Write code to demonstrate dijkstra's algorithm"},
+      ...
+    ]
+    
+    Make the suggestions varied and interesting, covering different domains like technology, creativity, analysis, and everyday tasks.`,
+    prompt: 'Generate 5 diverse prompt suggestions for an AI chat interface',
+  });
+
+  try {
+    // Parse the JSON response
+    const parsedSuggestions = JSON.parse(suggestions);
+    
+    // Validate the structure
+    if (Array.isArray(parsedSuggestions) && parsedSuggestions.length === 5) {
+      return parsedSuggestions.map(suggestion => ({
+        title: suggestion.title || '',
+        label: suggestion.label || '',
+        action: suggestion.action || suggestion.title || '',
+      }));
+    }
+  } catch (error) {
+    console.error('Failed to parse AI-generated suggestions:', error);
+  }
+  
+  // Fallback to static suggestions if AI generation fails
+  return [
+    {
+      title: 'What are the advantages',
+      label: 'of using Next.js?',
+      action: 'What are the advantages of using Next.js?',
+    },
+    {
+      title: 'Create a modern website',
+      label: 'for a tech startup',
+      action: 'Create a modern website for a tech startup with hero section, features, and pricing',
+    },
+    {
+      title: 'Write code to',
+      label: `demonstrate dijkstra's algorithm`,
+      action: `Write code to demonstrate dijkstra's algorithm`,
+    },
+    {
+      title: 'Help me write an essay',
+      label: `about silicon valley`,
+      action: `Help me write an essay about silicon valley`,
+    },
+    {
+      title: 'What is the weather',
+      label: 'in San Francisco?',
+      action: 'What is the weather in San Francisco?',
+    },
+  ];
+}

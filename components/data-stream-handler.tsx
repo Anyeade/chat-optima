@@ -25,6 +25,7 @@ export type DataStreamDelta = {
     | 'kind'
     | 'pexels-search-status'
     | 'pexels-search-results'
+    | 'pexels-auto-images'
     | 'web-search-status'
     | 'web-search-results'
     | 'webpage-screenshot-status'

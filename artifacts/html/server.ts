@@ -4,6 +4,7 @@ import { streamText, smoothStream } from 'ai';
 import { updateDocumentPrompt } from '@/lib/ai/prompts';
 import { smartLayoutAnalyzer } from '@/lib/ai/smart-layout-analyzer';
 import { suggestComponentsForPrompt } from '@/lib/ai/component-templates';
+import { selectAutoImages, formatImagesForPrompt, createImageDataForStream } from '@/lib/ai/auto-pexels-images';
 
 // Enhanced HTML Prompt System v6.0 with Planning Workflow Integration
 const ENHANCED_HTML_PROMPT = `
@@ -33,42 +34,33 @@ You can now create HTML artifacts directly without requiring a planning phase. F
 - NO text, characters, or whitespace before \`<!DOCTYPE html>\` or after \`</html>\`.
 
 **🖼️ PEXELS-ONLY MEDIA STRATEGY 🖼️**
-**EXCLUSIVE SOURCE: Pexels for ALL visual content (PHOTOS & VIDEOS)**
-- Professional photos for heroes, features, testimonials, team members
-- High-quality background videos for dynamic hero sections
-- Abstract and themed background imagery
-- Search-driven approach using relevant keywords
-- Contextually appropriate imagery and video content
+**EXCLUSIVE SOURCE: Auto-Attached Pexels Images for ALL visual content**
+- 60 professional images automatically provided (2 per category)
+- Pre-selected from 30 categories: ecommerce, backgrounds, profiles
+- High-quality images for heroes, features, testimonials, team members
+- Abstract and themed background imagery for visual richness
+- Professional portraits for team/profile sections
+- Product images for ecommerce and showcase areas
 
-**COMPREHENSIVE VIDEO CAPABILITIES:**
-- Background videos for immersive hero sections
-- Product demonstration videos
-- Ambient background footage
-- Abstract motion graphics
-- Multiple quality/format options (HD, 4K, different file types)
-
-**COMPLETE PEXELS IMPLEMENTATION:**
-- Hero sections with professional imagery or videos
-- Feature areas with thematic, relevant content
-- Background elements using abstract Pexels imagery
-- Team sections with professional headshots
-- All decorative elements sourced from Pexels search
+**COMPREHENSIVE AUTO-IMAGE IMPLEMENTATION:**
+- Hero sections with professional imagery from background categories
+- Feature areas with thematic, relevant ecommerce content
+- Background elements using abstract/minimal images
+- Team sections with professional profile headshots
+- All decorative elements sourced from provided image library
 
 **Implementation Patterns:**
 \`\`\`html
-<!-- Hero with background video (Pexels - from planning phase) -->
+<!-- Hero with background image (Auto-attached Pexels) -->
 <div class="relative h-screen overflow-hidden">
-  <video autoplay muted loop class="absolute inset-0 w-full h-full object-cover">
-    <source src="[PLANNED_PEXELS_VIDEO_URL]" type="video/mp4">
-  </video>
-  <div class="relative z-10 bg-black/30"><!-- Content overlay --></div>
+  <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('[AUTO_SELECTED_BACKGROUND_URL]')">
+    <div class="absolute inset-0 bg-black/30"></div>
+  </div>
+  <div class="relative z-10"><!-- Content overlay --></div>
 </div>
 
-<!-- Background section (Pexels abstract imagery) -->
-<div class="bg-cover bg-center" style="background-image: url('[PLANNED_PEXELS_BACKGROUND_URL]')">
-
-<!-- Featured content (Pexels photos - from planning phase) -->
-<img src="[PLANNED_PEXELS_IMAGE_URL]" alt="Professional photo" class="rounded-lg">
+<!-- Featured content (Auto-attached Pexels photos) -->
+<img src="[AUTO_SELECTED_IMAGE_URL]" alt="Professional photo" class="rounded-lg" loading="lazy">
 \`\`\`
 
 ## 🎯 MANDATORY CDN STACK (ALWAYS INCLUDE)
@@ -329,6 +321,27 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
 
     const modelToUse = selectedChatModel || 'artifact-model';
     
+    // Auto-select Pexels images for all HTML artifacts
+    let autoSelectedImages;
+    let imageLibraryPrompt = '';
+    
+    try {
+      // Automatically select 60 images (2 per category across all use cases)
+      autoSelectedImages = selectAutoImages();
+      
+      // Format images for AI prompt injection
+      imageLibraryPrompt = formatImagesForPrompt(autoSelectedImages);
+      
+      // Send image data to the UI stream
+      const imageStreamData = createImageDataForStream(autoSelectedImages);
+      dataStream.writeData(imageStreamData);
+      
+    } catch (error) {
+      console.error('Failed to auto-select Pexels images:', error);
+      // Continue without auto-selected images if there's an error
+      imageLibraryPrompt = '\n\n⚠️ Auto-image selection unavailable. Please use generic Pexels search for images.\n\n';
+    }
+    
     // Temporarily disable planning enforcement to allow direct HTML creation
     const DISABLE_PLANNING_ENFORCEMENT = true;
 
@@ -438,11 +451,43 @@ ${componentSuggestions}
 - Target audience: ${layoutAnalysis.targetAudience}
 - Content priority: ${layoutAnalysis.contentPriority.join(' → ')}
 
-🖼️ PEXELS-ONLY IMAGE IMPLEMENTATION:
-- Use ONLY planned Pexels images and videos for ALL visual content (from planning phase)
-- NO external image services - everything sourced through Pexels search
-- Ensure all images have proper alt text and loading attributes
-- Include both photos and videos as planned during the planning phase
+${imageLibraryPrompt}
+
+🖼️ **MANDATORY AUTO-IMAGE INTEGRATION PROTOCOL** 🖼️
+**🚨 CRITICAL: YOU MUST USE THE AUTO-ATTACHED PEXELS IMAGES ABOVE 🚨**
+
+**EXCLUSIVE IMAGE SOURCE RULES:**
+- **FORBIDDEN**: External image services (Picsum, Lorem Space, placeholder.com, etc.)
+- **MANDATORY**: ONLY use the pre-selected Pexels images provided in the library above
+- **REQUIRED**: Every image in your HTML must come from the auto-attached collection
+
+**STRATEGIC IMAGE DEPLOYMENT:**
+- **Hero Sections**: Use background/abstract images from the library for stunning visuals
+- **Product Showcases**: Use ecommerce product images for authentic commercial appeal
+- **Team/About Sections**: Use professional profile images for credibility
+- **Background Elements**: Use minimalist/texture images for visual depth
+- **Feature Cards**: Use relevant category images to enhance content
+
+**TECHNICAL IMPLEMENTATION:**
+- **Quality Selection**: Use large_url for hero/featured images, medium_url for standard content
+- **Performance**: Add loading="lazy" for images below the fold
+- **Accessibility**: Include proper alt text using the provided descriptions
+- **Responsive Design**: Ensure images scale properly across all devices
+- **Visual Hierarchy**: Mix different image categories for rich, professional layouts
+
+**🎯 INTEGRATION EXAMPLES:**
+\`\`\`html
+<!-- Hero with auto-selected background -->
+<div class="hero bg-cover bg-center" style="background-image: url('AUTO_SELECTED_BACKGROUND_URL')">
+
+<!-- Product showcase with auto-selected ecommerce images -->
+<img src="AUTO_SELECTED_ECOMMERCE_URL" alt="Professional product" class="rounded-lg" loading="lazy">
+
+<!-- Team section with auto-selected profiles -->
+<img src="AUTO_SELECTED_PROFILE_URL" alt="Team member" class="w-32 h-32 rounded-full object-cover">
+\`\`\`
+
+**🚨 COMPLIANCE CHECK: Before finalizing, ensure EVERY image comes from the auto-attached library! 🚨**
 
 📋 IMPLEMENTATION REQUIREMENTS:
 - Single, self-contained HTML file with all functionality embedded

@@ -2,9 +2,16 @@
 
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
+import { generatePromptSuggestions } from '@/app/(chat)/actions';
+
+interface SuggestedAction {
+  title: string;
+  label: string;
+  action: string;
+}
 
 interface SuggestedActionsProps {
   chatId: string;
@@ -17,7 +24,7 @@ function PureSuggestedActions({
   append,
   selectedVisibilityType,
 }: SuggestedActionsProps) {
-  const suggestedActions = [
+  const [suggestedActions, setSuggestedActions] = useState<SuggestedAction[]>([
     {
       title: 'What are the advantages',
       label: 'of using Next.js?',
@@ -30,8 +37,8 @@ function PureSuggestedActions({
     },
     {
       title: 'Write code to',
-      label: `demonstrate djikstra's algorithm`,
-      action: `Write code to demonstrate djikstra's algorithm`,
+      label: `demonstrate dijkstra's algorithm`,
+      action: `Write code to demonstrate dijkstra's algorithm`,
     },
     {
       title: 'Help me write an essay',
@@ -43,7 +50,25 @@ function PureSuggestedActions({
       label: 'in San Francisco?',
       action: 'What is the weather in San Francisco?',
     },
-  ];
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const loadSuggestions = async () => {
+      try {
+        setIsLoading(true);
+        const dynamicSuggestions = await generatePromptSuggestions();
+        setSuggestedActions(dynamicSuggestions);
+      } catch (error) {
+        console.error('Failed to load dynamic suggestions:', error);
+        // Keep default suggestions on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadSuggestions();
+  }, []);
 
   return (
     <div
@@ -69,11 +94,14 @@ function PureSuggestedActions({
                 content: suggestedAction.action,
               });
             }}
-            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start"
+            disabled={isLoading}
+            className="text-left border rounded-xl px-4 py-3.5 text-sm flex-1 gap-1 sm:flex-col w-full h-auto justify-start items-start disabled:opacity-50"
           >
-            <span className="font-medium">{suggestedAction.title}</span>
+            <span className="font-medium">
+              {isLoading ? 'Loading...' : suggestedAction.title}
+            </span>
             <span className="text-muted-foreground">
-              {suggestedAction.label}
+              {isLoading ? 'Generating suggestions' : suggestedAction.label}
             </span>
           </Button>
         </motion.div>
