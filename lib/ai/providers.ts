@@ -49,6 +49,10 @@ const openRouter = createOpenAICompatible({
   name: 'openrouter',
   baseURL: 'https://openrouter.ai/api/v1',
   apiKey: process.env.OPENROUTER_API_KEY || 'dummy-key',
+  headers: {
+    'HTTP-Referer': process.env.VERCEL_URL || 'https://chat-optima.vercel.app',
+    'X-Title': 'Chat Optima',
+  },
 });
 
 // Cerebras (Ultra-fast inference with free tier)
@@ -68,17 +72,38 @@ function checkProviderKeys() {
     openai: process.env.OPENAI_API_KEY,
     togetherai: process.env.TOGETHER_AI_API_KEY,
     requestyai: process.env.REQUESTY_AI_API_KEY,
-    glamaai: process.env.GLAMA_AI_API_KEY,    chutesai: process.env.CHUTES_AI_API_KEY,
+    glamaai: process.env.GLAMA_AI_API_KEY,
+    chutesai: process.env.CHUTES_AI_API_KEY,
     chutesimage: process.env.CHUTES_IMAGE_API_TOKEN,
     xai: process.env.XAI_API_KEY,
     openrouter: process.env.OPENROUTER_API_KEY,
     cerebras: process.env.CEREBRAS_API_KEY,
   };
   
-  console.log('Provider API Keys Status:');
+  console.log('🔑 Provider API Keys Status:');
+  console.log('================================');
   Object.entries(keys).forEach(([provider, key]) => {
-    console.log(`${provider}: ${key ? '✓ Set' : '✗ Missing'}`);
+    const status = key && key !== 'dummy-key' ? '✅ Set' : '❌ Missing';
+    const keyPreview = key && key !== 'dummy-key' ? `${key.substring(0, 8)}...` : 'Not found';
+    console.log(`${provider.padEnd(12)}: ${status} (${keyPreview})`);
   });
+    // Special debug for the new providers
+  if (process.env.OPENROUTER_API_KEY) {
+    console.log('🌐 OpenRouter Config:', {
+      'HTTP-Referer': process.env.VERCEL_URL || 'https://chat-optima.vercel.app',
+      'X-Title': 'Chat Optima',
+      'API-Key-Length': process.env.OPENROUTER_API_KEY.length
+    });
+  }
+  
+  if (process.env.CEREBRAS_API_KEY) {
+    console.log('🧠 Cerebras Config:', {
+      'Simplified': 'No custom headers',
+      'API-Key-Length': process.env.CEREBRAS_API_KEY.length
+    });
+  }
+  
+  console.log('================================');
   
   return keys;
 }
