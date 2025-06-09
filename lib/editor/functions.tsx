@@ -1,6 +1,6 @@
 'use client';
 
-import { defaultMarkdownSerializer } from 'prosemirror-markdown';
+import { defaultMarkdownSerializer, MarkdownSerializer } from 'prosemirror-markdown';
 import { DOMParser, type Node } from 'prosemirror-model';
 import { Decoration, DecorationSet, type EditorView } from 'prosemirror-view';
 import { renderToString } from 'react-dom/server';
@@ -9,6 +9,46 @@ import { Markdown } from '@/components/markdown';
 
 import { documentSchema } from './config';
 import { createSuggestionWidget, type UISuggestion } from './suggestions';
+
+// Create a table-aware markdown serializer
+const customMarkdownSerializer = new MarkdownSerializer(
+  {
+    ...defaultMarkdownSerializer.nodes,
+    table(state, node) {
+      state.write("\n");
+      state.renderContent(node);
+      state.write("\n");
+    },
+    table_row(state, node, parent, index) {
+      state.write("|");
+      for (let i = 0; i < node.childCount; i++) {
+        if (i) state.write("|");
+        state.render(node.child(i), node, i);
+      }
+      state.write("|\n");
+      // Add header separator after first row
+      if (index === 0 && parent && parent.type.name === 'table') {
+        state.write("|");
+        for (let i = 0; i < node.childCount; i++) {
+          if (i) state.write("|");
+          state.write("---");
+        }
+        state.write("|\n");
+      }
+    },
+    table_cell(state, node) {
+      state.write(" ");
+      state.renderInline(node);
+      state.write(" ");
+    },
+    table_header(state, node) {
+      state.write(" ");
+      state.renderInline(node);
+      state.write(" ");
+    }
+  },
+  defaultMarkdownSerializer.marks
+);
 
 export const buildDocumentFromContent = (content: string) => {
   const parser = DOMParser.fromSchema(documentSchema);
@@ -19,7 +59,7 @@ export const buildDocumentFromContent = (content: string) => {
 };
 
 export const buildContentFromDocument = (document: Node) => {
-  return defaultMarkdownSerializer.serialize(document);
+  return customMarkdownSerializer.serialize(document);
 };
 
 export const createDecorations = (

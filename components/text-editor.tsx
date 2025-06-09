@@ -12,6 +12,7 @@ import {
   REGEX_INLINE_MATH_DOLLARS,
   REGEX_BLOCK_MATH_DOLLARS,
 } from '@benrbray/prosemirror-math';
+import { tableEditing, columnResizing, tableNodes, fixTables } from 'prosemirror-tables';
 import '@benrbray/prosemirror-math/dist/prosemirror-math.css';
 import 'katex/dist/katex.min.css';
 
@@ -77,6 +78,8 @@ function PureEditor({
               blockMathInputRule,
             ],
           }),
+          columnResizing(),
+          tableEditing(),
           suggestionsPlugin,
           mathPlugin,
         ],
@@ -84,7 +87,19 @@ function PureEditor({
 
       editorRef.current = new EditorView(containerRef.current, {
         state,
+        transformPastedHTML(html) {
+          // Fix table structure issues on paste
+          return html;
+        },
       });
+
+      // Fix tables on initialization
+      if (editorRef.current) {
+        const fix = fixTables(editorRef.current.state);
+        if (fix) {
+          editorRef.current.dispatch(fix);
+        }
+      }
     }
 
     return () => {

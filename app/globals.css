@@ -260,3 +260,87 @@
         word-wrap: break-word;
     }
 }
+
+/* ProseMirror Table Styling */
+.ProseMirror table {
+    @apply w-full border-collapse border border-border rounded-lg overflow-hidden;
+    margin: 1rem 0;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+    @apply border border-border px-3 py-2 text-left;
+    min-width: 1em;
+    vertical-align: top;
+    position: relative;
+}
+
+.ProseMirror th {
+    @apply bg-muted font-semibold text-foreground;
+}
+
+.ProseMirror td {
+    @apply bg-background;
+}
+
+.ProseMirror tr:hover td {
+    @apply bg-muted/30;
+}
+
+.ProseMirror .selectedCell {
+    @apply bg-primary/20 border-primary;
+}
+
+.ProseMirror .column-resize-handle {
+    @apply absolute right-0 top-0 bottom-0 w-1 bg-primary/30 cursor-col-resize;
+    pointer-events: auto;
+}
+
+.ProseMirror .tableWrapper {
+    @apply overflow-x-auto;
+    max-width: 100%;
+}
+
+.ProseMirror table .selectedCell::after {
+    @apply absolute inset-0 bg-primary/10 pointer-events-none;
+    content: "";
+}
+
+/* Table controls styling */
+.ProseMirror .table-controls {
+    @apply flex gap-2 mb-2;
+}
+
+.ProseMirror .table-controls button {
+    @apply px-2 py-1 text-sm border border-border rounded bg-background hover:bg-muted;
+}
+
+/* Dark mode table styling */
+.dark .ProseMirror table {
+    @apply border-zinc-700;
+}
+
+.dark .ProseMirror th,
+.dark .ProseMirror td {
+    @apply border-zinc-700;
+}
+
+.dark .ProseMirror th {
+    @apply bg-zinc-800 text-zinc-100;
+}
+
+.dark .ProseMirror td {
+    @apply bg-zinc-900;
+}
+
+.dark .ProseMirror tr:hover td {
+    @apply bg-zinc-800/50;
+}
+
+.dark .ProseMirror .selectedCell {
+    @apply bg-blue-900/40 border-blue-600;
+}
+
+.dark .ProseMirror .column-resize-handle {
+    @apply bg-blue-600/50;
+}

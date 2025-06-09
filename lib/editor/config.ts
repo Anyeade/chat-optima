@@ -2,6 +2,7 @@ import { textblockTypeInputRule } from 'prosemirror-inputrules';
 import { Schema } from 'prosemirror-model';
 import { schema as basicSchema } from 'prosemirror-schema-basic';
 import { addListNodes } from 'prosemirror-schema-list';
+import { tableNodes } from 'prosemirror-tables';
 import type { Transaction } from 'prosemirror-state';
 import type { EditorView } from 'prosemirror-view';
 import type { MutableRefObject } from 'react';
@@ -31,7 +32,17 @@ const mathNodes = {
 const baseNodes = addListNodes(basicSchema.spec.nodes, "paragraph block*", "block");
 
 export const documentSchema = new Schema({
-  nodes: baseNodes.append(mathNodes),
+  nodes: baseNodes.append(tableNodes({
+    tableGroup: "block",
+    cellContent: "block+",
+    cellAttributes: {
+      background: {
+        default: null,
+        getFromDOM(dom) { return dom.style.backgroundColor || null },
+        setDOMAttr(value, attrs) { if (value) attrs.style = (attrs.style || "") + `background-color: ${value};` }
+      }
+    }
+  })).append(mathNodes),
   marks: basicSchema.spec.marks,
 });
 
