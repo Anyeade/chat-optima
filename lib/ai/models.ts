@@ -98,12 +98,21 @@ export const chatModels: Array<ChatModel> = [
     id: 'llama3-8b-8192',
     name: 'Trio Llama 3 8B',
     description: 'Llama 3 8B classic (14.4k req/day)',
-  },
-  // Optima Fast
+  },  // Optima Fast (Mistral Models)
   {
     id: 'pixtral-12b-2409',
     name: 'Optima Fast',
     description: 'HansTech fast model',
+  },
+  {
+    id: 'mistral-small-3-1',
+    name: 'Optima Small 3.1',
+    description: 'Mistral Small 3.1 - Compact and efficient',
+  },
+  {
+    id: 'devstral-small-2505',
+    name: 'Optima DevStral Small',
+    description: 'DevStral Small 2505 - Specialized for development',
   },
   // Optima Command Series (Cohere - 128K context, tool support)
   {

@@ -111,10 +111,10 @@ export const myProvider = isTestEnvironment
         'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'), // 6k tokens/min, 14.4k req/day
         'gemma2-9b-it': groq('gemma2-9b-it'), // 15k tokens/min, 14.4k req/day
         'llama3-70b-8192': groq('llama3-70b-8192'), // 6k tokens/min, 14.4k req/day
-        'llama3-8b-8192': groq('llama3-8b-8192'), // 6k tokens/min, 14.4k req/day
-
-        // Mistral Models
+        'llama3-8b-8192': groq('llama3-8b-8192'), // 6k tokens/min, 14.4k req/day        // Mistral Models
         'pixtral-12b-2409': mistral('pixtral-12b-2409'),
+        'mistral-small-3-1': mistral('mistral-small-3-1'),
+        'devstral-small-2505': mistral('devstral-small-2505'),
 
         // Cohere Models (128K context, tool support, no vision)
         'command-a-03-2025': cohere('command-a-03-2025'),
