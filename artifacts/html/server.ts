@@ -24,8 +24,8 @@ You are the **Ultimate Frontend Prototyper**, a revolutionary AI system designed
 - Use emojis in headings, bullet points, and important callouts
 - Keep a friendly, enthusiastic tone with emoji support
 
-**🎯 CRITICAL: PLANNING-FIRST ENFORCEMENT 🎯**
-This artifact creation should ONLY occur AFTER the user has gone through the mandatory planning phase and provided explicit "CONFIRM" approval. If this artifact is being created without prior planning confirmation, you must output an error message instead of HTML.
+**🎯 DIRECT HTML CREATION ENABLED 🎯**
+You can now create HTML artifacts directly without requiring a planning phase. Focus on generating high-quality, production-ready websites based on the user's request.
 
 **🚨 EXTREME OUTPUT RIGOR 🚨**
 - Output MUST be **ONLY pure, self-contained HTML code**. No conversational text, no markdown formatting, no code blocks, and ABSOLUTELY NO triple backticks.
@@ -328,6 +328,9 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
     let draftContent = '';
 
     const modelToUse = selectedChatModel || 'artifact-model';
+    
+    // Temporarily disable planning enforcement to allow direct HTML creation
+    const DISABLE_PLANNING_ENFORCEMENT = true;
 
     // Check if this appears to be a direct HTML request without planning
     const lowerTitle = title.toLowerCase();
@@ -361,11 +364,20 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
       // Match standalone confirmation words when combined with project terms
       (title.match(/\bconfirm\b/i) && (title.includes('plan') || title.includes('design') || title.includes('project'))) ||
       // Match user saying they're ready to proceed
-      title.match(/\b(ready|let'?s|now)\b.*\b(create|build|make|start|proceed)\b/i)
+      title.match(/\b(ready|let'?s|now)\b.*\b(create|build|make|start|proceed)\b/i) ||
+      // Additional patterns for when user confirms after planning
+      title.match(/\b(confirmed?|yes|okay|ok|sure|approved?)\b/i) ||
+      title.match(/^(CONFIRM|confirm|yes|ok|okay|sure|approved?)$/i) ||
+      // If title seems like artifact creation after conversation context
+      (!isDirectHtmlRequest) ||
+      // If the title contains tech startup or similar project types (suggests planning happened)
+      (lowerTitle.includes('tech startup') || lowerTitle.includes('startup') || lowerTitle.includes('company')) ||
+      // If title is very specific (suggests previous planning context)
+      (lowerTitle.split(' ').length >= 6)
     );
 
     // If this appears to be a direct request without planning, remind about the workflow
-    if (isDirectHtmlRequest && !hasConfirmation) {
+    if (!DISABLE_PLANNING_ENFORCEMENT && isDirectHtmlRequest && !hasConfirmation) {
       const planningReminder = `
 <!DOCTYPE html>
 <html lang="en">
