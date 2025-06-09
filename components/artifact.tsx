@@ -58,6 +58,14 @@ export interface UIArtifact {
     width: number;
     height: number;
   };
+  pexelsSearchStatus?: string;
+  pexelsSearchResults?: string;
+  webSearchStatus?: string;
+  webSearchResults?: string;
+  webpageScreenshotStatus?: string;
+  webpageScreenshotResult?: string;
+  webScraperStatus?: string;
+  webScraperResult?: string;
 }
 
 function PureArtifact({

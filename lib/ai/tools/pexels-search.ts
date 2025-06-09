@@ -1,11 +1,15 @@
-import { tool } from 'ai';
+import { tool, DataStreamWriter } from 'ai';
 import { z } from 'zod';
+
+interface PexelsSearchProps {
+  dataStream: DataStreamWriter;
+}
 
 /**
  * Pexels API search tool for finding high-quality images and videos
  * Provides access to Pexels' vast library of free stock photos and videos
  */
-export const pexelsSearch = tool({
+export const pexelsSearch = ({ dataStream }: PexelsSearchProps) => tool({
   description: 'Search for high-quality images and videos from Pexels API. Use when you need specific, themed, or professional images for websites, applications, or content creation.',
   parameters: z.object({
     query: z.string().describe('Search query for images/videos (e.g., "business meeting", "nature landscape", "technology", "food photography")'),
@@ -24,6 +28,12 @@ export const pexelsSearch = tool({
   }),
   execute: async ({ query, type, orientation, size, color, per_page, page }) => {
     try {
+      // Signal that Pexels search is starting
+      dataStream.writeData({
+        type: 'pexels-search-status',
+        content: 'searching-pexels'
+      });
+
       console.log(`Starting Pexels ${type} search for: ${query}`);
       
       // Build the API endpoint
@@ -130,10 +140,27 @@ export const pexelsSearch = tool({
           })) || []
         };
         
+        // Signal that Pexels search is complete
+        dataStream.writeData({
+          type: 'pexels-search-status',
+          content: 'searched-pexels'
+        });
+
+        // Send results to AI in JSON format
+        dataStream.writeData({
+          type: 'pexels-search-results',
+          content: JSON.stringify(formattedResults)
+        });
+
         return formattedResults;
       }
       
     } catch (error) {
+      // Signal search failed
+      dataStream.writeData({
+        type: 'pexels-search-status',
+        content: 'search-failed'
+      });
       console.error('Pexels search tool error:', error);
       return {
         error: 'Failed to search Pexels',

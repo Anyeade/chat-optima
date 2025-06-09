@@ -179,10 +179,10 @@ export async function POST(request: Request) {
           experimental_generateMessageId: generateUUID,
           tools: {
             getWeather,
-            webSearch,
-            webpageScreenshot,
-            webScraper,
-            pexelsSearch,
+            webSearch: webSearch({ dataStream }),
+            webpageScreenshot: webpageScreenshot({ dataStream }),
+            webScraper: webScraper({ dataStream }),
+            pexelsSearch: pexelsSearch({ dataStream }),
             createDocument: createDocument({ session, dataStream, selectedChatModel }),
             updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
             requestSuggestions: requestSuggestions({

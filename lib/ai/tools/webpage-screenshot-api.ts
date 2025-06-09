@@ -2,11 +2,12 @@
 import { tool } from 'ai';
 import { z } from 'zod';
 import screenshotmachine from 'screenshotmachine';
+import type { DataStreamWriter } from '@ai-sdk/ui-utils';
 
 /**
  * Webpage screenshot tool that uses Screenshot Machine API service
  */
-export const webpageScreenshotApi = tool({
+export const webpageScreenshotApi = ({ dataStream }: { dataStream: DataStreamWriter }) => tool({
   description: 'Capture a screenshot of a website to show the user its visual content and layout',  parameters: z.object({
     url: z.string()
       .min(1, 'URL is required')
@@ -35,8 +36,14 @@ export const webpageScreenshotApi = tool({
       .describe('The width of the screenshot in pixels. Defaults to 1024x768.'),
     fullPage: z.boolean().default(true)
       .describe('Whether to capture the full page or just the visible area.')
-  }),execute: async ({ url, width, fullPage }) => {
+  }),
+  execute: async ({ url, width, fullPage }) => {
     try {
+      // Send initial status
+      dataStream.writeData({
+        type: 'webpage-screenshot-status',
+        content: 'taking-screenshot'
+      });
       // Clean and validate the URL
       let cleanUrl = url.trim();
       
@@ -113,31 +120,50 @@ export const webpageScreenshotApi = tool({
       
       const uploadData = await uploadResponse.json();
         // Format the results
-      const formattedResults = {
-        url: cleanUrl, // Use the cleaned URL
-        originalUrl: url, // Keep original URL for reference
-        timestamp: new Date().toISOString(),
-        screenshotUrl: uploadData.url,
-        width,
-        pageType: 'webpage',
-        captureMethod: 'screenshot-machine',
-        instructionsForAI: "This screenshot shows the visual layout and content of the webpage. Describe what you see to the user including layout, design elements, content, and overall structure."
-      };
-      
-      // Return an attachment for the AI to display and analyze
-      return {
-        result: formattedResults,
-        experimental_attachments: [
-          {
-            name: `Screenshot of ${url}`,
-            url: uploadData.url,
-            contentType: 'image/png',
-          },
-        ],
-      };
+        const formattedResults = {
+          url: cleanUrl, // Use the cleaned URL
+          originalUrl: url, // Keep original URL for reference
+          timestamp: new Date().toISOString(),
+          screenshotUrl: uploadData.url,
+          width,
+          pageType: 'webpage',
+          captureMethod: 'screenshot-machine',
+          instructionsForAI: "This screenshot shows the visual layout and content of the webpage. Describe what you see to the user including layout, design elements, content, and overall structure."
+        };
+  
+        // Send completion status
+        dataStream.writeData({
+          type: 'webpage-screenshot-status',
+          content: 'screenshot-taken'
+        });
+  
+        // Send results to AI
+        dataStream.writeData({
+          type: 'webpage-screenshot-result',
+          content: JSON.stringify(formattedResults)
+        });
+        
+        // Return an attachment for the AI to display and analyze
+        return {
+          result: formattedResults,
+          experimental_attachments: [
+            {
+              name: `Screenshot of ${url}`,
+              url: uploadData.url,
+              contentType: 'image/png',
+            },
+          ],
+        };
     } catch (error) {
       console.error('Webpage screenshot tool error:', error);
-      return { 
+      
+      // Send failure status
+      dataStream.writeData({
+        type: 'webpage-screenshot-status',
+        content: 'screenshot-failed'
+      });
+      
+      return {
         error: 'Failed to capture website screenshot',
         message: typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error),
         timestamp: new Date().toISOString(),

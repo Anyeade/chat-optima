@@ -1,5 +1,6 @@
 import { tool } from 'ai';
 import { z } from 'zod';
+import type { DataStreamWriter } from '@ai-sdk/ui-utils';
 
 // TODO: Move this to environment variables in production
 const ANYAPI_KEY = 'qlh3lj31a5onoqdu7arq9opupumimjo8uisbq6f3ga8pumabumj7n';
@@ -7,17 +8,24 @@ const ANYAPI_KEY = 'qlh3lj31a5onoqdu7arq9opupumimjo8uisbq6f3ga8pumabumj7n';
 /**
  * Web scraping tool that uses anyapi.io to extract content from websites
  */
-export const webScraper = tool({
+export const webScraper = ({ dataStream }: { dataStream: DataStreamWriter }) => tool({
   description: 'Scrape content from a website',
   parameters: z.object({
     url: z.string().url().describe('The URL of the website to scrape. Must be a valid URL with http:// or https:// prefix.')
   }),
   execute: async ({ url }) => {
     try {
+      // Send initial status
+      dataStream.writeData({
+        type: 'web-scraper-status',
+        content: 'scraping-webpage'
+      });
+
       console.log(`Scraping content from: ${url}`);
       
       // Construct the API URL with proper encoding
       const apiUrl = `https://anyapi.io/api/v1/scrape?url=${encodeURIComponent(url)}&apiKey=${ANYAPI_KEY}`;
+      
       // Make the request to the API
       const response = await fetch(apiUrl, {
         method: 'GET',
@@ -28,7 +36,9 @@ export const webScraper = tool({
       
       if (!response.ok) {
         throw new Error(`Scraping failed with status: ${response.status}`);
-      }      // Parse the response
+      }
+      
+      // Parse the response
       // Based on the curl example, we know the API returns JSON with a content property
       const data = await response.json();
       
@@ -39,12 +49,31 @@ export const webScraper = tool({
         _html: data.content,
         instructionsForAI: "Full HTML content has been scraped from the website and is available for processing."
       };
+
+      // Send completion status
+      dataStream.writeData({
+        type: 'web-scraper-status',
+        content: 'webpage-scraped'
+      });
+
+      // Send results to AI
+      dataStream.writeData({
+        type: 'web-scraper-result',
+        content: JSON.stringify(formattedResults)
+      });
       
       return {
         result: formattedResults
       };
     } catch (error) {
       console.error('Web scraper tool error:', error);
+      
+      // Send failure status
+      dataStream.writeData({
+        type: 'web-scraper-status',
+        content: 'scraping-failed'
+      });
+      
       return { 
         error: 'Failed to scrape website content',
         message: typeof error === 'object' && error !== null && 'message' in error ? (error as any).message : String(error),

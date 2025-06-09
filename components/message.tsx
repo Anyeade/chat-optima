@@ -22,6 +22,10 @@ import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 import { MessageEditor } from './message-editor';
 import { DocumentPreview } from './document-preview';
 import { MessageReasoning } from './message-reasoning';
+import { MessageWebSearch } from './message-web-search';
+import { MessagePexelsSearch } from './message-pexels-search';
+import { MessageWebpageScreenshot } from './message-webpage-screenshot';
+import { MessageWebScraper } from './message-web-scraper';
 import type { UseChatHelpers } from '@ai-sdk/react';
 
 const PurePreviewMessage = ({
@@ -166,7 +170,7 @@ const PurePreviewMessage = ({
                     <div
                       key={toolCallId}
                       className={cx({
-                        skeleton: ['getWeather'].includes(toolName),
+                        skeleton: ['getWeather', 'pexelsSearch', 'webSearch', 'webpageScreenshot', 'webScraper'].includes(toolName),
                       })}
                     >
                       {toolName === 'getWeather' ? (
@@ -190,6 +194,30 @@ const PurePreviewMessage = ({
                           action={args.action || 'read'}
                           args={args}
                           isReadonly={isReadonly}
+                        />
+                      ) : toolName === 'pexelsSearch' ? (
+                        <MessagePexelsSearch
+                          isLoading={true}
+                          searchResults={null}
+                          searchQuery={args.query}
+                        />
+                      ) : toolName === 'webSearch' ? (
+                        <MessageWebSearch
+                          isLoading={true}
+                          searchResults={null}
+                          searchQuery={args.query}
+                        />
+                      ) : toolName === 'webpageScreenshot' ? (
+                        <MessageWebpageScreenshot
+                          isLoading={true}
+                          screenshotResults={null}
+                          url={args.url}
+                        />
+                      ) : toolName === 'webScraper' ? (
+                        <MessageWebScraper
+                          isLoading={true}
+                          scrapedResults={null}
+                          url={args.url}
                         />
                       ) : null}
                     </div>
@@ -227,11 +255,29 @@ const PurePreviewMessage = ({
                           isReadonly={isReadonly}
                         />
                       ) : toolName === 'webSearch' ? (
-                        <WebSearch searchResults={result} />
+                        <MessageWebSearch
+                          isLoading={false}
+                          searchResults={result}
+                          searchQuery={result.search_query}
+                        />
                       ) : toolName === 'webpageScreenshot' ? (
-                        <WebpageScreenshot screenshotResults={result} />
+                        <MessageWebpageScreenshot
+                          isLoading={false}
+                          screenshotResults={result}
+                          url={result.url}
+                        />
                       ) : toolName === 'webScraper' ? (
-                        <WebScraper scrapedResults={result} />
+                        <MessageWebScraper
+                          isLoading={false}
+                          scrapedResults={result}
+                          url={result.url}
+                        />
+                      ) : toolName === 'pexelsSearch' ? (
+                        <MessagePexelsSearch
+                          isLoading={false}
+                          searchResults={result}
+                          searchQuery={result.search_query}
+                        />
                       ) : (
                         <pre>{JSON.stringify(result, null, 2)}</pre>
                       )}

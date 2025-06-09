@@ -342,12 +342,26 @@ export const htmlDocumentHandler = createDocumentHandler<'html'>({
       lowerTitle.includes('make a')
     );
 
-    // Check for planning confirmation indicators
+    // Check for planning confirmation indicators (expanded detection)
     const hasConfirmation = (
       title.includes('CONFIRM') ||
+      title.includes('confirm') ||
       title.includes('confirmed') ||
       title.includes('approved plan') ||
-      title.includes('proceed with')
+      title.includes('proceed with') ||
+      title.includes('yes, proceed') ||
+      title.includes('go ahead') ||
+      title.includes('start building') ||
+      title.includes('create it') ||
+      title.includes('build it') ||
+      title.includes('make it') ||
+      title.includes('implement') ||
+      title.match(/\b(ok|okay|yes)\b.*\b(build|create|proceed|start)\b/i) ||
+      title.match(/\b(proceed|continue|go)\b.*\b(creation|building|implementation)\b/i) ||
+      // Match standalone confirmation words when combined with project terms
+      (title.match(/\bconfirm\b/i) && (title.includes('plan') || title.includes('design') || title.includes('project'))) ||
+      // Match user saying they're ready to proceed
+      title.match(/\b(ready|let'?s|now)\b.*\b(create|build|make|start|proceed)\b/i)
     );
 
     // If this appears to be a direct request without planning, remind about the workflow
