@@ -44,6 +44,20 @@ const googleAI = createOpenAICompatible({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy-key',
 });
 
+// OpenRouter (Free tier with multiple models)
+const openRouter = createOpenAICompatible({
+  name: 'openrouter',
+  baseURL: 'https://openrouter.ai/api/v1',
+  apiKey: process.env.OPENROUTER_API_KEY || 'dummy-key',
+});
+
+// Cerebras (Ultra-fast inference with free tier)
+const cerebras = createOpenAICompatible({
+  name: 'cerebras',
+  baseURL: 'https://api.cerebras.ai/v1',
+  apiKey: process.env.CEREBRAS_API_KEY || 'dummy-key',
+});
+
 // Debug function to check environment variables
 function checkProviderKeys() {
   const keys = {
@@ -57,6 +71,8 @@ function checkProviderKeys() {
     glamaai: process.env.GLAMA_AI_API_KEY,    chutesai: process.env.CHUTES_AI_API_KEY,
     chutesimage: process.env.CHUTES_IMAGE_API_TOKEN,
     xai: process.env.XAI_API_KEY,
+    openrouter: process.env.OPENROUTER_API_KEY,
+    cerebras: process.env.CEREBRAS_API_KEY,
   };
   
   console.log('Provider API Keys Status:');
@@ -103,9 +119,11 @@ export const myProvider = isTestEnvironment
         'deepseek-r1-distill-llama-70b': wrapLanguageModel({
           model: groq('deepseek-r1-distill-llama-70b'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }), // 6k tokens/min, 1k req/day        'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'), // 12k tokens/min, 1k req/day
+        'qwen-qwq-32b': wrapLanguageModel({
+          model: groq('qwen-qwq-32b'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }), // 6k tokens/min, 1k req/day
-        'llama-3.3-70b-versatile': groq('llama-3.3-70b-versatile'), // 12k tokens/min, 1k req/day
-        'qwen-qwq-32b': groq('qwen-qwq-32b'), // 6k tokens/min, 1k req/day
         
         // High volume models (higher daily limits)
         'llama-3.1-8b-instant': groq('llama-3.1-8b-instant'), // 6k tokens/min, 14.4k req/day
@@ -142,12 +160,32 @@ export const myProvider = isTestEnvironment
         'llama-3.2-11b-vision-instruct': glamaAI('llama-3.2-11b-vision-instruct'),
 
         // Chutes AI Models (OpenAI-compatible)
-        'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'),
-        'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
+        'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'),        'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
           model: chutesAI('deepseek-ai/DeepSeek-R1'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),        'Qwen/Qwen3-235B-A22B': chutesAI('Qwen/Qwen3-235B-A22B'),        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),        // X.AI Models (Grok series)
-        'grok-3-mini-beta': xai('grok-3-mini-beta'),
+        }),
+        'Qwen/Qwen3-235B-A22B': wrapLanguageModel({
+          model: chutesAI('Qwen/Qwen3-235B-A22B'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),// X.AI Models (Grok series)
+        'grok-3-mini-beta': xai('grok-3-mini-beta'),        // OpenRouter Models (Free tier with multiple providers)
+        'qwen/qwen2.5-vl-72b-instruct:free': wrapLanguageModel({
+          model: openRouter('qwen/qwen2.5-vl-72b-instruct:free'),
+          middleware: extractReasoningMiddleware({ tagName: 'think' }),
+        }),
+        'deepseek/deepseek-v3-base:free': openRouter('deepseek/deepseek-v3-base:free'),
+        'meta-llama/llama-4-scout:free': openRouter('meta-llama/llama-4-scout:free'),
+        'meta-llama/llama-4-maverick:free': openRouter('meta-llama/llama-4-maverick:free'),
+        'nvidia/llama-3.1-nemotron-ultra-253b-v1:free': openRouter('nvidia/llama-3.1-nemotron-ultra-253b-v1:free'),
+        'microsoft/mai-ds-r1:free': openRouter('microsoft/mai-ds-r1:free'),
+        'tngtech/deepseek-r1t-chimera:free': openRouter('tngtech/deepseek-r1t-chimera:free'),
+
+        // Cerebras Models (Ultra-fast inference, free tier)
+        'llama-4-scout-17b-16e-instruct-cerebras': cerebras('llama-4-scout-17b-16e-instruct'),
+        'llama3.1-8b-cerebras': cerebras('llama3.1-8b'),
+        'llama-3.3-70b-cerebras': cerebras('llama-3.3-70b'),
+        'qwen-3-32b-cerebras': cerebras('qwen-3-32b'),
       },
       imageModels: {
         'small-model': xai.image('grok-2-image-1212'),

@@ -206,11 +206,67 @@ export const chatModels: Array<ChatModel> = [
     id: 'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
     name: 'Chutes Llama 4 Maverick',
     description: 'Llama 4 Maverick 17B FP8 optimized via Chutes AI',
-  },
-  // X.AI Series (Grok Models)
+  },  // X.AI Series (Grok Models)
   {
     id: 'grok-3-mini-beta',
     name: 'Optima Grok 3 Mini',
     description: 'X.AI Grok 3 Mini - Compact and efficient',
+  },
+  // OpenRouter Free Series (Multiple providers via OpenRouter)
+  {
+    id: 'qwen/qwen2.5-vl-72b-instruct:free',
+    name: 'Router Qwen 2.5 VL 72B',
+    description: 'Qwen 2.5 Vision-Language 72B - Free via OpenRouter',
+  },
+  {
+    id: 'deepseek/deepseek-v3-base:free',
+    name: 'Router DeepSeek V3 Base',
+    description: 'DeepSeek V3 Base model - Free via OpenRouter',
+  },
+  {
+    id: 'meta-llama/llama-4-scout:free',
+    name: 'Router Llama 4 Scout',
+    description: 'Llama 4 Scout - Free via OpenRouter',
+  },
+  {
+    id: 'meta-llama/llama-4-maverick:free',
+    name: 'Router Llama 4 Maverick',
+    description: 'Llama 4 Maverick - Free via OpenRouter',
+  },
+  {
+    id: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
+    name: 'Router Nemotron Ultra 253B',
+    description: 'NVIDIA Nemotron Ultra 253B - Free via OpenRouter',
+  },
+  {
+    id: 'microsoft/mai-ds-r1:free',
+    name: 'Router MAI DS R1',
+    description: 'Microsoft MAI DS R1 - Free via OpenRouter',
+  },
+  {
+    id: 'tngtech/deepseek-r1t-chimera:free',
+    name: 'Router DeepSeek R1T Chimera',
+    description: 'DeepSeek R1T Chimera - Free via OpenRouter',
+  },
+  // Cerebras Fast Series (Ultra-fast inference)
+  {
+    id: 'llama-4-scout-17b-16e-instruct-cerebras',
+    name: 'Fast Llama 4 Scout',
+    description: 'Llama 4 Scout via Cerebras - Ultra-fast inference',
+  },
+  {
+    id: 'llama3.1-8b-cerebras',
+    name: 'Fast Llama 3.1 8B',
+    description: 'Llama 3.1 8B via Cerebras - 2200 tokens/s',
+  },
+  {
+    id: 'llama-3.3-70b-cerebras',
+    name: 'Fast Llama 3.3 70B',
+    description: 'Llama 3.3 70B via Cerebras - 2100 tokens/s',
+  },
+  {
+    id: 'qwen-3-32b-cerebras',
+    name: 'Fast Qwen 3 32B',
+    description: 'Qwen 3 32B via Cerebras - 2100 tokens/s',
   },
 ];

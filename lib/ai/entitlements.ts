@@ -9,8 +9,7 @@ interface Entitlements {
 export const entitlementsByUserType: Record<UserType, Entitlements> = {
   /*
    * For users without an account
-   */
-  guest: {
+   */  guest: {
     maxMessagesPerDay: 30,
     availableChatModelIds: [
       'chat-model', 
@@ -20,6 +19,12 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       // Free/accessible models for guests
       'phi-3-mini-128k-instruct', // Glama AI - smaller model
       'google/gemini-2.0-flash-exp', // Requesty AI - experimental access
+      // OpenRouter Free Models (limited selection for guests)
+      'meta-llama/llama-4-scout:free',
+      'qwen/qwen2.5-vl-72b-instruct:free',
+      // Cerebras Fast Models (limited selection for guests)
+      'llama3.1-8b-cerebras',
+      'llama-3.3-70b-cerebras',
     ],
   },
 
@@ -76,9 +81,21 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       'deepseek-ai/DeepSeek-V3-0324',
       'deepseek-ai/DeepSeek-R1',
       'Qwen/Qwen3-235B-A22B',
-      'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
-      // X.AI Models (Grok series)
+      'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',      // X.AI Models (Grok series)
       'grok-3-mini-beta',
+      // OpenRouter Free Models (Multiple providers)
+      'qwen/qwen2.5-vl-72b-instruct:free',
+      'deepseek/deepseek-v3-base:free',
+      'meta-llama/llama-4-scout:free',
+      'meta-llama/llama-4-maverick:free',
+      'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
+      'microsoft/mai-ds-r1:free',
+      'tngtech/deepseek-r1t-chimera:free',
+      // Cerebras Fast Models (Ultra-fast inference)
+      'llama-4-scout-17b-16e-instruct-cerebras',
+      'llama3.1-8b-cerebras',
+      'llama-3.3-70b-cerebras',
+      'qwen-3-32b-cerebras',
     ],
   },
 
