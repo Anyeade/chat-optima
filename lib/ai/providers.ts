@@ -4,6 +4,8 @@ import {
   wrapLanguageModel,
 } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { cerebras } from '@ai-sdk/cerebras';
+import { createOpenRouter } from '@openrouter/ai-sdk-provider';
 import { xai } from '@ai-sdk/xai';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
@@ -44,10 +46,8 @@ const googleAI = createOpenAICompatible({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy-key',
 });
 
-// OpenRouter (Free tier with multiple models)
-const openRouter = createOpenAICompatible({
-  name: 'openrouter',
-  baseURL: 'https://openrouter.ai/api/v1',
+// OpenRouter (Official AI SDK Provider)
+const openRouter = createOpenRouter({
   apiKey: process.env.OPENROUTER_API_KEY || 'dummy-key',
   headers: {
     'HTTP-Referer': process.env.VERCEL_URL || 'https://chat-optima.vercel.app',
@@ -55,12 +55,8 @@ const openRouter = createOpenAICompatible({
   },
 });
 
-// Cerebras (Ultra-fast inference with free tier)
-const cerebras = createOpenAICompatible({
-  name: 'cerebras',
-  baseURL: 'https://api.cerebras.ai/v1',
-  apiKey: process.env.CEREBRAS_API_KEY || 'dummy-key',
-});
+// Cerebras (Official AI SDK Provider) - No custom config needed
+// Uses CEREBRAS_API_KEY environment variable automatically
 
 // Debug function to check environment variables
 function checkProviderKeys() {
@@ -87,9 +83,9 @@ function checkProviderKeys() {
     const keyPreview = key && key !== 'dummy-key' ? `${key.substring(0, 8)}...` : 'Not found';
     console.log(`${provider.padEnd(12)}: ${status} (${keyPreview})`);
   });
-    // Special debug for the new providers
+  // Special debug for the new providers
   if (process.env.OPENROUTER_API_KEY) {
-    console.log('🌐 OpenRouter Config:', {
+    console.log('🌐 OpenRouter (Official AI SDK):', {
       'HTTP-Referer': process.env.VERCEL_URL || 'https://chat-optima.vercel.app',
       'X-Title': 'Chat Optima',
       'API-Key-Length': process.env.OPENROUTER_API_KEY.length
@@ -97,8 +93,8 @@ function checkProviderKeys() {
   }
   
   if (process.env.CEREBRAS_API_KEY) {
-    console.log('🧠 Cerebras Config:', {
-      'Simplified': 'No custom headers',
+    console.log('🧠 Cerebras (Official AI SDK):', {
+      'Auto-configuration': 'Uses CEREBRAS_API_KEY environment variable',
       'API-Key-Length': process.env.CEREBRAS_API_KEY.length
     });
   }
@@ -196,15 +192,15 @@ export const myProvider = isTestEnvironment
         'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),// X.AI Models (Grok series)
         'grok-3-mini-beta': xai('grok-3-mini-beta'),        // OpenRouter Models (Free tier with multiple providers)
         'qwen/qwen2.5-vl-72b-instruct:free': wrapLanguageModel({
-          model: openRouter('qwen/qwen2.5-vl-72b-instruct:free'),
+          model: openRouter.chat('qwen/qwen2.5-vl-72b-instruct:free'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'deepseek/deepseek-v3-base:free': openRouter('deepseek/deepseek-v3-base:free'),
-        'meta-llama/llama-4-scout:free': openRouter('meta-llama/llama-4-scout:free'),
-        'meta-llama/llama-4-maverick:free': openRouter('meta-llama/llama-4-maverick:free'),
-        'nvidia/llama-3.1-nemotron-ultra-253b-v1:free': openRouter('nvidia/llama-3.1-nemotron-ultra-253b-v1:free'),
-        'microsoft/mai-ds-r1:free': openRouter('microsoft/mai-ds-r1:free'),
-        'tngtech/deepseek-r1t-chimera:free': openRouter('tngtech/deepseek-r1t-chimera:free'),
+        'deepseek/deepseek-v3-base:free': openRouter.chat('deepseek/deepseek-v3-base:free'),
+        'meta-llama/llama-4-scout:free': openRouter.chat('meta-llama/llama-4-scout:free'),
+        'meta-llama/llama-4-maverick:free': openRouter.chat('meta-llama/llama-4-maverick:free'),
+        'nvidia/llama-3.1-nemotron-ultra-253b-v1:free': openRouter.chat('nvidia/llama-3.1-nemotron-ultra-253b-v1:free'),
+        'microsoft/mai-ds-r1:free': openRouter.chat('microsoft/mai-ds-r1:free'),
+        'tngtech/deepseek-r1t-chimera:free': openRouter.chat('tngtech/deepseek-r1t-chimera:free'),
 
         // Cerebras Models (Ultra-fast inference, free tier)
         'llama-4-scout-17b-16e-instruct-cerebras': cerebras('llama-4-scout-17b-16e-instruct'),

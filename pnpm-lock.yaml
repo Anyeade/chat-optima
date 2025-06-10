@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@ai-sdk/cerebras':
+        specifier: ^0.2.14
+        version: 0.2.14(zod@3.24.2)
       '@ai-sdk/cohere':
         specifier: ^1.2.10
         version: 1.2.10(zod@3.24.2)
@@ -74,6 +77,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.35.3
         version: 6.36.4
+      '@openrouter/ai-sdk-provider':
+        specifier: ^0.7.1
+        version: 0.7.1(ai@4.3.13(react@19.0.0-rc-45804af1-20241021)(zod@3.24.2))(zod@3.24.2)
       '@opentelemetry/api':
         specifier: ^1.9.0
         version: 1.9.0
@@ -395,6 +401,12 @@ importers:
         version: 5.8.2
 
 packages:
+
+  '@ai-sdk/cerebras@0.2.14':
+    resolution: {integrity: sha512-BIDf9hfgAEEu3xhNUyBWvAzeSgt7A7cSMj7UcKS4jhBDybRoKjoEGWHC7916j8LS/5Hkdmo6jwaxWxn/gZJYbQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.0.0
 
   '@ai-sdk/cohere@1.2.10':
     resolution: {integrity: sha512-OaUwd5xj4bxSO8hdCbX1a5uUlTouU8FcodSuRON6xDSsmjZIvQL4O2G1XzcidxiQVL8JQuA+M0tHZOwGxSL96A==}
@@ -1390,6 +1402,13 @@ packages:
   '@nolyfill/is-core-module@1.0.39':
     resolution: {integrity: sha512-nn5ozdjYQpUCZlWGuxcJY/KpxkWQs4DcbMCmKojjyrYDEAGy4Ce19NN4v5MduafTwJlbKc99UA8YhSVqq9yPZA==}
     engines: {node: '>=12.4.0'}
+
+  '@openrouter/ai-sdk-provider@0.7.1':
+    resolution: {integrity: sha512-jppCJErJ13KKnr0rOJrElmrlGul+0G5OO45Tqn1II2uIVcJLjyuzyS1hkCWD3fmlKVAuwVbyumTh6JQsS4e+4g==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      ai: ^4.3.16
+      zod: ^3.25.34
 
   '@opentelemetry/api-logs@0.200.0':
     resolution: {integrity: sha512-IKJBQxh91qJ+3ssRly5hYEJ8NDHu9oY/B1PXVSCWf7zytmYO9RNLB0Ox9XQ/fJ8m6gY6Q6NtBWlmXfaXt5Uc4Q==}
@@ -5495,6 +5514,13 @@ packages:
 
 snapshots:
 
+  '@ai-sdk/cerebras@0.2.14(zod@3.24.2)':
+    dependencies:
+      '@ai-sdk/openai-compatible': 0.2.14(zod@3.24.2)
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.24.2)
+      zod: 3.24.2
+
   '@ai-sdk/cohere@1.2.10(zod@3.24.2)':
     dependencies:
       '@ai-sdk/provider': 1.1.3
@@ -6313,6 +6339,13 @@ snapshots:
       fastq: 1.19.1
 
   '@nolyfill/is-core-module@1.0.39': {}
+
+  '@openrouter/ai-sdk-provider@0.7.1(ai@4.3.13(react@19.0.0-rc-45804af1-20241021)(zod@3.24.2))(zod@3.24.2)':
+    dependencies:
+      '@ai-sdk/provider': 1.1.3
+      '@ai-sdk/provider-utils': 2.2.8(zod@3.24.2)
+      ai: 4.3.13(react@19.0.0-rc-45804af1-20241021)(zod@3.24.2)
+      zod: 3.24.2
 
   '@opentelemetry/api-logs@0.200.0':
     dependencies:

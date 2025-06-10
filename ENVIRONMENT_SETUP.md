@@ -78,6 +78,24 @@ XAI_API_KEY=your_xai_api_key_here
 - Get your API key from: https://console.x.ai/
 - Used for Grok models (currently commented out due to credit limits)
 
+### 10. OpenRouter (Official AI SDK Provider)
+```
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+```
+- Get your API key from: https://openrouter.ai/keys
+- Used for free tier models from multiple providers (Qwen, DeepSeek, Meta, NVIDIA, Microsoft)
+- Official AI SDK provider with enhanced reliability and features
+- Supports 200+ requests per day on free tier
+
+### 11. Cerebras (Official AI SDK Provider) 
+```
+CEREBRAS_API_KEY=your_cerebras_api_key_here
+```
+- Get your API key from: https://platform.cerebras.ai/
+- Used for ultra-fast inference models (2000+ tokens/second)
+- Official AI SDK provider with automatic configuration
+- Free tier available with generous limits
+
 ## How to Set Environment Variables in Vercel
 
 1. Go to your Vercel dashboard
@@ -102,4 +120,4 @@ The application will now log the provider status and selected models to help you
 - **Trio Series** → Groq models  
 - **Optima Fast** → Mistral models
 - **Optima Deluxe/Light** → Cohere models
-- **Optima Core/Reasoning** → X.AI Grok models 
+- **Optima Core/Reasoning** → X.AI Grok models
