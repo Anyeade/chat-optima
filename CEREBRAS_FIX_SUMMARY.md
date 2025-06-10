@@ -4,12 +4,17 @@
 ## ✅ FIXED MODELS
 - **Cerebras: llama3.1-8b-cerebras** - Now responding properly
 - **Cerebras: llama-3.3-70b-cerebras** - Now responding properly
+- **Groq: compound-beta** - Now responding properly (tools disabled)
+- **Groq: compound-beta-mini** - Now responding properly (tools disabled)
 
-## ❌ MODELS WITH DEEPER ISSUES  
-- **OpenRouter: qwen/qwen2.5-vl-72b-instruct:free** - API/Auth issues
-- **OpenRouter: meta-llama/llama-3.1-8b-instruct:free** - API/Auth issues
-- **Glama: phi-3-medium-128k-instruct** - API/Auth issues
-- **Glama: phi-3-mini-128k-instruct** - API/Auth issues
+## ✅ FIXED ISSUES
+- **JSON Parsing Error**: Fixed "Unexpected token 'H', 'Here are f'..." error in suggestions
+- **Empty Responses**: Fixed models returning empty responses when tools enabled
+- **Tool Compatibility**: Disabled tools for models that don't support them properly
+
+## ❌ PROVIDERS COMPLETELY REMOVED  
+- **OpenRouter models** - Removed due to persistent API/Auth issues
+- **Glama models** - Removed due to persistent API/Auth issues
 
 ## 🔧 WHAT WAS FIXED
 1. **Identified the root cause**: Cerebras models return empty responses when tools are enabled

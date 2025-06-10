@@ -53,40 +53,55 @@ export async function updateChatVisibility({
 }
 
 export async function generatePromptSuggestions() {
-  const { text: suggestions } = await generateText({
-    model: myProvider.languageModel('title-model'),
-    system: `Generate 5 diverse and engaging prompt suggestions for an AI chat interface.
-    Each suggestion should be:
-    - Actionable and specific
-    - Appealing to different use cases (coding, creative writing, analysis, problem-solving, general knowledge)
-    - Between 30-80 characters long
-    - Written as direct commands or questions
-    
-    Return the suggestions as a JSON array of objects with this format:
-    [
-      {"title": "Create a modern website", "label": "for a tech startup", "action": "Create a modern website for a tech startup with hero section, features, and pricing"},
-      {"title": "Write code to", "label": "demonstrate dijkstra's algorithm", "action": "Write code to demonstrate dijkstra's algorithm"},
-      ...
-    ]
-    
-    Make the suggestions varied and interesting, covering different domains like technology, creativity, analysis, and everyday tasks.`,
-    prompt: 'Generate 5 diverse prompt suggestions for an AI chat interface',
-  });
-
   try {
+    const { text: suggestions } = await generateText({
+      model: myProvider.languageModel('title-model'),
+      system: `You are a JSON generator. ONLY return valid JSON, no explanations or additional text.
+
+Generate exactly 5 diverse and engaging prompt suggestions for an AI chat interface.
+
+CRITICAL: Return ONLY a valid JSON array with NO additional text, explanations, or formatting. Start directly with [ and end with ].
+
+Format:
+[
+  {"title": "Create a modern website", "label": "for a tech startup", "action": "Create a modern website for a tech startup with hero section, features, and pricing"},
+  {"title": "Write code to", "label": "demonstrate dijkstra's algorithm", "action": "Write code to demonstrate dijkstra's algorithm"},
+  {"title": "Analyze the performance", "label": "of this React component", "action": "Analyze the performance of this React component and suggest optimizations"},
+  {"title": "Help me plan", "label": "a weekend hiking trip", "action": "Help me plan a weekend hiking trip with route suggestions and gear recommendations"},
+  {"title": "Explain the concept", "label": "of machine learning", "action": "Explain the concept of machine learning in simple terms with practical examples"}
+]`,
+      prompt: 'Generate exactly 5 diverse prompt suggestions as valid JSON array only',
+      maxTokens: 800,
+    });
+
+    // Clean the response - remove any non-JSON content
+    let cleanSuggestions = suggestions.trim();
+    
+    // Find the first [ and last ] to extract only the JSON array
+    const startIndex = cleanSuggestions.indexOf('[');
+    const endIndex = cleanSuggestions.lastIndexOf(']');
+    
+    if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
+      cleanSuggestions = cleanSuggestions.substring(startIndex, endIndex + 1);
+    }
+
     // Parse the JSON response
-    const parsedSuggestions = JSON.parse(suggestions);
+    const parsedSuggestions = JSON.parse(cleanSuggestions);
     
     // Validate the structure
-    if (Array.isArray(parsedSuggestions) && parsedSuggestions.length === 5) {
-      return parsedSuggestions.map(suggestion => ({
-        title: suggestion.title || '',
+    if (Array.isArray(parsedSuggestions) && parsedSuggestions.length >= 3) {
+      return parsedSuggestions.slice(0, 5).map(suggestion => ({
+        title: suggestion.title || 'Untitled',
         label: suggestion.label || '',
-        action: suggestion.action || suggestion.title || '',
+        action: suggestion.action || suggestion.title || 'Ask me anything',
       }));
     }
+    
+    throw new Error('Invalid response structure');
+    
   } catch (error) {
-    console.error('Failed to parse AI-generated suggestions:', error);
+    console.error('Failed to generate AI suggestions:', error);
+    console.log('Falling back to static suggestions');
   }
   
   // Fallback to static suggestions if AI generation fails
