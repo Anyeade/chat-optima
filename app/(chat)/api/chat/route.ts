@@ -159,44 +159,26 @@ export async function POST(request: Request) {
         } catch (error) {
           console.error('✗ Failed to create model instance for:', selectedChatModel, error);
           throw new Error(`Invalid model: ${selectedChatModel}`);
-        }        const result = streamText({
+        }        // Check if this model doesn't work well with tools
+        const isModelWithoutTools = selectedChatModel.includes('cerebras') || 
+                                   selectedChatModel.includes('llama3.1-8b-cerebras') ||
+                                   selectedChatModel.includes('llama-3.3-70b-cerebras') ||
+                                   selectedChatModel.includes('compound-beta') ||
+                                   selectedChatModel.includes('compound-beta-mini');
+
+        const streamTextConfig = {
           model: modelToUse,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
           maxSteps: 5,
-          experimental_activeTools: [
-            'getWeather',
-            'createDocument',
-            'updateDocument',
-            'requestSuggestions',
-            'readDoc',
-            'webSearch',
-            'webpageScreenshot',
-            'webScraper',
-            'pexelsSearch',
-          ],
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
-          tools: {
-            getWeather,
-            webSearch: webSearch({ dataStream }),
-            webpageScreenshot: webpageScreenshot({ dataStream }),
-            webScraper: webScraper({ dataStream }),
-            pexelsSearch: pexelsSearch({ dataStream }),
-            createDocument: createDocument({ session, dataStream, selectedChatModel }),
-            updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
-            requestSuggestions: requestSuggestions({
-              session,
-              dataStream,
-            }),
-            readDoc: readDoc({ session, dataStream, selectedChatModel }),
-          },
-          onFinish: async ({ response }) => {
+          onFinish: async ({ response }: any) => {
             if (session.user?.id) {
               try {
                 const assistantId = getTrailingMessageId({
                   messages: response.messages.filter(
-                    (message) => message.role === 'assistant',
+                    (message: any) => message.role === 'assistant',
                   ),
                 });
 
@@ -231,7 +213,40 @@ export async function POST(request: Request) {
             isEnabled: isProductionEnvironment,
             functionId: 'stream-text',
           },
-        });
+        };        // Only add tools for models that support them properly
+        if (!isModelWithoutTools) {
+          Object.assign(streamTextConfig, {
+            experimental_activeTools: [
+              'getWeather',
+              'createDocument',
+              'updateDocument',
+              'requestSuggestions',
+              'readDoc',
+              'webSearch',
+              'webpageScreenshot',
+              'webScraper',
+              'pexelsSearch',
+            ],
+            tools: {
+              getWeather,
+              webSearch: webSearch({ dataStream }),
+              webpageScreenshot: webpageScreenshot({ dataStream }),
+              webScraper: webScraper({ dataStream }),
+              pexelsSearch: pexelsSearch({ dataStream }),
+              createDocument: createDocument({ session, dataStream, selectedChatModel }),
+              updateDocument: updateDocument({ session, dataStream, selectedChatModel }),
+              requestSuggestions: requestSuggestions({
+                session,
+                dataStream,
+              }),
+              readDoc: readDoc({ session, dataStream, selectedChatModel }),
+            },
+          });        } else {
+          console.log('🚫 Model detected that doesn\'t work well with tools - disabling for compatibility');
+          console.log(`   Model: ${selectedChatModel}`);
+        }
+
+        const result = streamText(streamTextConfig);
 
         result.consumeStream();
 

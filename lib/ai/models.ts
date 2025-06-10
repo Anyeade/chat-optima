@@ -169,23 +169,7 @@ export const chatModels: Array<ChatModel> = [
     id: 'gemma-3-27b-it-requesty',
     name: 'Requesty Gemma 3 27B',
     description: 'Gemma 3 27B instructive model via Requesty Router',
-  },
-  // Glama AI Gateway Series (OpenAI-compatible gateway)
-  {
-    id: 'phi-3-medium-128k-instruct',
-    name: 'Glama Phi-3 Medium',
-    description: 'Microsoft Phi-3 Medium 128K context via Glama',
-  },
-  {
-    id: 'phi-3-mini-128k-instruct',
-    name: 'Glama Phi-3 Mini',
-    description: 'Microsoft Phi-3 Mini 128K context via Glama',
-  },
-  {
-    id: 'llama-3.2-11b-vision-instruct',
-    name: 'Glama Llama 3.2 Vision',
-    description: 'Llama 3.2 11B with vision capabilities via Glama',
-  },
+  },  // Glama AI Gateway Series removed due to API issues
   // Chutes AI Series (OpenAI-compatible gateway)
   {
     id: 'deepseek-ai/DeepSeek-V3-0324',
@@ -211,43 +195,7 @@ export const chatModels: Array<ChatModel> = [
     id: 'grok-3-mini-beta',
     name: 'Optima Grok 3 Mini',
     description: 'X.AI Grok 3 Mini - Compact and efficient',
-  },
-  // OpenRouter Free Series (Multiple providers via OpenRouter)
-  {
-    id: 'qwen/qwen2.5-vl-72b-instruct:free',
-    name: 'Router Qwen 2.5 VL 72B',
-    description: 'Qwen 2.5 Vision-Language 72B - Free via OpenRouter',
-  },
-  {
-    id: 'deepseek/deepseek-v3-base:free',
-    name: 'Router DeepSeek V3 Base',
-    description: 'DeepSeek V3 Base model - Free via OpenRouter',
-  },
-  {
-    id: 'meta-llama/llama-4-scout:free',
-    name: 'Router Llama 4 Scout',
-    description: 'Llama 4 Scout - Free via OpenRouter',
-  },
-  {
-    id: 'meta-llama/llama-4-maverick:free',
-    name: 'Router Llama 4 Maverick',
-    description: 'Llama 4 Maverick - Free via OpenRouter',
-  },
-  {
-    id: 'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
-    name: 'Router Nemotron Ultra 253B',
-    description: 'NVIDIA Nemotron Ultra 253B - Free via OpenRouter',
-  },
-  {
-    id: 'microsoft/mai-ds-r1:free',
-    name: 'Router MAI DS R1',
-    description: 'Microsoft MAI DS R1 - Free via OpenRouter',
-  },
-  {
-    id: 'tngtech/deepseek-r1t-chimera:free',
-    name: 'Router DeepSeek R1T Chimera',
-    description: 'DeepSeek R1T Chimera - Free via OpenRouter',
-  },
+  },  // OpenRouter Free Series removed due to API issues
   // Cerebras Fast Series (Ultra-fast inference)
   {
     id: 'llama-4-scout-17b-16e-instruct-cerebras',

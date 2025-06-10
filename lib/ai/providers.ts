@@ -5,7 +5,7 @@ import {
 } from 'ai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 import { cerebras } from '@ai-sdk/cerebras';
-import { createOpenRouter } from '@openrouter/ai-sdk-provider';
+// OpenRouter and Glama removed due to API issues
 import { xai } from '@ai-sdk/xai';
 import { groq } from '@ai-sdk/groq';
 import { mistral } from '@ai-sdk/mistral';
@@ -20,18 +20,14 @@ import {
   titleModel,
 } from './models.test';
 
-// Create OpenAI-compatible providers
+// Requesty AI (OpenAI-compatible API)
 const requestyAI = createOpenAICompatible({
   name: 'requesty-ai',
   baseURL: 'https://router.requesty.ai/v1',
   apiKey: process.env.REQUESTY_AI_API_KEY || 'dummy-key', // Some providers may not require auth
 });
 
-const glamaAI = createOpenAICompatible({
-  name: 'glama-ai',
-  baseURL: 'https://glama.ai/api/gateway/openai/v1',
-  apiKey: process.env.GLAMA_AI_API_KEY || 'dummy-key', // Some providers may not require auth
-});
+// Chutes AI (OpenAI-compatible API)
 
 const chutesAI = createOpenAICompatible({
   name: 'chutes-ai',
@@ -46,18 +42,6 @@ const googleAI = createOpenAICompatible({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy-key',
 });
 
-// OpenRouter (Official AI SDK Provider)
-const openRouter = createOpenRouter({
-  apiKey: process.env.OPENROUTER_API_KEY || 'dummy-key',
-  headers: {
-    'HTTP-Referer': process.env.VERCEL_URL || 'https://chat-optima.vercel.app',
-    'X-Title': 'Chat Optima',
-  },
-});
-
-// Cerebras (Official AI SDK Provider) - No custom config needed
-// Uses CEREBRAS_API_KEY environment variable automatically
-
 // Debug function to check environment variables
 function checkProviderKeys() {
   const keys = {
@@ -68,30 +52,20 @@ function checkProviderKeys() {
     openai: process.env.OPENAI_API_KEY,
     togetherai: process.env.TOGETHER_AI_API_KEY,
     requestyai: process.env.REQUESTY_AI_API_KEY,
-    glamaai: process.env.GLAMA_AI_API_KEY,
     chutesai: process.env.CHUTES_AI_API_KEY,
     chutesimage: process.env.CHUTES_IMAGE_API_TOKEN,
     xai: process.env.XAI_API_KEY,
-    openrouter: process.env.OPENROUTER_API_KEY,
     cerebras: process.env.CEREBRAS_API_KEY,
   };
-  
-  console.log('🔑 Provider API Keys Status:');
+    console.log('🔑 Provider API Keys Status:');
   console.log('================================');
   Object.entries(keys).forEach(([provider, key]) => {
     const status = key && key !== 'dummy-key' ? '✅ Set' : '❌ Missing';
     const keyPreview = key && key !== 'dummy-key' ? `${key.substring(0, 8)}...` : 'Not found';
     console.log(`${provider.padEnd(12)}: ${status} (${keyPreview})`);
   });
-  // Special debug for the new providers
-  if (process.env.OPENROUTER_API_KEY) {
-    console.log('🌐 OpenRouter (Official AI SDK):', {
-      'HTTP-Referer': process.env.VERCEL_URL || 'https://chat-optima.vercel.app',
-      'X-Title': 'Chat Optima',
-      'API-Key-Length': process.env.OPENROUTER_API_KEY.length
-    });
-  }
   
+  // Special debug for Cerebras
   if (process.env.CEREBRAS_API_KEY) {
     console.log('🧠 Cerebras (Official AI SDK):', {
       'Auto-configuration': 'Uses CEREBRAS_API_KEY environment variable',
@@ -173,12 +147,7 @@ export const myProvider = isTestEnvironment
 
         // Requesty AI Router Models (OpenAI-compatible)
         'google/gemini-2.0-flash-exp': requestyAI('google/gemini-2.0-flash-exp'),
-        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),
-
-        // Glama AI Gateway Models (OpenAI-compatible)
-        'phi-3-medium-128k-instruct': glamaAI('phi-3-medium-128k-instruct'),
-        'phi-3-mini-128k-instruct': glamaAI('phi-3-mini-128k-instruct'),
-        'llama-3.2-11b-vision-instruct': glamaAI('llama-3.2-11b-vision-instruct'),
+        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),        // Glama AI Gateway Models removed due to API issues
 
         // Chutes AI Models (OpenAI-compatible)
         'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'),        'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
@@ -190,17 +159,7 @@ export const myProvider = isTestEnvironment
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
         'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),// X.AI Models (Grok series)
-        'grok-3-mini-beta': xai('grok-3-mini-beta'),        // OpenRouter Models (Free tier with multiple providers)
-        'qwen/qwen2.5-vl-72b-instruct:free': wrapLanguageModel({
-          model: openRouter.chat('qwen/qwen2.5-vl-72b-instruct:free'),
-          middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),
-        'deepseek/deepseek-v3-base:free': openRouter.chat('deepseek/deepseek-v3-base:free'),
-        'meta-llama/llama-4-scout:free': openRouter.chat('meta-llama/llama-4-scout:free'),
-        'meta-llama/llama-4-maverick:free': openRouter.chat('meta-llama/llama-4-maverick:free'),
-        'nvidia/llama-3.1-nemotron-ultra-253b-v1:free': openRouter.chat('nvidia/llama-3.1-nemotron-ultra-253b-v1:free'),
-        'microsoft/mai-ds-r1:free': openRouter.chat('microsoft/mai-ds-r1:free'),
-        'tngtech/deepseek-r1t-chimera:free': openRouter.chat('tngtech/deepseek-r1t-chimera:free'),
+        'grok-3-mini-beta': xai('grok-3-mini-beta'),        // OpenRouter Models removed due to API issues
 
         // Cerebras Models (Ultra-fast inference, free tier)
         'llama-4-scout-17b-16e-instruct-cerebras': cerebras('llama-4-scout-17b-16e-instruct'),

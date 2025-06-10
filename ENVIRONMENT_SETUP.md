@@ -47,15 +47,7 @@ REQUESTY_AI_API_KEY=your_requesty_ai_api_key_here
 - OpenAI-compatible router for accessing various models
 - May not require authentication for some endpoints
 
-### 7. Glama AI Gateway (Optional)
-```
-GLAMA_AI_API_KEY=your_glama_ai_api_key_here
-```
-- Get your API key from: https://glama.ai/
-- OpenAI-compatible gateway for accessing Phi-3 and Llama models
-- May not require authentication for some endpoints
-
-### 8. Chutes AI (Optional)
+### 7. Chutes AI (Optional)
 ```
 CHUTES_AI_API_KEY=your_chutes_ai_api_key_here
 ```
@@ -63,7 +55,7 @@ CHUTES_AI_API_KEY=your_chutes_ai_api_key_here
 - OpenAI-compatible provider for DeepSeek V3, DeepSeek R1, Qwen 3, and Llama 4 models
 - May not require authentication for some endpoints
 
-### 8b. Chutes AI Image Generation (Optional)
+### 7b. Chutes AI Image Generation (Optional)
 ```
 CHUTES_IMAGE_API_TOKEN=your_chutes_image_api_token_here
 ```
@@ -71,23 +63,14 @@ CHUTES_IMAGE_API_TOKEN=your_chutes_image_api_token_here
 - Used for AI image generation (replaces OpenAI DALL-E 3)
 - Primary image generation provider with OpenAI fallback
 
-### 9. X.AI (Grok) - Optional
+### 8. X.AI (Grok) - Optional
 ```
 XAI_API_KEY=your_xai_api_key_here
 ```
 - Get your API key from: https://console.x.ai/
 - Used for Grok models (currently commented out due to credit limits)
 
-### 10. OpenRouter (Official AI SDK Provider)
-```
-OPENROUTER_API_KEY=your_openrouter_api_key_here
-```
-- Get your API key from: https://openrouter.ai/keys
-- Used for free tier models from multiple providers (Qwen, DeepSeek, Meta, NVIDIA, Microsoft)
-- Official AI SDK provider with enhanced reliability and features
-- Supports 200+ requests per day on free tier
-
-### 11. Cerebras (Official AI SDK Provider) 
+### 9. Cerebras (Official AI SDK Provider)
 ```
 CEREBRAS_API_KEY=your_cerebras_api_key_here
 ```

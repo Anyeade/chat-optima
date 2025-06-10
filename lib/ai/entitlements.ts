@@ -13,15 +13,11 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
     maxMessagesPerDay: 30,
     availableChatModelIds: [
       'chat-model', 
-      'chat-model-reasoning',
-      // Google Gemini Models (basic access)
+      'chat-model-reasoning',      // Google Gemini Models (basic access)
       'gemini-2.0-flash-lite', // Lightweight model for guests
       // Free/accessible models for guests
-      'phi-3-mini-128k-instruct', // Glama AI - smaller model
       'google/gemini-2.0-flash-exp', // Requesty AI - experimental access
-      // OpenRouter Free Models (limited selection for guests)
-      'meta-llama/llama-4-scout:free',
-      'qwen/qwen2.5-vl-72b-instruct:free',
+      // OpenRouter and Glama models removed due to API issues
       // Cerebras Fast Models (limited selection for guests)
       'llama3.1-8b-cerebras',
       'llama-3.3-70b-cerebras',
@@ -69,28 +65,17 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
       // Together.ai Models (200+ open-source models, free options)
       'meta-llama/Llama-Vision-Free',
       'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free',
-      'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
-      // Requesty AI Router Models (OpenAI-compatible)
+      'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',      // Requesty AI Router Models (OpenAI-compatible)
       'google/gemini-2.0-flash-exp',
       'gemma-3-27b-it-requesty',
-      // Glama AI Gateway Models (OpenAI-compatible)
-      'phi-3-medium-128k-instruct',
-      'phi-3-mini-128k-instruct',
-      'llama-3.2-11b-vision-instruct',
+      // Glama AI Gateway Models removed due to API issues
       // Chutes AI Models (OpenAI-compatible)
       'deepseek-ai/DeepSeek-V3-0324',
       'deepseek-ai/DeepSeek-R1',
       'Qwen/Qwen3-235B-A22B',
       'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',      // X.AI Models (Grok series)
       'grok-3-mini-beta',
-      // OpenRouter Free Models (Multiple providers)
-      'qwen/qwen2.5-vl-72b-instruct:free',
-      'deepseek/deepseek-v3-base:free',
-      'meta-llama/llama-4-scout:free',
-      'meta-llama/llama-4-maverick:free',
-      'nvidia/llama-3.1-nemotron-ultra-253b-v1:free',
-      'microsoft/mai-ds-r1:free',
-      'tngtech/deepseek-r1t-chimera:free',
+      // OpenRouter Free Models removed due to API issues
       // Cerebras Fast Models (Ultra-fast inference)
       'llama-4-scout-17b-16e-instruct-cerebras',
       'llama3.1-8b-cerebras',
