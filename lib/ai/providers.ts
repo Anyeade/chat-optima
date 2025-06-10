@@ -98,7 +98,7 @@ export const myProvider = isTestEnvironment
         'chat-model-reasoning': wrapLanguageModel({
           model: groq('deepseek-r1-distill-llama-70b'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),        'title-model': groq('llama3-70b-8192'), // High volume model with tool support        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),        // Google Gemini Models (OpenAI-compatible endpoint)
+        }),        'title-model': groq('compound-beta'), // Optimized for JSON generation and suggestions        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),        // Google Gemini Models (OpenAI-compatible endpoint)
         'gemini-2.0-flash': googleAI('gemini-2.0-flash'),
         'gemini-2.0-flash-lite': googleAI('gemini-2.0-flash-lite'), 
         'gemini-2.0-flash-exp': googleAI('gemini-2.0-flash-exp'),

@@ -162,9 +162,8 @@ export async function POST(request: Request) {
         }        // Check if this model doesn't work well with tools
         const isModelWithoutTools = selectedChatModel.includes('cerebras') || 
                                    selectedChatModel.includes('llama3.1-8b-cerebras') ||
-                                   selectedChatModel.includes('llama-3.3-70b-cerebras') ||
-                                   selectedChatModel.includes('compound-beta') ||
-                                   selectedChatModel.includes('compound-beta-mini');
+                                   selectedChatModel.includes('llama-3.3-70b-cerebras');
+                                   // Compound models removed from user selection
 
         const streamTextConfig = {
           model: modelToUse,

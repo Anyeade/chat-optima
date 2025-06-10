@@ -56,48 +56,92 @@ export async function generatePromptSuggestions() {
   try {
     const { text: suggestions } = await generateText({
       model: myProvider.languageModel('title-model'),
-      system: `You are a JSON generator. ONLY return valid JSON, no explanations or additional text.
+      system: `Generate 5 complete prompt suggestions as a JSON array. Return only valid JSON with no extra text.
 
-Generate exactly 5 diverse and engaging prompt suggestions for an AI chat interface.
+Each suggestion must have:
+- title: short engaging start (3-6 words)
+- label: completion phrase (2-4 words) 
+- action: full detailed prompt (8+ words)
 
-CRITICAL: Return ONLY a valid JSON array with NO additional text, explanations, or formatting. Start directly with [ and end with ].
-
-Format:
+Example format:
 [
   {"title": "Create a modern website", "label": "for a tech startup", "action": "Create a modern website for a tech startup with hero section, features, and pricing"},
-  {"title": "Write code to", "label": "demonstrate dijkstra's algorithm", "action": "Write code to demonstrate dijkstra's algorithm"},
-  {"title": "Analyze the performance", "label": "of this React component", "action": "Analyze the performance of this React component and suggest optimizations"},
-  {"title": "Help me plan", "label": "a weekend hiking trip", "action": "Help me plan a weekend hiking trip with route suggestions and gear recommendations"},
-  {"title": "Explain the concept", "label": "of machine learning", "action": "Explain the concept of machine learning in simple terms with practical examples"}
-]`,
-      prompt: 'Generate exactly 5 diverse prompt suggestions as valid JSON array only',
-      maxTokens: 800,
+  {"title": "Write Python code", "label": "for data analysis", "action": "Write Python code to analyze sales data and create visualizations"}
+]
+
+CRITICAL: Always close the JSON array with ] and no trailing commas!
+Return ONLY the JSON array, nothing else.`,
+      prompt: 'Generate 5 diverse, complete prompt suggestions as JSON array',
+      maxTokens: 1500,
     });
 
-    // Clean the response - remove any non-JSON content
+    console.log('Suggestion generation response:', suggestions.substring(0, 200) + '...');
+
+    // Clean the response more aggressively
     let cleanSuggestions = suggestions.trim();
     
-    // Find the first [ and last ] to extract only the JSON array
-    const startIndex = cleanSuggestions.indexOf('[');
-    const endIndex = cleanSuggestions.lastIndexOf(']');
+    // Remove any markdown formatting
+    cleanSuggestions = cleanSuggestions.replace(/```json\s*/gi, '').replace(/```\s*/gi, '');
     
-    if (startIndex !== -1 && endIndex !== -1 && startIndex < endIndex) {
-      cleanSuggestions = cleanSuggestions.substring(startIndex, endIndex + 1);
+    // Find the JSON array bounds
+    const startIndex = cleanSuggestions.indexOf('[');
+    let endIndex = cleanSuggestions.lastIndexOf(']');
+    
+    if (startIndex !== -1) {
+      if (endIndex === -1 || endIndex <= startIndex) {
+        // JSON is incomplete, try to fix it
+        console.log('Incomplete JSON detected, attempting to fix...');
+        
+        // Get everything from [ onwards
+        let partialJson = cleanSuggestions.substring(startIndex);
+        
+        // Clean up any trailing whitespace and incomplete parts
+        partialJson = partialJson.replace(/\s+$/, ''); // Remove trailing whitespace
+        
+        // Remove any trailing incomplete object or malformed content
+        const lastCompleteObjectIndex = partialJson.lastIndexOf('}');
+        if (lastCompleteObjectIndex !== -1) {
+          partialJson = partialJson.substring(0, lastCompleteObjectIndex + 1);
+          
+          // Remove any trailing comma and close the array
+          partialJson = partialJson.replace(/,\s*$/, '') + ']';
+          cleanSuggestions = partialJson;
+        } else {
+          throw new Error('Cannot repair incomplete JSON - no complete objects found');
+        }
+      } else {
+        cleanSuggestions = cleanSuggestions.substring(startIndex, endIndex + 1);
+      }
+    } else {
+      throw new Error('No valid JSON array found in response');
     }
 
     // Parse the JSON response
     const parsedSuggestions = JSON.parse(cleanSuggestions);
     
-    // Validate the structure
+    // Validate and filter suggestions
     if (Array.isArray(parsedSuggestions) && parsedSuggestions.length >= 3) {
-      return parsedSuggestions.slice(0, 5).map(suggestion => ({
-        title: suggestion.title || 'Untitled',
-        label: suggestion.label || '',
-        action: suggestion.action || suggestion.title || 'Ask me anything',
-      }));
+      const validSuggestions = parsedSuggestions
+        .filter(suggestion => 
+          suggestion.title && 
+          suggestion.title.length >= 3 && 
+          suggestion.action && 
+          suggestion.action.length >= 10
+        )
+        .slice(0, 5)
+        .map(suggestion => ({
+          title: suggestion.title.trim(),
+          label: (suggestion.label || '').trim(),
+          action: suggestion.action.trim(),
+        }));
+      
+      if (validSuggestions.length >= 3) {
+        console.log(`Generated ${validSuggestions.length} valid suggestions`);
+        return validSuggestions;
+      }
     }
     
-    throw new Error('Invalid response structure');
+    throw new Error('Insufficient valid suggestions generated');
     
   } catch (error) {
     console.error('Failed to generate AI suggestions:', error);

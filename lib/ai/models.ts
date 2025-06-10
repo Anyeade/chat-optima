@@ -53,22 +53,12 @@ export const chatModels: Array<ChatModel> = [
     id: 'meta-llama/llama-4-maverick-17b-128e-instruct',
     name: 'Trio Maverick 4',
     description: 'Llama 4 Maverick - Advanced reasoning',
-  },
-  {
+  },  {
     id: 'deepseek-r1-distill-llama-70b',
     name: 'Trio DeepSeek R1',
     description: 'DeepSeek R1 distilled reasoning model',
   },
-  {
-    id: 'compound-beta',
-    name: 'Trio Compound',
-    description: 'Groq compound beta model',
-  },
-  {
-    id: 'compound-beta-mini',
-    name: 'Trio Compound Mini',
-    description: 'Groq compound beta mini model',
-  },
+  // Compound models removed from user selection (used internally for suggestions)
   {
     id: 'llama-3.3-70b-versatile',
     name: 'Trio Llama 3.3',
