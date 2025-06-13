@@ -159,12 +159,20 @@ export default function AboutPage() {
               </div>
               <h3 className="text-xl font-semibold text-white mb-2">Hans Ade</h3>
               <p className="text-[#58a6ff] text-sm mb-3">CEO & Founder</p>
-              <p className="text-gray-400 text-sm mb-3">Software Engineer</p>
-              <div className="text-gray-400 text-xs space-y-1">
-                <p>BTech in Software Engineering</p>
-                <p>Atlantic International University, Hawaii USA</p>
-                <p>BTech in Software Engineering</p>
-                <p>SwissLink Higher Institute of Business and Technology, Douala Cameroon</p>
+              <p className="text-gray-400 text-sm mb-3">Software Engineer & AI Researcher</p>
+              <div className="text-gray-400 text-xs space-y-2 mb-4">
+                <div className="border-b border-gray-600 pb-2">
+                  <p className="text-white font-medium text-sm">Professional Experience</p>
+                  <p>3+ years in Computer Programming & Software Development</p>
+                  <p>2 years AI Research at Google AI - Python, Transformer Architecture, AI Training</p>
+                </div>
+                <div>
+                  <p className="text-white font-medium text-sm">Education</p>
+                  <p>BTech in Software Engineering</p>
+                  <p>Atlantic International University, Hawaii USA</p>
+                  <p>BTech in Software Engineering</p>
+                  <p>SwissLink Higher Institute of Business and Technology, Douala Cameroon</p>
+                </div>
               </div>
             </div>
 
