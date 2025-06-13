@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import AuthAwareNavbar from '@/components/ui/auth-aware-navbar';
 import ScrollToTopButton from '@/components/ui/scroll-to-top-button';
 import { HeroParticles } from '@/components/particles-background';
+import { MarkdownRenderer } from '@/components/ui/markdown-renderer';
 import '../../landing/landing.css';
 
 interface BlogPost {
@@ -903,12 +904,719 @@ The power of AI is now at your fingertips. Start experimenting with different mo
     `,
     category: 'Tutorials',
     tags: ['API', 'Getting Started', 'Authentication', 'Integration'],
-    author: 'Mark Rodriguez',
-    authorRole: 'Developer Relations',
+    author: 'Mark Rodriguez',    authorRole: 'Developer Relations',
     publishDate: 'December 8, 2024',
     readTime: '12 min read',
     featured: false,
     slug: 'building-first-ai-app-api'
+  },
+  {
+    id: '4',
+    title: 'Advanced Prompting Techniques for Better AI Results',
+    excerpt: 'Master the art of prompt engineering to get the most out of AI models with proven techniques and real-world examples.',
+    content: `
+# Advanced Prompting Techniques for Better AI Results
+
+Effective prompting is the key to unlocking the full potential of AI models. Whether you're using GPT-4, Gemini Pro, or Grok, the way you structure your prompts can dramatically improve the quality and relevance of the responses you receive.
+
+## Understanding Prompt Engineering
+
+Prompt engineering is both an art and a science. It involves crafting inputs that guide AI models to produce desired outputs consistently and effectively.
+
+### The Anatomy of a Great Prompt
+
+A well-structured prompt typically includes:
+
+1. **Context**: Background information
+2. **Instructions**: Clear, specific directions
+3. **Examples**: Demonstrations of desired output
+4. **Constraints**: Limitations or requirements
+5. **Output Format**: How you want the response structured
+
+## Core Techniques
+
+### 1. Few-Shot Learning
+
+Provide examples to guide the AI's understanding:
+
+\`\`\`
+Translate the following sentences to French:
+
+English: Hello, how are you?
+French: Bonjour, comment allez-vous?
+
+English: What time is it?
+French: Quelle heure est-il?
+
+English: Where is the library?
+French: [Your translation here]
+\`\`\`
+
+### 2. Chain of Thought
+
+Break down complex problems into steps:
+
+\`\`\`
+Solve this step by step:
+A company has 150 employees. 60% work remotely. Of those who work remotely, 25% live in a different timezone. How many employees live in a different timezone?
+
+Step 1: Calculate remote workers
+Step 2: Calculate different timezone workers
+Step 3: Provide final answer
+\`\`\`
+
+### 3. Role-Based Prompting
+
+Assign specific roles to get specialized responses:
+
+\`\`\`
+You are a senior software architect with 15 years of experience. 
+Analyze this database design and suggest improvements for scalability.
+\`\`\`
+
+## Advanced Strategies
+
+### Temperature Control
+
+Adjust creativity vs. consistency:
+- **Low temperature (0.1-0.3)**: Factual, consistent responses
+- **Medium temperature (0.4-0.7)**: Balanced creativity
+- **High temperature (0.8-1.0)**: Creative, varied outputs
+
+### Prompt Chaining
+
+Break complex tasks into multiple prompts:
+
+1. First prompt: Analyze the problem
+2. Second prompt: Generate solutions
+3. Third prompt: Evaluate and rank solutions
+
+### Negative Prompting
+
+Specify what you don't want:
+
+\`\`\`
+Write a product review for a smartphone. 
+Do NOT mention:
+- Price comparisons
+- Technical specifications
+- Competitor products
+
+Focus on user experience and practical benefits.
+\`\`\`
+
+## Domain-Specific Techniques
+
+### For Code Generation
+
+\`\`\`
+Create a Python function that:
+- Takes a list of dictionaries as input
+- Filters items where 'status' is 'active'
+- Returns sorted results by 'created_date'
+- Include error handling for edge cases
+- Add docstring with examples
+\`\`\`
+
+### For Creative Writing
+
+\`\`\`
+Write a short story (500 words) with:
+- Setting: Victorian London
+- Protagonist: A detective with synesthesia
+- Conflict: Missing person case
+- Tone: Dark but hopeful
+- Include sensory details related to synesthesia
+\`\`\`
+
+### For Data Analysis
+
+\`\`\`
+Analyze this sales data:
+[data here]
+
+Provide:
+1. Key trends and patterns
+2. Potential causes for anomalies
+3. Actionable recommendations
+4. Confidence level for each insight
+\`\`\`
+
+## Best Practices
+
+### 1. Be Specific and Clear
+
+Instead of: "Help me with marketing"
+Use: "Create a social media content calendar for a B2B SaaS company targeting developers, focusing on educational content about API integration"
+
+### 2. Use Structured Formats
+
+\`\`\`
+Task: [What you want done]
+Context: [Background information]
+Requirements: [Specific needs]
+Output: [Desired format]
+Constraints: [Limitations]
+\`\`\`
+
+### 3. Iterate and Refine
+
+Start with a basic prompt and refine based on results:
+- Add missing context
+- Clarify ambiguous instructions
+- Include better examples
+- Adjust constraints
+
+### 4. Test Across Models
+
+Different models respond differently to the same prompt. Test your prompts across multiple models to find the best fit.
+
+## Common Pitfalls to Avoid
+
+### 1. Overloading with Information
+- Keep prompts focused
+- Break complex requests into smaller parts
+
+### 2. Ambiguous Instructions
+- Be explicit about requirements
+- Avoid vague terms like "good" or "better"
+
+### 3. Ignoring Context Windows
+- Stay within model limits
+- Prioritize most important information
+
+### 4. Not Validating Outputs
+- Always verify AI-generated content
+- Implement quality checks
+
+## Measuring Prompt Effectiveness
+
+Track these metrics:
+- **Relevance**: How well does the output match your needs?
+- **Consistency**: Do you get similar quality across runs?
+- **Efficiency**: How many iterations needed for good results?
+- **Creativity**: Does it provide novel insights when needed?
+
+## Conclusion
+
+Mastering prompt engineering is an ongoing process. Start with these techniques, experiment with different approaches, and continuously refine your methods based on results.
+
+Remember: the best prompt is one that consistently produces the output you need for your specific use case.
+
+---
+
+*Want to practice these techniques? Try them in [Optima AI Chat](https://optima-ai.com/chat) with different models to see how they respond.*
+    `,
+    category: 'Best Practices',
+    tags: ['Prompting', 'AI Techniques', 'Optimization', 'Best Practices'],
+    author: 'Dr. Sarah Chen',
+    authorRole: 'AI Research Lead',
+    publishDate: 'December 5, 2024',
+    readTime: '15 min read',
+    featured: false,
+    slug: 'advanced-prompting-techniques'
+  },
+  {
+    id: '5',
+    title: 'The Future of AI Development in 2025: Trends and Predictions',
+    excerpt: 'Explore the cutting-edge trends shaping AI development in 2025, from multimodal models to AI agents and beyond.',
+    content: `
+# The Future of AI Development in 2025: Trends and Predictions
+
+As we advance through 2025, the AI landscape continues to evolve at an unprecedented pace. From breakthrough model architectures to revolutionary applications, this year promises to be transformative for developers, businesses, and society at large.
+
+## Major Trends Shaping 2025
+
+### 1. Multimodal AI Becomes Mainstream
+
+The integration of text, image, audio, and video processing in single models is reaching maturity:
+
+- **Vision-Language Models**: Seamless interaction between visual and textual understanding
+- **Audio Integration**: Real-time speech processing and generation
+- **Video Understanding**: AI that can comprehend and generate video content
+- **Cross-Modal Search**: Finding images with text descriptions and vice versa
+
+### 2. AI Agents and Autonomous Systems
+
+The shift from reactive AI to proactive AI agents:
+
+- **Task Automation**: AI that can complete multi-step workflows
+- **Decision Making**: Autonomous systems that can make contextual decisions
+- **Tool Integration**: AI agents that can use external tools and APIs
+- **Collaborative AI**: Multiple AI agents working together on complex tasks
+
+### 3. Edge AI and Distributed Computing
+
+Moving AI processing closer to users:
+
+- **Mobile AI**: Powerful models running directly on smartphones
+- **IoT Integration**: AI capabilities in everyday devices
+- **Edge Computing**: Reduced latency and improved privacy
+- **Hybrid Architectures**: Combining cloud and edge processing
+
+## Breakthrough Technologies
+
+### Mixture of Experts (MoE) Models
+
+More efficient model architectures:
+
+\`\`\`python
+# Example: Routing to specialized expert models
+def route_to_expert(input_text, experts):
+    task_type = classify_task(input_text)
+    expert = select_expert(task_type, experts)
+    return expert.process(input_text)
+\`\`\`
+
+### Retrieval-Augmented Generation (RAG) 2.0
+
+Enhanced knowledge integration:
+
+- **Real-time Updates**: Dynamic knowledge base integration
+- **Multimodal Retrieval**: Finding relevant images, documents, and data
+- **Personalized RAG**: Context adapted to individual users
+- **Federated Knowledge**: Accessing distributed knowledge sources
+
+### Neurosymbolic AI
+
+Combining neural networks with symbolic reasoning:
+
+- **Logical Reasoning**: AI that can follow logical rules
+- **Explainable AI**: Models that can explain their reasoning
+- **Knowledge Graphs**: Integration with structured knowledge
+- **Causal Inference**: Understanding cause-and-effect relationships
+
+## Development Tools and Frameworks
+
+### Next-Generation AI Frameworks
+
+\`\`\`javascript
+// Example: Modern AI framework usage
+import { OptimaAI } from '@optima-ai/sdk';
+
+const ai = new OptimaAI({
+  model: 'gpt-4-2025',
+  multimodal: true,
+  agents: true
+});
+
+const result = await ai.agent
+  .withTools(['web_search', 'image_generation'])
+  .execute('Create a marketing campaign for our new product');
+\`\`\`
+
+### Low-Code AI Development
+
+Making AI accessible to non-programmers:
+
+- **Visual AI Builders**: Drag-and-drop AI application creation
+- **Natural Language Programming**: Describing AI behavior in plain English
+- **Template Libraries**: Pre-built AI solutions for common use cases
+- **One-Click Deployment**: Simplified deployment and scaling
+
+## Industry-Specific Applications
+
+### Healthcare AI
+
+- **Diagnostic Assistants**: AI-powered medical diagnosis
+- **Drug Discovery**: Accelerated pharmaceutical research
+- **Personalized Medicine**: Treatment plans adapted to individuals
+- **Telemedicine Enhancement**: AI-enhanced remote healthcare
+
+### Educational AI
+
+- **Personalized Learning**: Adaptive curricula for individual students
+- **AI Tutors**: 24/7 educational assistance
+- **Content Generation**: Automatic creation of educational materials
+- **Assessment Automation**: Intelligent grading and feedback
+
+### Creative Industries
+
+- **Content Creation**: AI-assisted writing, design, and video production
+- **Music Generation**: AI composers and producers
+- **Game Development**: Procedural content generation
+- **Art Collaboration**: Human-AI creative partnerships
+
+## Challenges and Considerations
+
+### Technical Challenges
+
+1. **Computational Requirements**: Managing increased processing demands
+2. **Data Quality**: Ensuring training data accuracy and bias reduction
+3. **Model Interpretability**: Understanding AI decision-making processes
+4. **Integration Complexity**: Combining multiple AI systems effectively
+
+### Ethical and Social Implications
+
+1. **Job Displacement**: Preparing for workforce changes
+2. **Privacy Concerns**: Protecting user data in AI systems
+3. **Bias and Fairness**: Ensuring equitable AI outcomes
+4. **Regulation Compliance**: Navigating evolving AI governance
+
+## Predictions for 2025
+
+### Q2 2025: Multimodal Breakthroughs
+- Major releases of GPT-5 and Gemini Ultra with enhanced multimodal capabilities
+- First consumer applications of real-time video understanding
+
+### Q3 2025: Edge AI Revolution
+- Smartphones with on-device models comparable to cloud-based AI from 2024
+- IoT devices with advanced AI capabilities become mainstream
+
+### Q4 2025: Agent Ecosystems
+- Launch of the first major AI agent marketplaces
+- Enterprise adoption of multi-agent AI systems reaches 50%
+
+## Preparing for the Future
+
+### For Developers
+
+1. **Learn Multimodal Development**: Understand cross-modal AI applications
+2. **Master Agent Programming**: Develop skills in AI agent orchestration
+3. **Edge AI Optimization**: Learn to deploy models on resource-constrained devices
+4. **Ethical AI Practices**: Implement responsible AI development practices
+
+### For Businesses
+
+1. **AI Strategy Update**: Revise AI adoption strategies for 2025 trends
+2. **Workforce Planning**: Prepare teams for AI-augmented workflows
+3. **Infrastructure Investment**: Upgrade systems for next-generation AI
+4. **Partnership Opportunities**: Explore collaborations with AI companies
+
+## Getting Started Today
+
+### Experiment with Current Tools
+
+\`\`\`bash
+# Try cutting-edge features in Optima AI
+curl -X POST https://api.optima-ai.com/v2/multimodal \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -F "text=Analyze this image and suggest improvements" \\
+  -F "image=@product_photo.jpg"
+\`\`\`
+
+### Build Future-Ready Applications
+
+Focus on:
+- Modular AI architectures
+- Cross-platform compatibility
+- Scalable infrastructure
+- User privacy protection
+
+## Conclusion
+
+2025 represents a pivotal year for AI development. The convergence of multimodal AI, autonomous agents, and edge computing is creating unprecedented opportunities for innovation.
+
+Success in this evolving landscape requires staying informed, experimenting with new technologies, and maintaining a focus on practical applications that benefit users and society.
+
+The future of AI is not just about more powerful models—it's about more intelligent, accessible, and beneficial AI systems that enhance human capabilities across all domains.
+
+---
+
+*Stay ahead of AI trends by joining our [developer community](https://discord.gg/optima-ai) and exploring the latest features in [Optima AI](https://optima-ai.com/chat).*
+    `,
+    category: 'Company News',
+    tags: ['Future Trends', '2025 Predictions', 'AI Development', 'Innovation'],
+    author: 'Dr. Alex Kim',
+    authorRole: 'Chief Technology Officer',
+    publishDate: 'December 1, 2024',    readTime: '18 min read',
+    featured: true,
+    slug: 'future-ai-development-2025'
+  },
+  {
+    id: '6',
+    title: 'Enterprise Security in AI Applications: Best Practices and Implementation',
+    excerpt: 'Comprehensive guide to securing AI applications in enterprise environments, covering authentication, data protection, and compliance.',
+    content: `
+# Enterprise Security in AI Applications: Best Practices and Implementation
+
+As AI applications become integral to enterprise operations, securing these systems is paramount. This comprehensive guide covers essential security practices for deploying AI applications in enterprise environments.
+
+## Security Framework Overview
+
+### Core Security Principles
+
+1. **Zero Trust Architecture**: Never trust, always verify
+2. **Defense in Depth**: Multiple layers of security controls
+3. **Principle of Least Privilege**: Minimal necessary access
+4. **Data Minimization**: Collect and process only necessary data
+5. **Continuous Monitoring**: Real-time threat detection
+
+## Authentication and Authorization
+
+### Multi-Factor Authentication (MFA)
+
+\`\`\`javascript
+// Implementation example
+const authenticateUser = async (credentials) => {
+  const primaryAuth = await validatePassword(credentials);
+  if (primaryAuth.success) {
+    const mfaChallenge = await sendMFAChallenge(credentials.userId);
+    return { requiresMFA: true, challengeId: mfaChallenge.id };
+  }
+  return { success: false };
+};
+\`\`\`
+
+### Role-Based Access Control (RBAC)
+
+Define granular permissions:
+- **AI Model Access**: Control which models users can access
+- **Data Permissions**: Restrict access to sensitive datasets
+- **Feature Flags**: Enable/disable functionality by role
+- **API Rate Limits**: Prevent abuse and ensure fair usage
+
+### Single Sign-On (SSO) Integration
+
+\`\`\`javascript
+// SAML/OAuth integration
+const ssoConfig = {
+  provider: 'active-directory',
+  domains: ['company.com'],
+  attributes: ['department', 'clearance_level'],
+  redirectUri: 'https://ai-platform.company.com/auth/callback'
+};
+\`\`\`
+
+## Data Protection and Privacy
+
+### Encryption Standards
+
+#### Data at Rest
+- **AES-256**: Encrypt stored data and models
+- **Key Rotation**: Regular cryptographic key updates
+- **Hardware Security Modules (HSM)**: Secure key storage
+
+#### Data in Transit
+- **TLS 1.3**: All communications encrypted
+- **Certificate Pinning**: Prevent man-in-the-middle attacks
+- **Perfect Forward Secrecy**: Session key protection
+
+### Data Anonymization
+
+\`\`\`python
+# Example anonymization pipeline
+def anonymize_dataset(data):
+    # Remove direct identifiers
+    data = remove_pii(data)
+    
+    # Apply k-anonymity
+    data = generalize_attributes(data, k=5)
+    
+    # Add differential privacy noise
+    data = add_privacy_noise(data, epsilon=1.0)
+    
+    return data
+\`\`\`
+
+### Privacy-Preserving AI
+
+- **Federated Learning**: Train models without centralizing data
+- **Homomorphic Encryption**: Compute on encrypted data
+- **Secure Multi-party Computation**: Collaborative analysis without data sharing
+- **Differential Privacy**: Mathematically proven privacy guarantees
+
+## Infrastructure Security
+
+### Secure AI Pipeline
+
+\`\`\`yaml
+# Kubernetes security configuration
+apiVersion: v1
+kind: Pod
+spec:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    fsGroup: 2000
+  containers:
+  - name: ai-service
+    securityContext:
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: true
+      capabilities:
+        drop:
+        - ALL
+\`\`\`
+
+### Network Security
+
+- **VPC/Network Segmentation**: Isolate AI workloads
+- **Firewall Rules**: Restrict network access
+- **VPN/Private Endpoints**: Secure external connections
+- **DDoS Protection**: Defend against attacks
+
+### Container Security
+
+\`\`\`dockerfile
+# Secure Dockerfile example
+FROM python:3.11-slim
+
+# Create non-root user
+RUN groupadd -r aiuser && useradd -r -g aiuser aiuser
+
+# Copy and install dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Switch to non-root user
+USER aiuser
+
+# Run application
+CMD ["python", "app.py"]
+\`\`\`
+
+## Model Security
+
+### Model Integrity
+
+- **Digital Signatures**: Verify model authenticity
+- **Checksums**: Detect model tampering
+- **Version Control**: Track model changes
+- **Secure Model Registry**: Centralized model management
+
+### Adversarial Attack Protection
+
+\`\`\`python
+# Input validation and sanitization
+def validate_input(user_input):
+    # Check input length
+    if len(user_input) > MAX_INPUT_LENGTH:
+        raise ValidationError("Input too long")
+    
+    # Sanitize input
+    sanitized = html.escape(user_input)
+    
+    # Check for adversarial patterns
+    if detect_adversarial_input(sanitized):
+        raise SecurityError("Potentially malicious input detected")
+    
+    return sanitized
+\`\`\`
+
+### Model Poisoning Prevention
+
+- **Data Validation**: Verify training data integrity
+- **Anomaly Detection**: Identify unusual patterns
+- **Robust Training**: Use adversarial training techniques
+- **Model Monitoring**: Continuous performance tracking
+
+## Compliance and Governance
+
+### Regulatory Compliance
+
+#### GDPR Compliance
+- **Data Subject Rights**: Right to deletion, portability, access
+- **Consent Management**: Clear opt-in/opt-out mechanisms
+- **Data Processing Records**: Detailed audit trails
+- **Privacy Impact Assessments**: Risk evaluation
+
+#### HIPAA Compliance (Healthcare)
+- **PHI Protection**: Safeguard protected health information
+- **Business Associate Agreements**: Third-party compliance
+- **Audit Logs**: Comprehensive access tracking
+- **Incident Response**: Breach notification procedures
+
+### AI Ethics and Fairness
+
+\`\`\`python
+# Bias detection and mitigation
+def assess_model_fairness(model, test_data):
+    results = {}
+    for group in protected_groups:
+        group_data = filter_by_group(test_data, group)
+        predictions = model.predict(group_data)
+        results[group] = {
+            'accuracy': calculate_accuracy(predictions),
+            'false_positive_rate': calculate_fpr(predictions),
+            'demographic_parity': check_demographic_parity(predictions)
+        }
+    return results
+\`\`\`
+
+## Monitoring and Incident Response
+
+### Security Monitoring
+
+\`\`\`javascript
+// Real-time monitoring setup
+const securityMonitor = {
+  rules: [
+    {
+      name: 'unusual_api_activity',
+      condition: 'requests > 1000 in 1m',
+      action: 'alert_and_throttle'
+    },
+    {
+      name: 'suspicious_model_access',
+      condition: 'model_access outside business_hours',
+      action: 'require_additional_auth'
+    }
+  ]
+};
+\`\`\`
+
+### Incident Response Plan
+
+1. **Detection**: Automated alerts and monitoring
+2. **Classification**: Assess severity and impact
+3. **Containment**: Isolate affected systems
+4. **Investigation**: Determine root cause
+5. **Recovery**: Restore normal operations
+6. **Lessons Learned**: Update security measures
+
+## Implementation Roadmap
+
+### Phase 1: Foundation (Months 1-2)
+- Implement authentication and authorization
+- Set up basic encryption and network security
+- Establish monitoring and logging
+
+### Phase 2: Advanced Security (Months 3-4)
+- Deploy privacy-preserving techniques
+- Implement model security measures
+- Set up compliance frameworks
+
+### Phase 3: Continuous Improvement (Ongoing)
+- Regular security assessments
+- Update security measures for new threats
+- Train team on security best practices
+
+## Security Checklist
+
+### Before Deployment
+- [ ] Authentication system tested
+- [ ] All data encrypted at rest and in transit
+- [ ] Network security configured
+- [ ] Model integrity verified
+- [ ] Compliance requirements met
+- [ ] Monitoring systems active
+
+### Regular Assessments
+- [ ] Penetration testing conducted
+- [ ] Vulnerability scans completed
+- [ ] Access permissions reviewed
+- [ ] Security policies updated
+- [ ] Team training completed
+
+## Conclusion
+
+Securing enterprise AI applications requires a comprehensive approach that addresses authentication, data protection, infrastructure security, and compliance. By implementing these best practices, organizations can confidently deploy AI systems while protecting sensitive data and maintaining regulatory compliance.
+
+Remember: security is not a one-time implementation but an ongoing process that must evolve with your AI applications and the threat landscape.
+
+---
+
+*Need help implementing these security measures? Contact our [enterprise security team](mailto:security@optima-ai.com) for personalized guidance.*
+    `,
+    category: 'Security',
+    tags: ['Enterprise Security', 'Compliance', 'Data Protection', 'Best Practices'],
+    author: 'Michael Chen',
+    authorRole: 'Head of Security',
+    publishDate: 'November 28, 2024',
+    readTime: '20 min read',
+    featured: false,
+    slug: 'enterprise-security-ai-apps'
   }
 ];
 
@@ -1047,35 +1755,13 @@ export default function BlogPost({ params }: { params: Promise<{ slug: string }>
             ))}
           </div>
         </div>
-      </section>
-
-      {/* Article Content */}
+      </section>      {/* Article Content */}
       <article className="pb-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="prose prose-lg prose-invert max-w-none">
-            <div 
-              className="text-gray-300 leading-relaxed"
-              style={{
-                fontSize: '1.1rem',
-                lineHeight: '1.8'
-              }}
-              dangerouslySetInnerHTML={{ 
-                __html: post.content
-                  .replace(/\n/g, '<br />')
-                  .replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre class="bg-[#0f0f0f] border border-gray-600 rounded-lg p-4 overflow-x-auto"><code class="text-green-400 text-sm">$2</code></pre>')
-                  .replace(/`([^`]+)`/g, '<code class="bg-[#2f343c] px-2 py-1 rounded text-green-400 text-sm">$1</code>')
-                  .replace(/^# (.+)$/gm, '<h1 class="text-3xl font-bold text-white mt-8 mb-4">$1</h1>')
-                  .replace(/^## (.+)$/gm, '<h2 class="text-2xl font-bold text-white mt-6 mb-3">$1</h2>')
-                  .replace(/^### (.+)$/gm, '<h3 class="text-xl font-semibold text-white mt-4 mb-2">$1</h3>')
-                  .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-                  .replace(/\*(.+?)\*/g, '<em class="italic">$1</em>')
-                  .replace(/^\- (.+)$/gm, '<li class="ml-4">$1</li>')
-                  .replace(/(<li.*<\/li>)/gm, '<ul class="list-disc list-inside space-y-1 mb-4">$1</ul>')
-                  .replace(/^\| (.+) \|$/gm, '<tr><td class="border border-gray-600 px-4 py-2">$1</td></tr>')
-                  .replace(/(<tr>.*<\/tr>)/gm, '<table class="w-full border-collapse border border-gray-600 my-4">$1</table>')
-              }}
-            />
-          </div>
+          <MarkdownRenderer 
+            content={post.content}
+            className="prose-xl"
+          />
         </div>
       </article>
 

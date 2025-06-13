@@ -58,6 +58,48 @@ const blogPosts: BlogPost[] = [
     readTime: '12 min read',
     featured: false,
     slug: 'building-first-ai-app-api'
+  },
+  {
+    id: '4',
+    title: 'Advanced Prompting Techniques for Better AI Results',
+    excerpt: 'Master the art of prompt engineering to get the most out of AI models with proven techniques and real-world examples.',
+    content: '',
+    category: 'Best Practices',
+    tags: ['Prompting', 'AI Techniques', 'Optimization', 'Best Practices'],
+    author: 'Dr. Sarah Chen',
+    authorRole: 'AI Research Lead',
+    publishDate: 'December 5, 2024',
+    readTime: '15 min read',
+    featured: false,
+    slug: 'advanced-prompting-techniques'
+  },
+  {
+    id: '5',
+    title: 'The Future of AI Development in 2025: Trends and Predictions',
+    excerpt: 'Explore the cutting-edge trends shaping AI development in 2025, from multimodal models to AI agents and beyond.',
+    content: '',
+    category: 'Company News',
+    tags: ['Future Trends', '2025 Predictions', 'AI Development', 'Innovation'],
+    author: 'Dr. Alex Kim',
+    authorRole: 'Chief Technology Officer',
+    publishDate: 'December 1, 2024',
+    readTime: '18 min read',
+    featured: true,
+    slug: 'future-ai-development-2025'
+  },
+  {
+    id: '6',
+    title: 'Enterprise Security in AI Applications: Best Practices and Implementation',
+    excerpt: 'Comprehensive guide to securing AI applications in enterprise environments, covering authentication, data protection, and compliance.',
+    content: '',
+    category: 'Security',
+    tags: ['Enterprise Security', 'Compliance', 'Data Protection', 'Best Practices'],
+    author: 'Michael Chen',
+    authorRole: 'Head of Security',
+    publishDate: 'November 28, 2024',
+    readTime: '20 min read',
+    featured: false,
+    slug: 'enterprise-security-ai-apps'
   }
 ];
 
