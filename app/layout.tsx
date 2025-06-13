@@ -9,7 +9,7 @@ import { SessionProvider } from 'next-auth/react';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://chat-optima.vercel.app'),
-  title: 'Optima AI Chat by HansTech',
+  title: 'Optima AI  by Optima Technologies, inc ',
   description: 'Optima AI Chat by HansTech: An advanced AI assistant capable of code generation, debugging, architectural planning, and answering technical questions.',
 };
 
