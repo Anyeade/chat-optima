@@ -22,11 +22,11 @@ export default function AnimatedGradientBackground() {
     window.addEventListener('resize', resizeCanvas);
     
     // Create gradient animation
-    let gradientAngle = 0;
+    let gradientAngle = 0;    // Using theme colors defined in tailwind config
     const colors = [
-      { r: 88, g: 166, b: 255 },   // #58a6ff - neonBlue
-      { r: 191, g: 0, b: 255 },    // #bf00ff - neonPurple
-      { r: 0, g: 255, b: 204 },    // #00ffcc - neonTeal
+      { r: 88, g: 166, b: 255 },   // neonBlue
+      { r: 191, g: 0, b: 255 },    // neonPurple
+      { r: 0, g: 255, b: 204 },    // neonTeal
     ];
     
     const animate = () => {

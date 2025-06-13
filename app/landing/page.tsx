@@ -49,7 +49,7 @@ const TypedText = () => {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-[#0d1117] font-poppins text-white overflow-hidden">
+    <div className="min-h-screen bg-githubDark font-poppins text-white overflow-hidden">
       {/* Particles Background */}
       <ParticlesBackground />
       
@@ -60,7 +60,7 @@ export default function LandingPage() {
       <ScrollToTopButton />
       
       {/* Hero Section */}
-      <section className="relative pt-32 pb-32 overflow-hidden">
+      <section className="relative py-32 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-6 leading-tight">
@@ -84,18 +84,18 @@ export default function LandingPage() {
           </div>
             {/* Hero Graphic */}
           <div className="mt-20 relative mx-auto max-w-4xl">
-            <div className="rounded-2xl overflow-hidden border border-[#2f343c] shadow-[0_0_30px_rgba(88,166,255,0.15)]">
+            <div className="rounded-2xl overflow-hidden border border-githubBorder shadow-[0_0_30px_rgba(88,166,255,0.15)]">
               <div className="dashboard-placeholder">
-                <div className="flex flex-col items-center justify-center space-y-6 p-10 w-full h-full z-10">
+                <div className="flex flex-col items-center justify-center space-y-6 p-10 size-full z-10">
                   <div className="flex items-center space-x-3">
-                    <div className="w-3 h-3 rounded-full bg-[#58a6ff] animate-pulse"></div>
-                    <div className="w-3 h-3 rounded-full bg-[#bf00ff] animate-pulse delay-150"></div>
-                    <div className="w-3 h-3 rounded-full bg-[#00ffcc] animate-pulse delay-300"></div>
+                    <div className="size-3 rounded-full bg-neonBlue animate-pulse"></div>
+                    <div className="size-3 rounded-full bg-neonPurple animate-pulse delay-150"></div>
+                    <div className="size-3 rounded-full bg-neonTeal animate-pulse delay-300"></div>
                   </div>
                   <div className="text-2xl font-bold text-white">AI Dashboard Preview</div>
-                  <div className="w-full max-w-md h-12 rounded-md bg-[#2f343c] flex items-center px-4">
-                    <div className="w-6 h-6 rounded-full bg-[#58a6ff]/20 mr-3"></div>
-                    <div className="flex-1 h-3 bg-[#58a6ff]/20 rounded"></div>
+                  <div className="w-full max-w-md h-12 rounded-md bg-githubBorder flex items-center px-4">
+                    <div className="size-6 rounded-full bg-neonBlue/20 mr-3"></div>
+                    <div className="flex-1 h-3 bg-neonBlue/20 rounded"></div>
                   </div>
                   <div className="grid grid-cols-2 gap-4 w-full max-w-md">
                     <div className="h-20 rounded-md bg-[#2f343c] p-4">

@@ -125,7 +125,7 @@ export function MessageAutoPexels({ imageData }: MessageAutoPexelsProps) {
                         </div>
                         <div className="flex gap-2 overflow-x-auto">
                           {sample_images.ecommerce.slice(0, 3).map((item: any, index: number) => (
-                            <div key={index} className="flex-shrink-0">
+                            <div key={index} className="shrink-0">
                               <img
                                 src={item.image.medium_url || item.image.small_url}
                                 alt={item.image.alt || `${item.category} sample`}
@@ -148,7 +148,7 @@ export function MessageAutoPexels({ imageData }: MessageAutoPexelsProps) {
                         </div>
                         <div className="flex gap-2 overflow-x-auto">
                           {sample_images.backgrounds.slice(0, 3).map((item: any, index: number) => (
-                            <div key={index} className="flex-shrink-0">
+                            <div key={index} className="shrink-0">
                               <img
                                 src={item.image.medium_url || item.image.small_url}
                                 alt={item.image.alt || `${item.category} sample`}
@@ -171,7 +171,7 @@ export function MessageAutoPexels({ imageData }: MessageAutoPexelsProps) {
                         </div>
                         <div className="flex gap-2 overflow-x-auto">
                           {sample_images.profiles.slice(0, 3).map((item: any, index: number) => (
-                            <div key={index} className="flex-shrink-0">
+                            <div key={index} className="shrink-0">
                               <img
                                 src={item.image.medium_url || item.image.small_url}
                                 alt={item.image.alt || `${item.category} sample`}

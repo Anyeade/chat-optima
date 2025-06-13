@@ -182,7 +182,7 @@ const FileItem = ({
           <Button
             variant="ghost"
             size="sm"
-            className="p-1 h-6 w-6 opacity-0 group-hover:opacity-100"
+            className="p-1 size-6 opacity-0 group-hover:opacity-100"
             onClick={(e) => e.stopPropagation()}
           >
             <PencilEditIcon size={12} />
@@ -230,11 +230,11 @@ export function FileExplorer({
               variant="ghost"
               size="sm"
               onClick={onToggleExpanded}
-              className="p-1 h-6 w-6"
+              className="p-1 size-6"
             >              {isExpanded ? (
                 <ChevronDownIcon size={14} />
               ) : (
-                <div className="rotate-[-90deg]">
+                <div className="-rotate-90">
                   <ChevronDownIcon size={14} />
                 </div>
               )}
@@ -245,7 +245,7 @@ export function FileExplorer({
           <Button 
             variant="ghost" 
             size="sm" 
-            className="p-1 h-6 w-6"
+            className="p-1 size-6"
             onClick={() => setShowCreateDialog(true)}
           >
             <PlusIcon size={14} />
