@@ -150,7 +150,7 @@ export default function AboutPage() {
             <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] text-center">
               <div className="w-20 h-20 mx-auto mb-4 relative">
                 <Image
-                  src="/images/ceo-Hans-Ade.jpg"
+                  src="/images/ceo-Hans-Ade.png"
                   alt="Hans Ade - CEO"
                   width={80}
                   height={80}
