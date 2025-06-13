@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 
 import { AppSidebar } from '@/components/app-sidebar';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { auth } from '../(auth)/auth';
+import { auth } from '@/app/(auth)/auth';
 import Script from 'next/script';
 
 // Disabled due to build issues with route groups
