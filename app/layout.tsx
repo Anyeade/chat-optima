@@ -77,6 +77,10 @@ export default async function RootLayout({
             __html: THEME_COLOR_SCRIPT,
           }}
         />
+        <script
+          src="https://cdn.jsdelivr.net/npm/particlesjs@2.2.3/dist/particles.min.js"
+          async
+        />
       </head>
       <body className="antialiased font-poppins">
         <ThemeProvider

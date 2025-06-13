@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 declare global {
   interface Window {
     Particles: {
-      init: (options: ParticlesOptions) => void;
+      init: (options: any) => void;
       pauseAnimation: () => void;
       resumeAnimation: () => void;
       destroy: () => void;
@@ -13,94 +13,66 @@ declare global {
   }
 }
 
-interface ParticlesOptions {
-  selector: string;
-  maxParticles?: number;
-  sizeVariations?: number;
-  speed?: number;
-  color?: string | string[];
-  minDistance?: number;
-  connectParticles?: boolean;
-  responsive?: Array<{
-    breakpoint: number;
-    options: Partial<ParticlesOptions>;
-  }>;
-}
-
 export default function EnhancedParticlesBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const scriptLoaded = useRef(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    const loadParticlesScript = () => {
-      return new Promise<void>((resolve, reject) => {
-        if (scriptLoaded.current || window.Particles) {
-          resolve();
-          return;
-        }
-
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/particlesjs@2.2.3/dist/particles.min.js';
-        script.async = true;
+    const initializeParticles = () => {
+      // Wait for particles.js to load
+      if (typeof window !== 'undefined' && window.Particles && !initialized.current) {
+        console.log('Initializing particles...');
         
-        script.onload = () => {
-          scriptLoaded.current = true;
-          resolve();
-        };
-        
-        script.onerror = () => {
-          reject(new Error('Failed to load particles.js'));
-        };
-        
-        document.head.appendChild(script);
-      });
-    };
-
-    const initializeParticles = async () => {
-      try {
-        await loadParticlesScript();
-        
-        if (window.Particles && canvasRef.current) {
-          // Initialize particles with spider web effect
+        try {
           window.Particles.init({
             selector: '.particles-background',
-            maxParticles: 100,
+            maxParticles: 80,
             sizeVariations: 3,
-            speed: 0.3,
-            color: ['#58a6ff', '#bf00ff', '#00ffcc', '#ffffff'],
-            minDistance: 150,
+            speed: 0.5,
+            color: ['#58a6ff', '#bf00ff', '#00ffcc'],
+            minDistance: 120,
             connectParticles: true,
             responsive: [
               {
                 breakpoint: 768,
                 options: {
-                  maxParticles: 60,
-                  minDistance: 120,
+                  maxParticles: 50,
+                  minDistance: 100,
                 }
               },
               {
                 breakpoint: 480,
                 options: {
-                  maxParticles: 40,
-                  minDistance: 100,
+                  maxParticles: 30,
+                  minDistance: 80,
                 }
               }
             ]
           });
+          
+          initialized.current = true;
+          console.log('Particles initialized successfully');
+        } catch (error) {
+          console.error('Error initializing particles:', error);
         }
-      } catch (error) {
-        console.error('Error initializing particles:', error);
-        // Fallback to a simple background if particles.js fails to load
       }
     };
 
+    // Try to initialize immediately
     initializeParticles();
+
+    // Also try after a delay in case script is still loading
+    const timeouts = [100, 500, 1000, 2000].map(delay =>
+      setTimeout(initializeParticles, delay)
+    );
 
     // Cleanup function
     return () => {
-      if (window.Particles && typeof window.Particles.destroy === 'function') {
+      timeouts.forEach(clearTimeout);
+      if (window.Particles && typeof window.Particles.destroy === 'function' && initialized.current) {
         try {
           window.Particles.destroy();
+          initialized.current = false;
         } catch (error) {
           console.error('Error destroying particles:', error);
         }
@@ -114,13 +86,9 @@ export default function EnhancedParticlesBackground() {
       <div className="absolute inset-0 bg-gradient-to-br from-[#0d1117] via-[#161b22] to-[#21262d]" />
       
       {/* Particles canvas */}
-      <canvas 
+      <canvas
         ref={canvasRef}
-        className="particles-background absolute inset-0 w-full h-full"
-        style={{
-          display: 'block',
-          background: 'transparent',
-        }}
+        className="particles-background absolute inset-0 w-full h-full block"
       />
       
       {/* Additional overlay for depth */}
