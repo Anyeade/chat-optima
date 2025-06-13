@@ -11,7 +11,7 @@ import NeonFAQItem from '@/components/ui/neon-faq-item';
 import NeonFeatureCard from '@/components/ui/neon-feature-card';
 import AuthAwareNavbar from '@/components/ui/auth-aware-navbar';
 import ScrollToTopButton from '@/components/ui/scroll-to-top-button';
-import AnimatedGradientBackground from '@/components/ui/animated-gradient-background';
+import { HeroParticles } from '@/components/particles-background';
 import './landing.css';
 
 // Hero section with typing animation
@@ -51,7 +51,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-githubDark font-poppins text-white overflow-hidden">
       {/* Particles Background */}
-      <SimpleParticlesTest />
+      <HeroParticles />
       
       {/* Header/Navigation */}
       <AuthAwareNavbar />
