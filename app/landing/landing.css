@@ -31,3 +31,20 @@
     z-index: 1;
     font-family: var(--font-poppins), sans-serif;
 }
+
+/* Animation for expandable content */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.3s ease-out;
+}

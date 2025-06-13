@@ -1,10 +1,179 @@
+'use client';
+
 import Link from 'next/link';
+import { useState } from 'react';
 import AuthAwareNavbar from '@/components/ui/auth-aware-navbar';
 import ScrollToTopButton from '@/components/ui/scroll-to-top-button';
 import { HeroParticles } from '@/components/particles-background';
 import '../landing/landing.css';
 
 export default function DocsPage() {
+  const [expandedSection, setExpandedSection] = useState<string | null>(null);
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSection(expandedSection === sectionId ? null : sectionId);
+  };
+
+  const documentationContent = {
+    'quick-start': {
+      title: 'Quick Start Guide',
+      description: 'Get up and running with Optima AI in under 5 minutes.',
+      content: (
+        <div className="space-y-4 text-gray-300">
+          <h4 className="text-lg font-semibold text-white">1. Create Your Account</h4>
+          <p>Sign up for a free Optima AI account at <span className="text-[#58a6ff]">app.optima-ai.com</span></p>
+          
+          <h4 className="text-lg font-semibold text-white">2. Start Your First Chat</h4>
+          <p>Click the "New Chat" button and select your preferred AI model from our extensive collection.</p>
+          
+          <h4 className="text-lg font-semibold text-white">3. Explore Features</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Upload files and images for analysis</li>
+            <li>Generate code in multiple programming languages</li>
+            <li>Create artifacts like HTML pages and diagrams</li>
+            <li>Save and organize your chat history</li>
+          </ul>
+          
+          <h4 className="text-lg font-semibold text-white">4. Customize Your Experience</h4>
+          <p>Adjust settings, manage your profile, and explore integrations to tailor Optima AI to your workflow.</p>
+        </div>
+      )
+    },
+    'api-auth': {
+      title: 'API Authentication',
+      description: 'Learn how to authenticate and secure your API requests.',
+      content: (
+        <div className="space-y-4 text-gray-300">
+          <h4 className="text-lg font-semibold text-white">Authentication Methods</h4>
+          <p>Optima AI supports multiple authentication methods to secure your API requests:</p>
+          
+          <h5 className="font-semibold text-[#58a6ff]">API Key Authentication</h5>
+          <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+            <code className="text-green-400">
+              curl -H "Authorization: Bearer YOUR_API_KEY" \<br/>
+              &nbsp;&nbsp;&nbsp;&nbsp;https://api.optima-ai.com/v1/chat/completions
+            </code>
+          </div>
+          
+          <h5 className="font-semibold text-[#58a6ff]">OAuth 2.0</h5>
+          <p>For enterprise applications, use OAuth 2.0 for secure user authentication and authorization.</p>
+          
+          <h4 className="text-lg font-semibold text-white">Rate Limits</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li>Free tier: 100 requests per day</li>
+            <li>Pro tier: 10,000 requests per day</li>
+            <li>Enterprise: Custom limits available</li>
+          </ul>
+        </div>
+      )
+    },
+    'model-comparison': {
+      title: 'Model Comparison',
+      description: 'Compare different AI models and choose the right one for your needs.',
+      content: (
+        <div className="space-y-4 text-gray-300">
+          <h4 className="text-lg font-semibold text-white">Available Models</h4>
+          
+          <div className="grid gap-4">
+            <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+              <h5 className="font-semibold text-[#58a6ff]">GPT-4 Turbo</h5>
+              <p>Best for: Complex reasoning, code generation, creative writing</p>
+              <p>Speed: ⭐⭐⭐ | Quality: ⭐⭐⭐⭐⭐ | Cost: High</p>
+            </div>
+            
+            <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+              <h5 className="font-semibold text-[#58a6ff]">Claude 3.5 Sonnet</h5>
+              <p>Best for: Analysis, research, detailed explanations</p>
+              <p>Speed: ⭐⭐⭐⭐ | Quality: ⭐⭐⭐⭐⭐ | Cost: Medium</p>
+            </div>
+            
+            <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+              <h5 className="font-semibold text-[#58a6ff]">Llama 3.1</h5>
+              <p>Best for: General tasks, cost-effective solutions</p>
+              <p>Speed: ⭐⭐⭐⭐⭐ | Quality: ⭐⭐⭐⭐ | Cost: Low</p>
+            </div>
+          </div>
+          
+          <h4 className="text-lg font-semibold text-white">Choosing the Right Model</h4>
+          <ul className="list-disc list-inside space-y-1">
+            <li>For coding: GPT-4 Turbo or Claude 3.5 Sonnet</li>
+            <li>For analysis: Claude 3.5 Sonnet</li>
+            <li>For quick tasks: Llama 3.1 or GPT-3.5 Turbo</li>
+            <li>For creative writing: GPT-4 Turbo</li>
+          </ul>
+        </div>
+      )
+    },
+    'code-examples': {
+      title: 'Code Examples',
+      description: 'Practical examples in multiple programming languages.',
+      content: (
+        <div className="space-y-4 text-gray-300">
+          <h4 className="text-lg font-semibold text-white">JavaScript/Node.js Example</h4>
+          <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+            <code className="text-green-400 text-sm">
+              {`const response = await fetch('https://api.optima-ai.com/v1/chat/completions', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    model: 'gpt-4-turbo',
+    messages: [
+      { role: 'user', content: 'Hello, world!' }
+    ]
+  })
+});
+
+const data = await response.json();
+console.log(data.choices[0].message.content);`}
+            </code>
+          </div>
+          
+          <h4 className="text-lg font-semibold text-white">Python Example</h4>
+          <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+            <code className="text-green-400 text-sm">
+              {`import requests
+
+response = requests.post(
+    'https://api.optima-ai.com/v1/chat/completions',
+    headers={
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+    },
+    json={
+        'model': 'gpt-4-turbo',
+        'messages': [
+            {'role': 'user', 'content': 'Hello, world!'}
+        ]
+    }
+)
+
+data = response.json()
+print(data['choices'][0]['message']['content'])`}
+            </code>
+          </div>
+          
+          <h4 className="text-lg font-semibold text-white">cURL Example</h4>
+          <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
+            <code className="text-green-400 text-sm">
+              {`curl -X POST https://api.optima-ai.com/v1/chat/completions \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "gpt-4-turbo",
+    "messages": [
+      {"role": "user", "content": "Hello, world!"}
+    ]
+  }'`}
+            </code>
+          </div>
+        </div>
+      )
+    }
+  };
+
   return (
     <div className="min-h-screen bg-githubDark font-poppins text-white">
       {/* Particles Background */}
@@ -140,33 +309,49 @@ export default function DocsPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* Quick Links */}
+      </section>      {/* Quick Links */}
       <section className="py-16 bg-[#111111]">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12 text-white">Popular Documentation</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] hover:border-[#58a6ff]/30 transition-colors">
-              <h3 className="text-lg font-semibold mb-2 text-[#58a6ff]">Quick Start Guide</h3>
-              <p className="text-gray-400 text-sm mb-3">Get up and running with Optima AI in under 5 minutes.</p>
-              <Link href="#" className="text-[#58a6ff] text-sm hover:underline">Read Guide →</Link>
-            </div>
-            <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] hover:border-[#58a6ff]/30 transition-colors">
-              <h3 className="text-lg font-semibold mb-2 text-[#58a6ff]">API Authentication</h3>
-              <p className="text-gray-400 text-sm mb-3">Learn how to authenticate and secure your API requests.</p>
-              <Link href="#" className="text-[#58a6ff] text-sm hover:underline">View Docs →</Link>
-            </div>
-            <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] hover:border-[#58a6ff]/30 transition-colors">
-              <h3 className="text-lg font-semibold mb-2 text-[#58a6ff]">Model Comparison</h3>
-              <p className="text-gray-400 text-sm mb-3">Compare different AI models and choose the right one for your needs.</p>
-              <Link href="#" className="text-[#58a6ff] text-sm hover:underline">Compare Models →</Link>
-            </div>
-            <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] hover:border-[#58a6ff]/30 transition-colors">
-              <h3 className="text-lg font-semibold mb-2 text-[#58a6ff]">Code Examples</h3>
-              <p className="text-gray-400 text-sm mb-3">Practical examples in multiple programming languages.</p>
-              <Link href="#" className="text-[#58a6ff] text-sm hover:underline">Browse Examples →</Link>
-            </div>
+            {Object.entries(documentationContent).map(([key, doc]) => (
+              <div key={key} className="bg-[#1a1a1b] rounded-lg border border-[#2f343c] overflow-hidden">
+                <div 
+                  className="p-6 hover:border-[#58a6ff]/30 transition-colors cursor-pointer"
+                  onClick={() => toggleSection(key)}
+                >
+                  <div className="flex justify-between items-center">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-[#58a6ff]">{doc.title}</h3>
+                      <p className="text-gray-400 text-sm mb-3">{doc.description}</p>
+                      <span className="text-[#58a6ff] text-sm hover:underline">
+                        {expandedSection === key ? 'Hide Content ↑' : 'View Content →'}
+                      </span>
+                    </div>
+                    <div className="ml-4">
+                      <svg 
+                        className={`w-5 h-5 text-[#58a6ff] transition-transform duration-200 ${
+                          expandedSection === key ? 'rotate-180' : ''
+                        }`} 
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+                
+                {expandedSection === key && (
+                  <div className="px-6 pb-6 border-t border-[#2f343c]">
+                    <div className="pt-4">
+                      {doc.content}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
