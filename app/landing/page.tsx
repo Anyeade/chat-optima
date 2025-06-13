@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import EnhancedParticlesBackground from '@/components/enhanced-particles-background';
+import SimpleParticlesTest from '@/components/simple-particles-test';
 import NeonButton from '@/components/ui/neon-button';
 import NeonSectionDivider from '@/components/ui/neon-section-divider';
 import NeonPricingCard from '@/components/ui/neon-pricing-card';
