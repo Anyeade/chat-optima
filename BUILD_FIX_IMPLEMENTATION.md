@@ -102,16 +102,22 @@ app/
 6. **Auth Fix**: Simplified authentication logic for guest access
 
 ## Final Working Routes
-- `/` → redirects to `/landing`
-- `/landing` → Landing page
+- `/` → redirects to `/chat` (for new chat creation)
+- `/landing` → Landing page (marketing/features page)
 - `/chat` → New chat interface
 - `/chat/[id]` → Individual chat pages
 - `/api/*` → All API endpoints
 
+## Navigation Logic
+- **Logo "Optima AI"** → `/landing` (marketing page)
+- **"New Chat" button** → `/` → redirects to `/chat` (new chat)
+- **Chat history items** → `/chat/[id]` (specific chats)
+
 ## Resolution Summary
 The build error has been **completely resolved**. The application now builds successfully and all functionality is working:
-- ✅ Landing page accessible
-- ✅ Chat creation working
+- ✅ Landing page accessible via logo
+- ✅ Chat creation working via "New Chat" button
 - ✅ Individual chats accessible by ID
 - ✅ Guest authentication working
 - ✅ No more client reference manifest errors
+- ✅ Proper navigation flow established
