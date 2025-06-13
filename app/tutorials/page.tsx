@@ -146,7 +146,7 @@ callOptimaAI();`}
         <div className="space-y-6 text-gray-300">
           <div>
             <h4 className="text-lg font-semibold text-white mb-3">Understanding Streaming</h4>
-            <p className="mb-4">Streaming allows you to receive partial responses as they're generated, creating a more interactive experience.</p>
+            <p className="mb-4">Streaming allows you to receive partial responses as they&apos;re generated, creating a more interactive experience.</p>
           </div>
           
           <div>
@@ -430,7 +430,7 @@ conversation_history.append({'role': 'assistant', 'content': response})`}
                 <div className="px-8 pb-8 border-t border-[#2f343c]">
                   <div className="pt-6 space-y-6 text-gray-300">
                     <div>
-                      <h4 className="text-xl font-semibold text-white mb-4">What You'll Build</h4>
+                      <h4 className="text-xl font-semibold text-white mb-4">What You&apos;ll Build</h4>
                       <p className="mb-4">A complete chatbot application with:</p>
                       <ul className="list-disc list-inside space-y-2 ml-4">
                         <li>Real-time streaming responses</li>

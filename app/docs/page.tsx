@@ -24,7 +24,7 @@ export default function DocsPage() {
           <p>Sign up for a free Optima AI account at <span className="text-[#58a6ff]">app.optima-ai.com</span></p>
           
           <h4 className="text-lg font-semibold text-white">2. Start Your First Chat</h4>
-          <p>Click the "New Chat" button and select your preferred AI model from our extensive collection.</p>
+          <p>Click the &quot;New Chat&quot; button and select your preferred AI model from our extensive collection.</p>
           
           <h4 className="text-lg font-semibold text-white">3. Explore Features</h4>
           <ul className="list-disc list-inside space-y-1">
@@ -50,7 +50,7 @@ export default function DocsPage() {
           <h5 className="font-semibold text-[#58a6ff]">API Key Authentication</h5>
           <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
             <code className="text-green-400">
-              curl -H "Authorization: Bearer YOUR_API_KEY" \<br/>
+              curl -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \<br/>
               &nbsp;&nbsp;&nbsp;&nbsp;https://api.optima-ai.com/v1/chat/completions
             </code>
           </div>
