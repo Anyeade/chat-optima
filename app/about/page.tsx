@@ -26,9 +26,8 @@ export default function AboutPage() {
             </span>
             <br />
             <span className="text-white">Pioneering the Future of AI</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-            We're building the next generation of AI-powered tools to help developers and teams work more efficiently and creatively.
+          </h1>          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
+            We&apos;re building the next generation of AI-powered tools to help developers and teams work more efficiently and creatively.
           </p>
         </div></div>
       </section>
@@ -49,9 +48,8 @@ export default function AboutPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold mb-3 text-white">Innovation</h3>
-                <p className="text-gray-400 text-sm">
-                  Pushing the boundaries of what's possible with AI technology and user experience.
+                <h3 className="text-lg font-semibold mb-3 text-white">Innovation</h3>                <p className="text-gray-400 text-sm">
+                  Pushing the boundaries of what&apos;s possible with AI technology and user experience.
                 </p>
               </div>
               <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c]">
@@ -95,9 +93,8 @@ export default function AboutPage() {
                 <p>
                   Our founding team, with backgrounds in AI research, software engineering, and product design, came together 
                   with a shared vision of creating a unified platform that would make powerful AI capabilities accessible to everyone.
-                </p>
-                <p>
-                  Today, we're proud to serve thousands of developers and teams worldwide, helping them build smarter applications, 
+                </p>                <p>
+                  Today, we&apos;re proud to serve thousands of developers and teams worldwide, helping them build smarter applications, 
                   automate repetitive tasks, and unlock new possibilities with AI.
                 </p>
               </div>
@@ -230,9 +227,8 @@ export default function AboutPage() {
       {/* Investors & Partners */}
       <section className="py-16">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-8 text-white">Trusted by Industry Leaders</h2>
-          <p className="text-gray-400 mb-12">
-            We're backed by leading investors and trusted by innovative companies worldwide.
+          <h2 className="text-3xl font-bold mb-8 text-white">Trusted by Industry Leaders</h2>          <p className="text-gray-400 mb-12">
+            We&apos;re backed by leading investors and trusted by innovative companies worldwide.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
             <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c]">
@@ -268,9 +264,8 @@ export default function AboutPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6 text-white">
             Join us in shaping the future of AI
-          </h2>
-          <p className="text-xl text-gray-400 mb-8">
-            Whether you're a developer, enterprise customer, or potential team member, we'd love to hear from you.
+          </h2>          <p className="text-xl text-gray-400 mb-8">
+            Whether you&apos;re a developer, enterprise customer, or potential team member, we&apos;d love to hear from you.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

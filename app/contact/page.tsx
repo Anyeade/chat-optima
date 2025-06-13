@@ -23,9 +23,8 @@ export default function ContactPage() {
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#58a6ff] to-[#bf00ff]">
                 Touch
               </span>
-            </h1>
-            <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-              We're here to help. Reach out to our team for sales inquiries, support, or just to say hello.
+            </h1>            <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
+              We&apos;re here to help. Reach out to our team for sales inquiries, support, or just to say hello.
             </p>
           </div>
         </div>

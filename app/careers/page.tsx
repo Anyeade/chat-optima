@@ -27,9 +27,8 @@ export default function CareersPage() {
             </span>
             <br />
             <span className="text-white">Shape the Future of AI</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-            We're building the next generation of AI tools and looking for passionate individuals to join our mission of democratizing AI.
+          </h1>          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
+            We&apos;re building the next generation of AI tools and looking for passionate individuals to join our mission of democratizing AI.
           </p>
           </div>
         </div>
@@ -49,7 +48,7 @@ export default function CareersPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-3 text-white">Cutting-Edge Technology</h3>
-              <p className="text-gray-400">Work with the latest AI models and technologies. Push the boundaries of what's possible in artificial intelligence.</p>
+              <p className="text-gray-400">Work with the latest AI models and technologies. Push the boundaries of what&apos;s possible in artificial intelligence.</p>
             </div>
 
             <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] hover:border-[#58a6ff]/30 transition-colors">
@@ -89,7 +88,7 @@ export default function CareersPage() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold mb-3 text-white">Competitive Benefits</h3>
-              <p className="text-gray-400">Competitive salary, equity, health insurance, and generous PTO. We invest in our team's wellbeing.</p>
+              <p className="text-gray-400">Competitive salary, equity, health insurance, and generous PTO. We invest in our team&apos;s wellbeing.</p>
             </div>
 
             <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] hover:border-[#58a6ff]/30 transition-colors">
@@ -275,10 +274,8 @@ export default function CareersPage() {
                 </Link>
               </div>
             </div>
-          </div>
-
-          <div className="text-center mt-12">
-            <p className="text-gray-400 mb-4">Don't see a role that fits? We're always looking for exceptional talent.</p>
+          </div>          <div className="text-center mt-12">
+            <p className="text-gray-400 mb-4">Don&apos;t see a role that fits? We&apos;re always looking for exceptional talent.</p>
             <Link
               href="#"
               className="inline-flex items-center px-6 py-3 border border-[#58a6ff] text-[#58a6ff] font-semibold rounded-lg hover:bg-[#58a6ff] hover:text-white transition-colors"

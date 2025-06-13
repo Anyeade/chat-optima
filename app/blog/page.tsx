@@ -46,10 +46,9 @@ export default function BlogPage() {
               </div>
               <h2 className="text-3xl font-bold mb-4 text-white">
                 Introducing xAI Grok Integration: Real-Time AI with Attitude
-              </h2>
-              <p className="text-gray-400 text-lg mb-6 leading-relaxed">
-                We're excited to announce our latest integration with xAI's Grok model, bringing real-time information 
-                and a unique conversational style to Optima AI. Learn how Grok's distinctive approach to AI can enhance 
+              </h2>              <p className="text-gray-400 text-lg mb-6 leading-relaxed">
+                We&apos;re excited to announce our latest integration with xAI&apos;s Grok model, bringing real-time information 
+                and a unique conversational style to Optima AI. Learn how Grok&apos;s distinctive approach to AI can enhance 
                 your development workflow with up-to-date information and creative problem-solving.
               </p>
               <div className="flex items-center justify-between">
@@ -105,9 +104,8 @@ export default function BlogPage() {
                 <div className="flex items-center mb-3">
                   <span className="px-2 py-1 bg-green-600 text-green-100 text-xs rounded">Tutorial</span>
                   <span className="ml-2 text-gray-400 text-sm">Dec 8, 2024</span>
-                </div>
-                <h3 className="text-xl font-semibold mb-3 text-white">
-                  Building Your First AI-Powered Application with Optima AI's API
+                </div>                <h3 className="text-xl font-semibold mb-3 text-white">
+                  Building Your First AI-Powered Application with Optima AI&apos;s API
                 </h3>
                 <p className="text-gray-400 text-sm mb-4">
                   Step-by-step guide to integrating Optima AI into your applications, from authentication to your first API call.

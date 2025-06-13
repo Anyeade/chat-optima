@@ -25,11 +25,10 @@ export default function RoadmapPage() {
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#58a6ff] to-[#bf00ff]">
               Product Roadmap
             </span>
-            <br />
-            <span className="text-white">What's Coming Next</span>
+            <br />            <span className="text-white">What&apos;s Coming Next</span>
           </h1>
           <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-            See what we're building for the future of AI-powered development and collaboration.
+            See what we&apos;re building for the future of AI-powered development and collaboration.
           </p>
           </div>
         </div>
@@ -159,9 +158,8 @@ export default function RoadmapPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-6 text-white">
             Have a Feature Request?
-          </h2>
-          <p className="text-xl text-gray-400 mb-8">
-            We'd love to hear from you! Share your ideas and help shape the future of Optima AI.
+          </h2>          <p className="text-xl text-gray-400 mb-8">
+            We&apos;d love to hear from you! Share your ideas and help shape the future of Optima AI.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link

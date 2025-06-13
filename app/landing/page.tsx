@@ -284,10 +284,9 @@ export default function LandingPage() {
               question="What AI models does your platform support?"
               answer="We support a wide range of state-of-the-art AI models including OpenAI GPT models, Anthropic Claude, Google Gemini, and more. Our platform is designed to integrate new models as they become available."
             />
-            
-            <NeonFAQItem 
+              <NeonFAQItem 
               question="How secure is the data I share with the AI?"
-              answer="We take security very seriously. All communications with our AI are encrypted end-to-end, and we don't store your conversations longer than necessary. Enterprise plans offer additional security features like SSO and custom data retention policies."
+              answer="We take security very seriously. All communications with our AI are encrypted end-to-end, and we don&apos;t store your conversations longer than necessary. Enterprise plans offer additional security features like SSO and custom data retention policies."
             />
             
             <NeonFAQItem 

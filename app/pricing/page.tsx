@@ -144,10 +144,9 @@ export default function PricingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           
-          <div className="space-y-8">
-            <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c]">
+          <div className="space-y-8">            <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c]">
               <h3 className="text-xl font-semibold mb-3">Can I change plans at any time?</h3>
-              <p className="text-gray-400">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we'll prorate the billing accordingly.</p>
+              <p className="text-gray-400">Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately, and we&apos;ll prorate the billing accordingly.</p>
             </div>
 
             <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c]">

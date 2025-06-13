@@ -26,9 +26,8 @@ export default function APIPage() {
             </span>
             <br />
             <span className="text-white">Build with Optima AI</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
-            Integrate Optima AI's powerful chat capabilities into your applications with our comprehensive REST API.
+          </h1>          <p className="text-xl md:text-2xl text-gray-400 mb-12 max-w-3xl mx-auto">
+            Integrate Optima AI&apos;s powerful chat capabilities into your applications with our comprehensive REST API.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -57,9 +56,8 @@ export default function APIPage() {
               <p className="text-gray-400 mb-4">
                 All API requests require authentication using an API key. Include your API key in the Authorization header.
               </p>
-              <div className="bg-[#1a1a1b] rounded-lg p-4 border border-[#2f343c]">
-                <code className="text-sm text-green-400">
-                  curl -H "Authorization: Bearer YOUR_API_KEY" \\<br />
+              <div className="bg-[#1a1a1b] rounded-lg p-4 border border-[#2f343c]">                <code className="text-sm text-green-400">
+                  curl -H &quot;Authorization: Bearer YOUR_API_KEY&quot; \\<br />
                   &nbsp;&nbsp;https://api.optima.ai/v1/chat/completions
                 </code>
               </div>
@@ -127,10 +125,9 @@ export default function APIPage() {
   "model": "gpt-4",
   "choices": [
     {
-      "index": 0,
-      "message": {
+      "index": 0,      "message": {
         "role": "assistant",
-        "content": "I'm Optima AI, and I can help you with..."
+        "content": "I&apos;m Optima AI, and I can help you with..."
       },
       "finish_reason": "stop"
     }
@@ -198,11 +195,10 @@ export default function APIPage() {
               </p>
 
               <h4 className="text-md font-semibold text-white mb-2">Request</h4>
-              <div className="bg-githubDark font-poppins rounded p-4 text-sm">
-                <code className="text-gray-300">
+              <div className="bg-githubDark font-poppins rounded p-4 text-sm">                <code className="text-gray-300">
                   Content-Type: multipart/form-data<br />
                   file: [binary data]<br />
-                  purpose: "chat"
+                  purpose: &quot;chat&quot;
                 </code>
               </div>
             </div>
