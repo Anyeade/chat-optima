@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import AuthAwareNavbar from '@/components/ui/auth-aware-navbar';
 import ScrollToTopButton from '@/components/ui/scroll-to-top-button';
 import { HeroParticles } from '@/components/particles-background';
@@ -145,17 +146,26 @@ export default function AboutPage() {
               Our leadership team brings together expertise from AI research, product development, and enterprise software.
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Team Member 1 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">            {/* Team Member 1 - CEO Hans Ade */}
             <div className="bg-[#1a1a1b] rounded-lg p-6 border border-[#2f343c] text-center">
-              <div className="w-20 h-20 bg-gradient-to-r from-[#58a6ff] to-[#bf00ff] rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-white text-xl font-bold">AJ</span>
+              <div className="w-20 h-20 mx-auto mb-4 relative">
+                <Image
+                  src="/images/ceo-Hans-Ade.jpg"
+                  alt="Hans Ade - CEO"
+                  width={80}
+                  height={80}
+                  className="rounded-full object-cover border-2 border-gradient-to-r from-[#58a6ff] to-[#bf00ff]"
+                />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-2">Alex Johnson</h3>
-              <p className="text-[#58a6ff] text-sm mb-3">CEO & Co-Founder</p>
-              <p className="text-gray-400 text-sm">
-                Former AI research lead at Google. PhD in Computer Science from Stanford. Passionate about democratizing AI.
-              </p>
+              <h3 className="text-xl font-semibold text-white mb-2">Hans Ade</h3>
+              <p className="text-[#58a6ff] text-sm mb-3">CEO & Founder</p>
+              <p className="text-gray-400 text-sm mb-3">Software Engineer</p>
+              <div className="text-gray-400 text-xs space-y-1">
+                <p>BTech in Software Engineering</p>
+                <p>Atlantic International University, Hawaii USA</p>
+                <p>BTech in Software Engineering</p>
+                <p>SwissLink Higher Institute of Business and Technology, Douala Cameroon</p>
+              </div>
             </div>
 
             {/* Team Member 2 */}
