@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
-import ParticlesBackground from '@/components/particles-background';
+import EnhancedParticlesBackground from '@/components/enhanced-particles-background';
 import NeonButton from '@/components/ui/neon-button';
 import NeonSectionDivider from '@/components/ui/neon-section-divider';
 import NeonPricingCard from '@/components/ui/neon-pricing-card';
@@ -51,7 +51,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-githubDark font-poppins text-white overflow-hidden">
       {/* Particles Background */}
-      <ParticlesBackground />
+      <EnhancedParticlesBackground />
       
       {/* Header/Navigation */}
       <AuthAwareNavbar />
