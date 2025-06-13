@@ -51,7 +51,7 @@ export default function LandingPage() {
   return (
     <div className="min-h-screen bg-githubDark font-poppins text-white overflow-hidden">
       {/* Particles Background */}
-      <EnhancedParticlesBackground />
+      <SimpleParticlesTest />
       
       {/* Header/Navigation */}
       <AuthAwareNavbar />
