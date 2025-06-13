@@ -27,29 +27,49 @@ export function AppSidebar({ user }: { user: User | undefined }) {
       <SidebarHeader>
         <SidebarMenu>
           <div className="flex flex-row justify-between items-center">
-            <Link
-              href="/landing"
-              onClick={() => {
-                setOpenMobile(false);
-              }}
-              className="flex flex-row gap-3 items-center"
-            >
-              <span className="text-lg font-semibold px-2 hover:bg-muted rounded-md cursor-pointer flex items-center">
-                Optima AI
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="size-5 ml-1"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M6.5 2C3.46243 2 1 4.46243 1 7.5C1 10.5376 3.46243 13 6.5 13C9.53757 13 12 10.5376 12 7.5C12 4.46243 9.53757 2 6.5 2ZM2.39289 7.5C2.39289 5.23294 4.23294 3.39289 6.5 3.39289C8.76706 3.39289 10.6071 5.23294 10.6071 7.5C10.6071 9.76706 8.76706 11.6071 6.5 11.6071C4.23294 11.6071 2.39289 9.76706 2.39289 7.5ZM14.2426 14.9497L11.2929 12L12 11.2929L14.9497 14.2426L14.2426 14.9497Z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </span>
-            </Link>
+            <Link 
+                          href="/landing" 
+                          className="flex items-center group"
+                        >
+                          {/* Logo glowing effect */}
+                          <div className="relative">
+                            <div className="absolute -inset-1 bg-gradient-to-r from-[#58a6ff] to-[#bf00ff] rounded-full opacity-0 group-hover:opacity-70 blur transition-opacity duration-300"></div>
+                            <svg 
+                              className="w-8 h-8 text-white relative" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              xmlns="http://www.w3.org/2000/svg"
+                            >
+                              <path 
+                                d="M12 2L2 7L12 12L22 7L12 2Z" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                              <path 
+                                d="M2 17L12 22L22 17" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                              <path 
+                                d="M2 12L12 17L22 12" 
+                                stroke="currentColor" 
+                                strokeWidth="2" 
+                                strokeLinecap="round" 
+                                strokeLinejoin="round"
+                              />
+                            </svg>
+                          </div>
+                          <span className="ml-2">
+                            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#58a6ff] to-[#bf00ff]">
+                              Optima AI
+                            </span>
+                            <span className="block text-xs text-gray-400 -mt-1">by Optima, Inc.</span>
+                          </span>
+                        </Link>
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
