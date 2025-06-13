@@ -2,10 +2,8 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   experimental: {
-    ppr: true,
-    serverActions: {
-      allowedOrigins: ['localhost:3000', 'vercel.app'],
-    },
+    // Temporarily disable PPR due to build issues with route groups
+    // ppr: true,
   },
   images: {
     remotePatterns: [
@@ -13,13 +11,6 @@ const nextConfig: NextConfig = {
         hostname: 'avatar.vercel.sh',
       },
     ],
-  },
-  webpack: (config) => {
-    config.snapshot = {
-      ...config.snapshot,
-      managedPaths: [],
-    };
-    return config;
   },
 };
 
