@@ -9,7 +9,7 @@ import NeonSectionDivider from '@/components/ui/neon-section-divider';
 import NeonPricingCard from '@/components/ui/neon-pricing-card';
 import NeonFAQItem from '@/components/ui/neon-faq-item';
 import NeonFeatureCard from '@/components/ui/neon-feature-card';
-import NeonNavbar from '@/components/ui/neon-navbar';
+import AuthAwareNavbar from '@/components/ui/auth-aware-navbar';
 import ScrollToTopButton from '@/components/ui/scroll-to-top-button';
 import AnimatedGradientBackground from '@/components/ui/animated-gradient-background';
 import './landing.css';
@@ -54,7 +54,7 @@ export default function LandingPage() {
       <ParticlesBackground />
       
       {/* Header/Navigation */}
-      <NeonNavbar />
+      <AuthAwareNavbar />
       
       {/* Scroll to top button */}
       <ScrollToTopButton />
