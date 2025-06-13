@@ -61,8 +61,9 @@ const blogPosts: BlogPost[] = [
   }
 ];
 
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
+export async function generateMetadata(props: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const params = await props.params;
+  const { slug } = params;
   const post = blogPosts.find(p => p.slug === slug);
 
   // Get base URL from environment variables

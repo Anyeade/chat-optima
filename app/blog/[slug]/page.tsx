@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AuthAwareNavbar from '@/components/ui/auth-aware-navbar';
@@ -911,8 +912,25 @@ The power of AI is now at your fingertips. Start experimenting with different mo
   }
 ];
 
-export default function BlogPost({ params }: { params: { slug: string } }) {
-  const post = blogPosts.find(p => p.slug === params.slug);
+export default function BlogPost({ params }: { params: Promise<{ slug: string }> }) {
+  const [post, setPost] = React.useState<BlogPost | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const getPost = async () => {
+      const resolvedParams = await params;
+      const foundPost = blogPosts.find(p => p.slug === resolvedParams.slug);
+      setPost(foundPost || null);
+      setIsLoading(false);
+    };
+    getPost();
+  }, [params]);
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-githubDark font-poppins text-white flex items-center justify-center">
+      <div className="text-white">Loading...</div>
+    </div>;
+  }
 
   if (!post) {
     notFound();
