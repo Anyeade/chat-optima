@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { memo, useEffect, useState } from 'react';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
-import { generatePromptSuggestions } from '@/app/(chat)/actions';
+import { generatePromptSuggestions } from '@/app/chat/actions';
 
 interface SuggestedAction {
   title: string;
