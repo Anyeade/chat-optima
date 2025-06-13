@@ -18,18 +18,6 @@ export function MessageWebpageScreenshot({
 }: MessageWebpageScreenshotProps) {
   const [isExpanded, setIsExpanded] = useState(true);
 
-  // Auto-collapse when screenshot completes
-  useEffect(() => {
-    if (isLoading === false && isExpanded === true) {
-      // Add a small delay to allow users to see the completion
-      const timer = setTimeout(() => {
-        setIsExpanded(false);
-      }, 1000); // 1 second delay
-
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, isExpanded]);
-
   const variants = {
     collapsed: {
       height: 0,

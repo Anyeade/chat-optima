@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChevronDownIcon, LoaderIcon } from './icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WebScraper } from './web-scraper';
@@ -17,18 +17,6 @@ export function MessageWebScraper({
   url,
 }: MessageWebScraperProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-
-  // Auto-collapse when scraping completes
-  useEffect(() => {
-    if (isLoading === false && isExpanded === true) {
-      // Add a small delay to allow users to see the completion
-      const timer = setTimeout(() => {
-        setIsExpanded(false);
-      }, 1000); // 1 second delay
-
-      return () => clearTimeout(timer);
-    }
-  }, [isLoading, isExpanded]);
 
   const variants = {
     collapsed: {
