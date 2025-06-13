@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 
 export default function HomePage() {
-  // Redirect to the chat page for new conversations
-  redirect('/chat');
+  // Redirect to the landing page as the homepage
+  redirect('/landing');
 }
