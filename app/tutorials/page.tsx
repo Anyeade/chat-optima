@@ -25,7 +25,7 @@ export default function TutorialsPage() {
         <div className="space-y-6 text-gray-300">
           <div>
             <h4 className="text-lg font-semibold text-white mb-3">Step 1: Create Your Account</h4>
-            <p className="mb-2">Visit <span className="text-[#58a6ff]">app.optima-ai.com</span> and click "Sign Up"</p>
+            <p className="mb-2">Visit <span className="text-[#58a6ff]">app.optima-ai.com</span> and click &quot;Sign Up&quot;</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Enter your email address</li>
               <li>Create a secure password</li>
@@ -46,7 +46,7 @@ export default function TutorialsPage() {
           <div>
             <h4 className="text-lg font-semibold text-white mb-3">Step 3: Start Your First Chat</h4>
             <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
-              <p className="text-green-400 text-sm">💡 Try this: "Hello! Can you explain what you can help me with?"</p>
+              <p className="text-green-400 text-sm">💡 Try this: &quot;Hello! Can you explain what you can help me with?&quot;</p>
             </div>
           </div>
           
@@ -75,7 +75,7 @@ export default function TutorialsPage() {
             <p className="mb-2">Navigate to your account settings to generate an API key:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Go to Settings → API Keys</li>
-              <li>Click "Create New Key"</li>
+              <li>Click &quot;Create New Key&quot;</li>
               <li>Copy and securely store your key</li>
             </ul>
           </div>
@@ -153,7 +153,7 @@ callOptimaAI();`}
             <h4 className="text-lg font-semibold text-white mb-3">Step 1: Enable Streaming</h4>
             <div className="bg-[#0f0f0f] p-4 rounded border border-gray-600">
               <code className="text-green-400 text-sm">
-                {`const response = await fetch('https://api.optima-ai.com/v1/chat/completions', {
+                {`const response = await fetch(&apos;https://api.optima-ai.com/v1/chat/completions&apos;, {
   method: 'POST',
   headers: {
     'Authorization': \`Bearer \${API_KEY}\`,
