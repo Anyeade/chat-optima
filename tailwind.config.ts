@@ -12,6 +12,7 @@ const config: Config = {
       fontFamily: {
         sans: ['var(--font-geist)'],
         mono: ['var(--font-geist-mono)'],
+        poppins: ['var(--font-poppins)', 'sans-serif'],
       },
       screens: {
         'toast-mobile': '600px',
@@ -28,6 +29,12 @@ const config: Config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        githubDark: '#0d1117',
+        githubDarkSecondary: '#1a1f25',
+        githubBorder: '#2f343c',
+        neonBlue: '#58a6ff',
+        neonPurple: '#bf00ff',
+        neonTeal: '#00ffcc',
         popover: {
           DEFAULT: 'hsl(var(--popover))',
           foreground: 'hsl(var(--popover-foreground))',
