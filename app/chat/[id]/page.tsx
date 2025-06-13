@@ -24,14 +24,8 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
     redirect('/api/auth/guest');
   }
 
-  if (chat.visibility === 'private') {
-    if (!session.user) {
-      return notFound();
-    }
-
-    if (session.user.id !== chat.userId) {
-      return notFound();
-    }
+  if (chat.visibility === 'private' && chat.userId !== session.user?.id) {
+    return notFound();
   }
 
   const messagesFromDb = await getMessagesByChatId({
