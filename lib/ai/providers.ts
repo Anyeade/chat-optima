@@ -147,10 +147,7 @@ export const myProvider = isTestEnvironment
           model: togetherai('deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free': togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'),
-
-        // Requesty AI Router Models (OpenAI-compatible)
-        'google/gemini-2.0-flash-exp': requestyAI('google/gemini-2.0-flash-exp'),
+        'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free': togetherai('meta-llama/Llama-3.3-70B-Instruct-Turbo-Free'),        // Requesty AI Router Models (OpenAI-compatible)
         'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),// Glama AI Gateway Models removed due to API issues        // Chutes AI Models (OpenAI-compatible gateway) - Enhanced for 163k context
         'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'), // 163k context window
         'deepseek-ai/DeepSeek-R1': wrapLanguageModel({

@@ -144,13 +144,7 @@ export const chatModels: Array<ChatModel> = [
     id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
     name: 'Together Llama 3.3 Free',
     description: 'Llama 3.3 70B Turbo - Free tier (8k max tokens)',
-  },
-  // Requesty AI Router Series (OpenAI-compatible gateway) - Enhanced tokens
-  {
-    id: 'google/gemini-2.0-flash-exp',
-    name: 'Requesty Gemini 2.0 Flash',
-    description: 'Gemini 2.0 Flash Experimental via Requesty Router (8k max tokens)',
-  },
+  },  // Requesty AI Router Series (OpenAI-compatible gateway) - Enhanced tokens
   {
     id: 'gemma-3-27b-it-requesty',
     name: 'Requesty Gemma 3 27B',
