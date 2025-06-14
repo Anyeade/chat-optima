@@ -42,7 +42,7 @@ import type { Chat } from '@/lib/db/schema';
 import { differenceInSeconds } from 'date-fns';
 import { ChatSDKError } from '@/lib/errors';
 
-export const maxDuration = 300; // Increased to 5 minutes to support long AI streaming responses
+export const maxDuration = 60; // Set to 60 seconds for Vercel Hobby plan compliance
 
 let globalStreamContext: ResumableStreamContext | null = null;
 
