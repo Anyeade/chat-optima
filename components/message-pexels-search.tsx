@@ -5,10 +5,34 @@ import { ChevronDownIcon, LoaderIcon } from './icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ErrorBoundary, ToolErrorFallback } from './error-boundary';
 
-interface MessagePexelsSearchProps {
-  isLoading: boolean;
-  searchResults: any;
-  searchQuery?: string;
+// Simple modal for previewing images/videos
+function MediaPreviewModal({ open, onClose, src, type, alt }: { open: boolean; onClose: () => void; src: string; type: 'image' | 'video'; alt?: string }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-4 max-w-2xl w-full relative">
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-700 dark:text-gray-200 hover:text-red-500 text-xl font-bold"
+          aria-label="Close preview"
+        >
+          ×
+        </button>
+        {type === 'image' ? (
+          <img src={src} alt={alt} className="max-h-[70vh] max-w-full mx-auto rounded" />
+        ) : (
+          <video src={src} controls autoPlay className="max-h-[70vh] max-w-full mx-auto rounded" />
+        )}
+        <a
+          href={src}
+          download
+          className="mt-4 inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm"
+        >
+          Download {type === 'image' ? 'Image' : 'Video'}
+        </a>
+      </div>
+    </div>
+  );
 }
 
 // Safe data validation function for Pexels results
@@ -61,9 +85,9 @@ function validatePexelsResults(results: any): { isValid: boolean; resultCount: n
 }
 
 // Safe photo rendering component
-function SafePhotoRow({ photo, index }: { photo: any; index: number }) {
+function SafePhotoRow({ photo, index, onPreview }: { photo: any; index: number; onPreview: (src: string, alt?: string) => void }) {
   try {
-    const safeSrc = photo?.src?.small || photo?.src?.tiny || '';
+    const safeSrc = photo?.src?.large || photo?.src?.original || photo?.src?.small || photo?.src?.tiny || '';
     const safeAlt = photo?.alt || `Image ${index + 1}`;
     const safePhotographer = photo?.photographer || 'Unknown';
     const safePhotographerUrl = photo?.photographer_url || '#';
@@ -75,15 +99,17 @@ function SafePhotoRow({ photo, index }: { photo: any; index: number }) {
       <tr key={safeId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
         <td className="px-4 py-2">
           {safeSrc ? (
-            <img
-              src={safeSrc}
-              alt={safeAlt}
-              className="w-16 h-12 object-cover rounded"
-              loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yOCAyNEwyNCAyMEwyOCAyNFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
-              }}
-            />
+            <button onClick={() => onPreview(safeSrc, safeAlt)} className="focus:outline-none">
+              <img
+                src={safeSrc}
+                alt={safeAlt}
+                className="w-16 h-12 object-cover rounded border border-gray-200 dark:border-gray-700 hover:scale-105 transition-transform"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yOCAyNEwyNCAyMEwyOCAyNFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
+                }}
+              />
+            </button>
           ) : (
             <div className="w-16 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs">
               No image
@@ -136,7 +162,7 @@ function SafePhotoRow({ photo, index }: { photo: any; index: number }) {
 }
 
 // Safe video rendering component
-function SafeVideoRow({ video, index }: { video: any; index: number }) {
+function SafeVideoRow({ video, index, onPreview }: { video: any; index: number; onPreview: (src: string) => void }) {
   try {
     const safeImage = video?.image || '';
     const safeAlt = `Video ${index + 1} preview`;
@@ -150,21 +176,26 @@ function SafeVideoRow({ video, index }: { video: any; index: number }) {
     const safeQuality = Array.isArray(video?.video_files)
       ? (video.video_files.find((f: any) => f.quality === 'hd')?.quality || 'HD')
       : 'HD';
+    const safeVideoFile = Array.isArray(video?.video_files)
+      ? (video.video_files.find((f: any) => f.quality === 'hd')?.link || video.video_files[0]?.link || '')
+      : '';
 
     return (
       <tr key={safeId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
         <td className="px-4 py-2">
           {safeImage ? (
-            <img
-              src={safeImage}
-              alt={safeAlt}
-              className="w-16 h-12 object-cover rounded"
-              loading="lazy"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src =
-                  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yOCAyNEwyNCAyMEwyOCAyNFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
-              }}
-            />
+            <button onClick={() => onPreview(safeVideoFile)} className="focus:outline-none">
+              <img
+                src={safeImage}
+                alt={safeAlt}
+                className="w-16 h-12 object-cover rounded border border-gray-200 dark:border-gray-700 hover:scale-105 transition-transform"
+                loading="lazy"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src =
+                    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yOCAyNEwyNCAyMEwyOCAyNFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
+                }}
+              />
+            </button>
           ) : (
             <div className="w-16 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs">
               No image
@@ -228,6 +259,7 @@ export function MessagePexelsSearch({
   searchQuery,
 }: MessagePexelsSearchProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [preview, setPreview] = useState<{ src: string; type: 'image' | 'video'; alt?: string } | null>(null);
 
   const variants = {
     collapsed: {
@@ -252,6 +284,15 @@ export function MessagePexelsSearch({
   return (
     <ErrorBoundary fallback={ToolErrorFallback}>
       <div className="flex flex-col">
+        {preview && (
+          <MediaPreviewModal
+            open={!!preview}
+            onClose={() => setPreview(null)}
+            src={preview.src}
+            type={preview.type}
+            alt={preview.alt}
+          />
+        )}
         {isLoading ? (
           <div className="flex flex-row gap-2 items-center">
             <div className="font-medium">Searching Pexels</div>
@@ -317,17 +358,12 @@ export function MessagePexelsSearch({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                        {searchResults.photos.slice(0, 5).map((photo: any, index: number) => (
-                          <SafePhotoRow key={photo?.id || index} photo={photo} index={index} />
+                        {searchResults.photos.map((photo: any, index: number) => (
+                          <SafePhotoRow key={photo?.id || index} photo={photo} index={index} onPreview={(src, alt) => setPreview({ src, type: 'image', alt })} />
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  {searchResults.photos.length > 5 && (
-                    <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-                      Showing 5 of {searchResults.photos.length} selected images
-                    </div>
-                  )}
                   <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-3">
                     <div className="text-sm text-blue-800 dark:text-blue-200 font-medium">
                       ✨ Images Ready for Implementation
@@ -351,8 +387,8 @@ export function MessagePexelsSearch({
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                        {searchResults.videos.slice(0, 3).map((video: any, index: number) => (
-                          <SafeVideoRow key={video?.id || index} video={video} index={index} />
+                        {searchResults.videos.map((video: any, index: number) => (
+                          <SafeVideoRow key={video?.id || index} video={video} index={index} onPreview={(src) => setPreview({ src, type: 'video' })} />
                         ))}
                       </tbody>
                     </table>
