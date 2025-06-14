@@ -135,6 +135,87 @@ function SafePhotoRow({ photo, index }: { photo: any; index: number }) {
   }
 }
 
+// Safe video rendering component
+function SafeVideoRow({ video, index }: { video: any; index: number }) {
+  try {
+    const safeImage = video?.image || '';
+    const safeAlt = `Video ${index + 1} preview`;
+    const safeTags = Array.isArray(video?.tags) ? video.tags.join(', ') : `Professional Video ${index + 1}`;
+    const safeDuration = typeof video?.duration === 'number' ? video.duration : 'Variable';
+    const safeId = video?.id || index;
+    const safeUserName = video?.user?.name || 'Pexels';
+    const safeUserUrl = video?.user?.url || '';
+    const safeWidth = video?.width || 'N/A';
+    const safeHeight = video?.height || 'N/A';
+    const safeQuality = Array.isArray(video?.video_files)
+      ? (video.video_files.find((f: any) => f.quality === 'hd')?.quality || 'HD')
+      : 'HD';
+
+    return (
+      <tr key={safeId} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+        <td className="px-4 py-2">
+          {safeImage ? (
+            <img
+              src={safeImage}
+              alt={safeAlt}
+              className="w-16 h-12 object-cover rounded"
+              loading="lazy"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yOCAyNEwyNCAyMEwyOCAyNFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
+              }}
+            />
+          ) : (
+            <div className="w-16 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center text-xs">
+              No image
+            </div>
+          )}
+        </td>
+        <td className="px-4 py-2">
+          <div className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+            {safeTags}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            Duration: {safeDuration}s • ID: {safeId}
+          </div>
+        </td>
+        <td className="px-4 py-2">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
+            {safeUserName}
+          </div>
+          {safeUserUrl && (
+            <a
+              href={safeUserUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              View Profile
+            </a>
+          )}
+        </td>
+        <td className="px-4 py-2">
+          <div className="text-sm text-gray-900 dark:text-gray-100">
+            {safeWidth} × {safeHeight}
+          </div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">
+            {safeQuality} Available
+          </div>
+        </td>
+      </tr>
+    );
+  } catch (error) {
+    console.error('Error rendering video row:', error);
+    return (
+      <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+        <td colSpan={4} className="px-4 py-2 text-center text-red-500">
+          Error displaying video {index + 1}
+        </td>
+      </tr>
+    );
+  }
+}
+
 interface MessagePexelsSearchProps {
   isLoading: boolean;
   searchResults: any;
@@ -271,50 +352,7 @@ export function MessagePexelsSearch({
                       </thead>
                       <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
                         {searchResults.videos.slice(0, 3).map((video: any, index: number) => (
-                          <tr key={video.id || index} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                            <td className="px-4 py-2">
-                              <img
-                                src={video.image}
-                                alt={`Video ${index + 1} preview`}
-                                className="w-16 h-12 object-cover rounded"
-                                loading="lazy"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjQiIGhlaWdodD0iNDgiIHZpZXdCb3g9IjAgMCA2NCA0OCIgZmlsbD0ibm9uZSIgeG1zbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjQ4IiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yOCAyNEwyNCAyMEwyOCAyNFoiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPC9zdmc+';
-                                }}
-                              />
-                            </td>
-                            <td className="px-4 py-2">
-                              <div className="text-sm text-gray-900 dark:text-gray-100 font-medium">
-                                {video.tags?.join(', ') || `Professional Video ${index + 1}`}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                Duration: {video.duration || 'Variable'}s • ID: {video.id}
-                              </div>
-                            </td>
-                            <td className="px-4 py-2">
-                              <div className="text-sm text-gray-900 dark:text-gray-100">
-                                {video.user?.name || 'Pexels'}
-                              </div>
-                              {video.user?.url && (
-                                <a
-                                  href={video.user.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                                >
-                                  View Profile
-                                </a>
-                              )}
-                            </td>
-                            <td className="px-4 py-2">
-                              <div className="text-sm text-gray-900 dark:text-gray-100">
-                                {video.width} × {video.height}
-                              </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400">
-                                {video.video_files?.find((f: any) => f.quality === 'hd')?.quality || 'HD'} Available
-                              </div>
-                            </td>
-                          </tr>
+                          <SafeVideoRow key={video?.id || index} video={video} index={index} />
                         ))}
                       </tbody>
                     </table>
