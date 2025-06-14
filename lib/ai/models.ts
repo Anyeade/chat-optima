@@ -159,28 +159,27 @@ export const chatModels: Array<ChatModel> = [
     id: 'gemma-3-27b-it-requesty',
     name: 'Requesty Gemma 3 27B',
     description: 'Gemma 3 27B instructive model via Requesty Router',
-  },  // Glama AI Gateway Series removed due to API issues
-  // Chutes AI Series (OpenAI-compatible gateway)
+  },  // Glama AI Gateway Series removed due to API issues  // Chutes AI Series (OpenAI-compatible gateway) - Enhanced for long code generation
   {
     id: 'deepseek-ai/DeepSeek-V3-0324',
     name: 'Chutes DeepSeek V3',
-    description: 'DeepSeek V3 latest model via Chutes AI',
+    description: 'DeepSeek V3 latest model via Chutes AI (163k context, 32k max tokens)',
   },
   {
     id: 'deepseek-ai/DeepSeek-R1',
     name: 'Chutes DeepSeek R1',
-    description: 'DeepSeek R1 reasoning model via Chutes AI',
+    description: 'DeepSeek R1 reasoning model via Chutes AI (163k context, 32k max tokens)',
   },
   {
     id: 'Qwen/Qwen3-235B-A22B',
     name: 'Chutes Qwen 3 235B',
-    description: 'Qwen 3 235B large model via Chutes AI',
+    description: 'Qwen 3 235B large model via Chutes AI (large context, 16k max tokens)',
   },
   {
     id: 'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
     name: 'Chutes Llama 4 Maverick',
-    description: 'Llama 4 Maverick 17B FP8 optimized via Chutes AI',
-  },  // X.AI Series (Grok Models)
+    description: 'Llama 4 Maverick 17B FP8 optimized via Chutes AI (extended context, 16k max tokens)',
+  },// X.AI Series (Grok Models)
   {
     id: 'grok-3-mini-beta',
     name: 'Optima Grok 3 Mini',

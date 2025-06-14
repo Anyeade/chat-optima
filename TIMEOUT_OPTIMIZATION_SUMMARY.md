@@ -57,6 +57,7 @@ if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 60) {
 | Chat API Route | 60 seconds | 300 seconds (5 minutes) | 5x increase |
 | Code Execution API | 30 seconds | 120 seconds (2 minutes) | 4x increase |
 | Stream Resume Window | 15 seconds | 60 seconds | 4x increase |
+| **Chutes AI MaxTokens** | **~4k tokens** | **32k tokens (DeepSeek)** | **8x increase** |
 
 ## 🚀 Benefits
 
@@ -64,6 +65,8 @@ if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 60) {
 2. **Reduced Interruptions**: Longer resume windows prevent premature termination of streaming responses
 3. **Better Code Execution**: Code-related AI operations have 2 minutes for processing complex requests
 4. **Improved User Experience**: Users can receive complete, uninterrupted AI responses for complex coding tasks
+5. **🆕 Enhanced Token Limits**: Chutes AI DeepSeek models can generate 8x longer responses (32k vs 4k tokens)
+6. **🆕 Full Context Utilization**: DeepSeek's 163k context window is now properly leveraged
 
 ## 🔍 Technical Details
 

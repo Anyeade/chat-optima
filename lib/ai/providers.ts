@@ -27,12 +27,14 @@ const requestyAI = createOpenAICompatible({
   apiKey: process.env.REQUESTY_AI_API_KEY || 'dummy-key', // Some providers may not require auth
 });
 
-// Chutes AI (OpenAI-compatible API)
-
+// Chutes AI (OpenAI-compatible API) - Enhanced for DeepSeek models
 const chutesAI = createOpenAICompatible({
   name: 'chutes-ai',
   baseURL: 'https://llm.chutes.ai/v1',
   apiKey: process.env.CHUTES_AI_API_KEY || 'dummy-key', // Some providers may not require auth
+  headers: {
+    'User-Agent': 'ChatOptima/1.0',
+  },
 });
 
 // Google Gemini (OpenAI-compatible endpoint)
@@ -147,18 +149,17 @@ export const myProvider = isTestEnvironment
 
         // Requesty AI Router Models (OpenAI-compatible)
         'google/gemini-2.0-flash-exp': requestyAI('google/gemini-2.0-flash-exp'),
-        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),        // Glama AI Gateway Models removed due to API issues
-
-        // Chutes AI Models (OpenAI-compatible)
-        'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'),        'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
-          model: chutesAI('deepseek-ai/DeepSeek-R1'),
+        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),        // Glama AI Gateway Models removed due to API issues        // Chutes AI Models (OpenAI-compatible gateway) - Enhanced for 163k context
+        'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'), // 163k context window
+        'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
+          model: chutesAI('deepseek-ai/DeepSeek-R1'), // 163k context window with reasoning
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
         'Qwen/Qwen3-235B-A22B': wrapLanguageModel({
-          model: chutesAI('Qwen/Qwen3-235B-A22B'),
+          model: chutesAI('Qwen/Qwen3-235B-A22B'), // Large context window
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
         }),
-        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'),// X.AI Models (Grok series)
+        'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8': chutesAI('chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8'), // Extended context// X.AI Models (Grok series)
         'grok-3-mini-beta': xai('grok-3-mini-beta'),        // OpenRouter Models removed due to API issues
 
         // Cerebras Models (Ultra-fast inference, free tier)

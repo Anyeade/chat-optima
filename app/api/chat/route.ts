@@ -163,12 +163,44 @@ export async function POST(request: Request) {
         const isModelWithoutTools = selectedChatModel.includes('cerebras') || 
                                    selectedChatModel.includes('llama3.1-8b-cerebras') ||
                                    selectedChatModel.includes('llama-3.3-70b-cerebras');
-                                   // Compound models removed from user selection
+                                   // Compound models removed from user selection        // Determine maxTokens based on model capabilities for long code generation
+        function getMaxTokensForModel(modelId: string): number {
+          // High-context models with 163k+ context windows (can generate longer responses)
+          if (modelId.includes('deepseek') || modelId.includes('DeepSeek')) {
+            return 32768; // 32k tokens for long code generation
+          }
+          // Qwen models with large context windows
+          if (modelId.includes('qwen') || modelId.includes('Qwen')) {
+            return 16384; // 16k tokens
+          }
+          // Llama 4 models with extended context
+          if (modelId.includes('llama-4') || modelId.includes('Llama-4')) {
+            return 16384; // 16k tokens
+          }
+          // Claude models
+          if (modelId.includes('claude')) {
+            return 8192; // 8k tokens
+          }
+          // GPT models
+          if (modelId.includes('gpt-4') || modelId.includes('gpt-3.5')) {
+            return 8192; // 8k tokens
+          }
+          // Gemini models
+          if (modelId.includes('gemini')) {
+            return 8192; // 8k tokens
+          }
+          // Default for other models
+          return 4096; // 4k tokens default
+        }
+
+        const maxTokens = getMaxTokensForModel(selectedChatModel);
+        console.log(`🎯 Model: ${selectedChatModel} | MaxTokens: ${maxTokens}`);
 
         const streamTextConfig = {
           model: modelToUse,
           system: systemPrompt({ selectedChatModel, requestHints }),
           messages,
+          maxTokens, // Add dynamic maxTokens based on model capabilities
           maxSteps: 5,
           experimental_transform: smoothStream({ chunking: 'word' }),
           experimental_generateMessageId: generateUUID,
