@@ -175,7 +175,8 @@ async function makeApiRequest(url: string, options: RequestInit, retries = 3): P
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+      // Increased timeout to 2 minutes for long-running AI operations
+      const timeoutId = setTimeout(() => controller.abort(), 120000); 
       
       const response = await fetch(url, {
         ...options,

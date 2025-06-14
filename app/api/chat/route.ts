@@ -42,7 +42,7 @@ import type { Chat } from '@/lib/db/schema';
 import { differenceInSeconds } from 'date-fns';
 import { ChatSDKError } from '@/lib/errors';
 
-export const maxDuration = 60;
+export const maxDuration = 300; // Increased to 5 minutes to support long AI streaming responses
 
 let globalStreamContext: ResumableStreamContext | null = null;
 
@@ -372,11 +372,10 @@ export async function GET(request: Request) {
 
     if (mostRecentMessage.role !== 'assistant') {
       return new Response(emptyDataStream, { status: 200 });
-    }
+    }    const messageCreatedAt = new Date(mostRecentMessage.createdAt);
 
-    const messageCreatedAt = new Date(mostRecentMessage.createdAt);
-
-    if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 15) {
+    // Allow longer resume window for AI streaming responses (60 seconds instead of 15)
+    if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 60) {
       return new Response(emptyDataStream, { status: 200 });
     }
 
