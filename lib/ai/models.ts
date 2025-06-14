@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL: string = 'meta-llama/llama-4-scout-17b-16e-instruct';
+export const DEFAULT_CHAT_MODEL: string = 'llama-3.3-70b-versatile';
 
 export interface ChatModel {
   id: string;
@@ -42,21 +42,20 @@ export const chatModels: Array<ChatModel> = [
     id: 'gemma-3-27b-it',
     name: 'Optima Gemma 3',
     description: 'Google Gemma 3 27B - Instructive model',
-  },
-  // Trio Series (Groq Models)
+  },  // Trio Series (Groq Models) - Enhanced for long code generation
   {
-    id: 'meta-llama/llama-4-scout-17b-16e-instruct',
-    name: 'Trio Scout 4',
-    description: 'Llama 4 Scout - Multimodal with vision',
+    id: 'llama-3.3-70b-versatile',
+    name: 'Trio Llama 3.3 70B',
+    description: 'Llama 3.3 70B versatile model via Groq (32k context, 12k max tokens)',
   },
   {
-    id: 'meta-llama/llama-4-maverick-17b-128e-instruct',
-    name: 'Trio Maverick 4',
-    description: 'Llama 4 Maverick - Advanced reasoning',
-  },  {
+    id: 'mixtral-8x7b-32768',
+    name: 'Trio Mixtral 8x7B',
+    description: 'Mixtral 8x7B model via Groq - Excellent for code (32k context, 12k max tokens)',
+  },{
     id: 'deepseek-r1-distill-llama-70b',
     name: 'Trio DeepSeek R1',
-    description: 'DeepSeek R1 distilled reasoning model',
+    description: 'DeepSeek R1 distilled reasoning model (12k max tokens)',
   },
   // Compound models removed from user selection (used internally for suggestions)
   {
@@ -68,27 +67,26 @@ export const chatModels: Array<ChatModel> = [
     id: 'qwen-qwq-32b',
     name: 'Trio Qwen QWQ',
     description: 'Qwen QWQ 32B reasoning model',
-  },
-  {
+  },  {
     id: 'llama-3.1-8b-instant',
     name: 'Trio Llama 3.1 Fast',
-    description: 'Llama 3.1 8B instant (14.4k req/day)',
+    description: 'Llama 3.1 8B instant (14.4k req/day, 12k max tokens)',
   },
   {
     id: 'gemma2-9b-it',
     name: 'Trio Gemma 2',
-    description: 'Gemma 2 9B instruction tuned (14.4k req/day)',
+    description: 'Gemma 2 9B instruction tuned (14.4k req/day, 12k max tokens)',
   },
   {
     id: 'llama3-70b-8192',
     name: 'Trio Llama 3 70B',
-    description: 'Llama 3 70B classic (14.4k req/day)',
+    description: 'Llama 3 70B classic (14.4k req/day, 12k max tokens)',
   },
   {
     id: 'llama3-8b-8192',
     name: 'Trio Llama 3 8B',
-    description: 'Llama 3 8B classic (14.4k req/day)',
-  },  // Optima Fast (Mistral Models)
+    description: 'Llama 3 8B classic (14.4k req/day, 12k max tokens)',
+  },// Optima Fast (Mistral Models)
   {
     id: 'pixtral-12b-2409',
     name: 'Optima Fast',
@@ -111,55 +109,53 @@ export const chatModels: Array<ChatModel> = [
     id: 'open-mistral-nemo',
     name: 'Optima Mistral Nemo',
     description: 'Open Mistral Nemo - Versatile open model',
-  },
-  // Optima Command Series (Cohere - 128K context, tool support)
+  },  // Optima Command Series (Cohere - 128K context, tool support) - Enhanced tokens
   {
     id: 'command-a-03-2025',
     name: 'Optima Command A',
-    description: 'Latest Cohere model (128K context, tools)',
+    description: 'Latest Cohere model (128K context, tools, 16k max tokens)',
   },
   {
     id: 'command-nightly',
     name: 'Optima Command Nightly',
-    description: 'Cohere nightly build (128K context, tools)',
+    description: 'Cohere nightly build (128K context, tools, 16k max tokens)',
   },
   {
     id: 'command-r-plus-04-2024',
     name: 'Optima Command R+',
-    description: 'Cohere R+ model (128K context, tools)',
+    description: 'Cohere R+ model (128K context, tools, 16k max tokens)',
   },
   {
     id: 'command-r-08-2024',
     name: 'Optima Command R',
-    description: 'Cohere R model (128K context, tools)',
-  },
-  // Together.ai Series (200+ open-source models, free options)
+    description: 'Cohere R model (128K context, tools, 16k max tokens)',
+  },// Together.ai Series (200+ open-source models, free options) - Enhanced tokens
   {
     id: 'meta-llama/Llama-Vision-Free',
     name: 'Together Vision Free',
-    description: 'Llama Vision model - Free tier',
+    description: 'Llama Vision model - Free tier (8k max tokens)',
   },
   {
     id: 'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free',
     name: 'Together DeepSeek R1 Free',
-    description: 'DeepSeek R1 distilled - Free tier',
+    description: 'DeepSeek R1 distilled - Free tier (8k max tokens)',
   },
   {
     id: 'meta-llama/Llama-3.3-70B-Instruct-Turbo-Free',
     name: 'Together Llama 3.3 Free',
-    description: 'Llama 3.3 70B Turbo - Free tier',
+    description: 'Llama 3.3 70B Turbo - Free tier (8k max tokens)',
   },
-  // Requesty AI Router Series (OpenAI-compatible gateway)
+  // Requesty AI Router Series (OpenAI-compatible gateway) - Enhanced tokens
   {
     id: 'google/gemini-2.0-flash-exp',
     name: 'Requesty Gemini 2.0 Flash',
-    description: 'Gemini 2.0 Flash Experimental via Requesty Router',
+    description: 'Gemini 2.0 Flash Experimental via Requesty Router (8k max tokens)',
   },
   {
     id: 'gemma-3-27b-it-requesty',
     name: 'Requesty Gemma 3 27B',
-    description: 'Gemma 3 27B instructive model via Requesty Router',
-  },  // Glama AI Gateway Series removed due to API issues  // Chutes AI Series (OpenAI-compatible gateway) - Enhanced for long code generation
+    description: 'Gemma 3 27B instructive model via Requesty Router (8k max tokens)',
+  },// Glama AI Gateway Series removed due to API issues  // Chutes AI Series (OpenAI-compatible gateway) - Enhanced for long code generation
   {
     id: 'deepseek-ai/DeepSeek-V3-0324',
     name: 'Chutes DeepSeek V3',
@@ -178,32 +174,31 @@ export const chatModels: Array<ChatModel> = [
   {
     id: 'chutesai/Llama-4-Maverick-17B-128E-Instruct-FP8',
     name: 'Chutes Llama 4 Maverick',
-    description: 'Llama 4 Maverick 17B FP8 optimized via Chutes AI (extended context, 16k max tokens)',
-  },// X.AI Series (Grok Models)
+    description: 'Llama 4 Maverick 17B FP8 optimized via Chutes AI (extended context, 16k max tokens)',  },// X.AI Series (Grok Models) - Enhanced tokens
   {
     id: 'grok-3-mini-beta',
     name: 'Optima Grok 3 Mini',
-    description: 'X.AI Grok 3 Mini - Compact and efficient',
+    description: 'X.AI Grok 3 Mini - Compact and efficient (8k max tokens)',
   },  // OpenRouter Free Series removed due to API issues
-  // Cerebras Fast Series (Ultra-fast inference)
+  // Cerebras Fast Series (Ultra-fast inference) - Enhanced tokens
   {
     id: 'llama-4-scout-17b-16e-instruct-cerebras',
     name: 'Fast Llama 4 Scout',
-    description: 'Llama 4 Scout via Cerebras - Ultra-fast inference',
+    description: 'Llama 4 Scout via Cerebras - Ultra-fast inference (8k max tokens)',
   },
   {
     id: 'llama3.1-8b-cerebras',
     name: 'Fast Llama 3.1 8B',
-    description: 'Llama 3.1 8B via Cerebras - 2200 tokens/s',
+    description: 'Llama 3.1 8B via Cerebras - 2200 tokens/s (8k max tokens)',
   },
   {
     id: 'llama-3.3-70b-cerebras',
     name: 'Fast Llama 3.3 70B',
-    description: 'Llama 3.3 70B via Cerebras - 2100 tokens/s',
+    description: 'Llama 3.3 70B via Cerebras - 2100 tokens/s (8k max tokens)',
   },
   {
     id: 'qwen-3-32b-cerebras',
     name: 'Fast Qwen 3 32B',
-    description: 'Qwen 3 32B via Cerebras - 2100 tokens/s',
+    description: 'Qwen 3 32B via Cerebras - 2100 tokens/s (8k max tokens)',
   },
 ];

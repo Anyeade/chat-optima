@@ -169,13 +169,61 @@ export async function POST(request: Request) {
           if (modelId.includes('deepseek') || modelId.includes('DeepSeek')) {
             return 32768; // 32k tokens for long code generation
           }
+          
+          // Groq models - Using EXACT limits from Groq documentation
+          if (modelId === 'llama-3.3-70b-versatile') {
+            return 32768; // 32k max completion tokens
+          }
+          if (modelId === 'meta-llama/llama-4-scout-17b-16e-instruct') {
+            return 8192; // 8k max completion tokens
+          }
+          if (modelId === 'meta-llama/llama-4-maverick-17b-128e-instruct') {
+            return 8192; // 8k max completion tokens
+          }
+          if (modelId === 'llama-3.1-8b-instant') {
+            return 8192; // 8k max completion tokens
+          }
+          if (modelId === 'compound-beta' || modelId === 'compound-beta-mini') {
+            return 8192; // 8k max completion tokens (preview systems)
+          }
+          if (modelId === 'qwen-qwq-32b' || modelId === 'qwen/qwen3-32b') {
+            return 16384; // 16k max completion tokens for Qwen 3 32B
+          }
+          if (modelId === 'deepseek-r1-distill-llama-70b') {
+            return 8192; // DeepSeek R1 distilled model
+          }
+          
           // Qwen models with large context windows
           if (modelId.includes('qwen') || modelId.includes('Qwen')) {
             return 16384; // 16k tokens
           }
           // Llama 4 models with extended context
           if (modelId.includes('llama-4') || modelId.includes('Llama-4')) {
-            return 16384; // 16k tokens
+            return 8192; // 8k tokens (corrected from Groq docs)
+          }
+          // Other Groq models - fallback
+          if (modelId.includes('groq') || modelId.includes('llama3')) {
+            return 8192; // 8k tokens for other Groq models
+          }
+          // Cohere Command models with 128k context
+          if (modelId.includes('command')) {
+            return 16384; // 16k tokens for Cohere Command series
+          }
+          // Together.ai models
+          if (modelId.includes('meta-llama') && modelId.includes('Free')) {
+            return 8192; // 8k tokens for Together.ai free models
+          }
+          // X.AI Grok models
+          if (modelId.includes('grok')) {
+            return 8192; // 8k tokens for Grok models
+          }
+          // Mistral models
+          if (modelId.includes('mistral') || modelId.includes('pixtral') || modelId.includes('devstral')) {
+            return 8192; // 8k tokens for Mistral models
+          }
+          // Requesty AI Router models
+          if (modelId.includes('requesty') || modelId.includes('google/') || modelId.includes('gemma-3-27b-it-requesty')) {
+            return 8192; // 8k tokens for Requesty Router models
           }
           // Claude models
           if (modelId.includes('claude')) {
@@ -186,8 +234,12 @@ export async function POST(request: Request) {
             return 8192; // 8k tokens
           }
           // Gemini models
-          if (modelId.includes('gemini')) {
+          if (modelId.includes('gemini') || modelId.includes('gemma')) {
             return 8192; // 8k tokens
+          }
+          // Cerebras models - fast inference
+          if (modelId.includes('cerebras')) {
+            return 8192; // 8k tokens for Cerebras models
           }
           // Default for other models
           return 4096; // 4k tokens default

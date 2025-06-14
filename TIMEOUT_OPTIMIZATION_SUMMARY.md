@@ -57,7 +57,10 @@ if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 60) {
 | Chat API Route | 60 seconds | 300 seconds (5 minutes) | 5x increase |
 | Code Execution API | 30 seconds | 120 seconds (2 minutes) | 4x increase |
 | Stream Resume Window | 15 seconds | 60 seconds | 4x increase |
-| **Chutes AI MaxTokens** | **~4k tokens** | **32k tokens (DeepSeek)** | **8x increase** |
+| **DeepSeek MaxTokens** | **~4k tokens** | **32k tokens** | **8x increase** |
+| **Cohere Command MaxTokens** | **~4k tokens** | **16k tokens** | **4x increase** |
+| **Groq Models MaxTokens** | **~4k tokens** | **12k tokens** | **3x increase** |
+| **Other Providers MaxTokens** | **~4k tokens** | **8k tokens** | **2x increase** |
 
 ## 🚀 Benefits
 
@@ -65,8 +68,9 @@ if (differenceInSeconds(resumeRequestedAt, messageCreatedAt) > 60) {
 2. **Reduced Interruptions**: Longer resume windows prevent premature termination of streaming responses
 3. **Better Code Execution**: Code-related AI operations have 2 minutes for processing complex requests
 4. **Improved User Experience**: Users can receive complete, uninterrupted AI responses for complex coding tasks
-5. **🆕 Enhanced Token Limits**: Chutes AI DeepSeek models can generate 8x longer responses (32k vs 4k tokens)
-6. **🆕 Full Context Utilization**: DeepSeek's 163k context window is now properly leveraged
+5. **🆕 Enhanced Token Limits**: All AI providers now support significantly longer responses
+6. **🆕 Full Context Utilization**: Each model can leverage its maximum capabilities
+7. **🆕 Provider-Specific Optimization**: Token limits tailored to each provider's strengths
 
 ## 🔍 Technical Details
 

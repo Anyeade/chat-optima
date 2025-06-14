@@ -20,11 +20,14 @@ import {
   titleModel,
 } from './models.test';
 
-// Requesty AI (OpenAI-compatible API)
+// Requesty AI (OpenAI-compatible API) - Enhanced for streaming
 const requestyAI = createOpenAICompatible({
   name: 'requesty-ai',
   baseURL: 'https://router.requesty.ai/v1',
   apiKey: process.env.REQUESTY_AI_API_KEY || 'dummy-key', // Some providers may not require auth
+  headers: {
+    'User-Agent': 'ChatOptima/1.0',
+  },
 });
 
 // Chutes AI (OpenAI-compatible API) - Enhanced for DeepSeek models
@@ -37,11 +40,14 @@ const chutesAI = createOpenAICompatible({
   },
 });
 
-// Google Gemini (OpenAI-compatible endpoint)
+// Google Gemini (OpenAI-compatible endpoint) - Enhanced for streaming
 const googleAI = createOpenAICompatible({
   name: 'google-ai',
   baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai',
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy-key',
+  headers: {
+    'User-Agent': 'ChatOptima/1.0',
+  },
 });
 
 // Debug function to check environment variables
@@ -100,7 +106,7 @@ export const myProvider = isTestEnvironment
         'chat-model-reasoning': wrapLanguageModel({
           model: groq('deepseek-r1-distill-llama-70b'),
           middleware: extractReasoningMiddleware({ tagName: 'think' }),
-        }),        'title-model': groq('compound-beta'), // Optimized for JSON generation and suggestions        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),        // Google Gemini Models (OpenAI-compatible endpoint)
+        }),        'title-model': groq('llama-3.1-8b-instant'), // Fast model for titles and JSON generation        'artifact-model': groq('meta-llama/llama-4-scout-17b-16e-instruct'),        // Google Gemini Models (OpenAI-compatible endpoint)
         'gemini-2.0-flash': googleAI('gemini-2.0-flash'),
         'gemini-2.0-flash-lite': googleAI('gemini-2.0-flash-lite'), 
         'gemini-2.0-flash-exp': googleAI('gemini-2.0-flash-exp'),
@@ -131,15 +137,11 @@ export const myProvider = isTestEnvironment
         'mistral-small-2503': mistral('mistral-small-2503'),
         'devstral-small-2505': mistral('devstral-small-2505'),
         'open-codestral-mamba': mistral('open-codestral-mamba'),
-        'open-mistral-nemo': mistral('open-mistral-nemo'),
-
-        // Cohere Models (128K context, tool support, no vision)
+        'open-mistral-nemo': mistral('open-mistral-nemo'),        // Cohere Models (128K context, tool support, no vision)
         'command-a-03-2025': cohere('command-a-03-2025'),
         'command-nightly': cohere('command-nightly'),
         'command-r-plus-04-2024': cohere('command-r-plus-04-2024'),
-        'command-r-08-2024': cohere('command-r-08-2024'),
-
-        // Together.ai Models (200+ open-source models, free options)
+        'command-r-08-2024': cohere('command-r-08-2024'),// Together.ai Models (200+ open-source models, free options)
         'meta-llama/Llama-Vision-Free': togetherai('meta-llama/Llama-Vision-Free'),
         'deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free': wrapLanguageModel({
           model: togetherai('deepseek-ai/DeepSeek-R1-Distill-Llama-70B-free'),
@@ -149,7 +151,7 @@ export const myProvider = isTestEnvironment
 
         // Requesty AI Router Models (OpenAI-compatible)
         'google/gemini-2.0-flash-exp': requestyAI('google/gemini-2.0-flash-exp'),
-        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),        // Glama AI Gateway Models removed due to API issues        // Chutes AI Models (OpenAI-compatible gateway) - Enhanced for 163k context
+        'gemma-3-27b-it-requesty': requestyAI('gemma-3-27b-it'),// Glama AI Gateway Models removed due to API issues        // Chutes AI Models (OpenAI-compatible gateway) - Enhanced for 163k context
         'deepseek-ai/DeepSeek-V3-0324': chutesAI('deepseek-ai/DeepSeek-V3-0324'), // 163k context window
         'deepseek-ai/DeepSeek-R1': wrapLanguageModel({
           model: chutesAI('deepseek-ai/DeepSeek-R1'), // 163k context window with reasoning
