@@ -98,11 +98,19 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
     getDocumentContentById?: any;
     isLoading?: boolean;
     [key: string]: any;
-  }) => {
-    // Safety check for metadata
+  }) => {    // Safety check for metadata with better error handling
     if (!metadata) {
       console.error('Video generator: metadata is undefined');
-      return <div className="p-4 text-red-500">Error: Video generator metadata not loaded</div>;
+      console.log('Props received:', { title, content, mode, isLoading });
+      return (
+        <div className="p-4 border border-red-200 bg-red-50 rounded-lg">
+          <div className="text-red-600 font-semibold mb-2">⚠️ Video Generator Loading</div>
+          <div className="text-red-500 text-sm">Initializing video generator metadata...</div>
+          <div className="text-xs text-gray-500 mt-2">
+            Title: {title || 'No title'} | Content: {content ? 'Present' : 'None'}
+          </div>
+        </div>
+      );
     }
 
     const [aiEditPrompt, setAiEditPrompt] = useState('');
@@ -258,9 +266,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
           ...prev, 
           generationProgress: 95,
           generationStep: 'Rendering final video...'
-        }));
-
-        const finalResponse = await fetch('/api/video-generator/render', {
+        }));        const finalResponse = await fetch('/api/video-generator/render', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -273,20 +279,47 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
           })
         });
 
-        if (!finalResponse.ok) throw new Error('Final video rendering failed');
-        const { videoUrl } = await finalResponse.json();
+        if (!finalResponse.ok) {
+          const errorText = await finalResponse.text();
+          console.error('Video rendering API error:', {
+            status: finalResponse.status,
+            statusText: finalResponse.statusText,
+            error: errorText
+          });
+          throw new Error(`Final video rendering failed: ${finalResponse.status} ${finalResponse.statusText}`);
+        }
+        
+        const responseData = await finalResponse.json();
+        const { videoUrl, error } = responseData;
 
         // Debug logging
-        console.log('🎬 Video generation complete:', {
+        console.log('🎬 Video generation API response:', {
+          hasVideoUrl: !!videoUrl,
           videoUrl: videoUrl ? (videoUrl.length > 100 ? `${videoUrl.substring(0, 100)}...` : videoUrl) : 'null',
           isBase64: videoUrl?.startsWith('data:'),
-          urlLength: videoUrl?.length
+          urlLength: videoUrl?.length,
+          hasError: !!error,
+          error: error
         });
 
         // Validate video URL
         if (!videoUrl) {
           console.warn('⚠️ No video URL returned from API');
+          if (error) {
+            throw new Error(`Video generation failed: ${error}`);
+          }
           throw new Error('No video URL returned from rendering API');
+        }
+
+        // Additional validation for base64 videos
+        if (videoUrl.startsWith('data:')) {
+          const [header, base64Data] = videoUrl.split(',');
+          if (!base64Data || base64Data.length < 100) {
+            console.warn('⚠️ Base64 video data seems too short:', {
+              headerLength: header?.length,
+              dataLength: base64Data?.length
+            });
+          }
         }
 
         setMetadata(prev => ({
@@ -521,14 +554,41 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
                           <video
                             src={metadata.finalVideoUrl}
                             controls
-                            className="w-full max-h-[400px] object-contain"
-                            onError={(e) => {
+                            className="w-full max-h-[400px] object-contain"                            onError={(e) => {
+                              const videoElement = e.target as HTMLVideoElement;
                               console.error('Video failed to load:', {
-                                url: metadata.finalVideoUrl,
-                                error: e,
+                                url: metadata.finalVideoUrl?.substring(0, 100) + '...',
+                                isBase64: metadata.finalVideoUrl?.startsWith('data:'),
+                                urlLength: metadata.finalVideoUrl?.length,
+                                error: e.nativeEvent,
+                                networkState: videoElement.networkState,
+                                readyState: videoElement.readyState,
+                                errorCode: videoElement.error?.code,
+                                errorMessage: videoElement.error?.message,
                                 videoElement: e.target
                               });
-                              toast.error('Failed to load video preview. Check console for details.');
+                              
+                              let errorMessage = 'Failed to load video preview.';
+                              if (videoElement.error) {
+                                switch (videoElement.error.code) {
+                                  case 1:
+                                    errorMessage = 'Video loading aborted.';
+                                    break;
+                                  case 2:
+                                    errorMessage = 'Network error while loading video.';
+                                    break;
+                                  case 3:
+                                    errorMessage = 'Video format not supported by browser.';
+                                    break;
+                                  case 4:
+                                    errorMessage = 'Video file appears to be corrupted or invalid.';
+                                    break;
+                                  default:
+                                    errorMessage = `Video error (code ${videoElement.error.code}): ${videoElement.error.message}`;
+                                }
+                              }
+                              
+                              toast.error(errorMessage);
                             }}
                             onLoadStart={() => {
                               console.log('🎬 Video loading started:', {
