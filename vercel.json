@@ -4,5 +4,5 @@
       "DISABLE_CANVAS": "true"
     }
   },
-  "installCommand": "pnpm install --ignore-optional"
+  "installCommand": "node scripts/install-deps.cjs"
 }

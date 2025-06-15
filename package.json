@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev --turbo",
     "build": "tsx lib/db/migrate && next build",
+    "postinstall": "node -e \"try { require('canvas') } catch (e) { console.log('Canvas not available, continuing without it') }\"",
     "start": "next start",
     "lint": "next lint && biome lint --write --unsafe",
     "lint:fix": "next lint --fix && biome lint --write --unsafe",
@@ -142,9 +143,6 @@
     "vitest": "^3.1.4",
     "xlsx": "^0.18.5",
     "zod": "^3.23.8"
-  },
-  "optionalDependencies": {
-    "canvas": "^2.11.2"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
