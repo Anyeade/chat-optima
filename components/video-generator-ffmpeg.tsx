@@ -39,14 +39,13 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
   
   const ffmpegRef = useRef(new FFmpeg());
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const messageRef = useRef<HTMLParagraphElement | null>(null);
-
-  const load = useCallback(async () => {
+  const messageRef = useRef<HTMLParagraphElement | null>(null);  const load = useCallback(async () => {
     try {
       setIsLoading(true);
       setError("");
       
-      const baseURL = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/umd";
+      // Use jsdelivr CDN which is more reliable for FFmpeg
+      const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
       const ffmpeg = ffmpegRef.current;
       
       ffmpeg.on("log", ({ message }) => {
@@ -60,11 +59,11 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         setProgress(Math.round(progress * 100));
       });
 
-      // Load FFmpeg core with CORS bypass
+      // Load FFmpeg core from jsdelivr CDN
       await ffmpeg.load({
         coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
         wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-        classWorkerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
+        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
       });
       
       setLoaded(true);
@@ -75,11 +74,13 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     } finally {
       setIsLoading(false);
     }  }, []);
-
   // Auto-load FFmpeg on component mount
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!loaded && !isLoading) {
+      console.log("Auto-loading FFmpeg...");
+      load();
+    }
+  }, [loaded, isLoading, load]);
 
   // Expose generateVideo function through ref
   useImperativeHandle(ref, () => ({
