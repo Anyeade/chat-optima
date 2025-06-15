@@ -66,21 +66,25 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
   kind: 'video-generator',
   description: 'AI-powered video creation with InVideo.ai style workflow',
   initialize: ({ setMetadata }: { setMetadata: React.Dispatch<React.SetStateAction<VideoGeneratorMetadata>> }) => {
-    setMetadata({
-      aiPrompt: '',
-      videoType: 'youtube-shorts',
-      duration: 60,
-      script: '',
-      scenes: [],
-      voiceOverUrl: null,
-      backgroundMusicUrl: null,
-      musicVolume: 40,
-      isGenerating: false,
-      generationStep: '',
-      generationProgress: 0,
-      finalVideoUrl: null,
-      isComplete: false
-    });
+    try {
+      setMetadata({
+        aiPrompt: '',
+        videoType: 'youtube-shorts',
+        duration: 60,
+        script: '',
+        scenes: [],
+        voiceOverUrl: null,
+        backgroundMusicUrl: null,
+        musicVolume: 40,
+        isGenerating: false,
+        generationStep: '',
+        generationProgress: 0,
+        finalVideoUrl: null,
+        isComplete: false
+      });
+    } catch (error) {
+      console.error('Video generator initialization failed:', error);
+    }
   },
   content: ({ metadata, setMetadata, content, mode, isLoading, title, ...props }: {
     metadata: VideoGeneratorMetadata;
@@ -95,18 +99,28 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
     isLoading?: boolean;
     [key: string]: any;
   }) => {
+    // Safety check for metadata
+    if (!metadata) {
+      console.error('Video generator: metadata is undefined');
+      return <div className="p-4 text-red-500">Error: Video generator metadata not loaded</div>;
+    }
+
     const [aiEditPrompt, setAiEditPrompt] = useState('');
 
     // Auto-detect prompt from title
     useEffect(() => {
-      if (title && title !== metadata.aiPrompt) {
-        console.log('🎯 Auto-detected prompt:', title);
-        setMetadata(prev => ({
-          ...prev,
-          aiPrompt: title
-        }));
+      try {
+        if (title && title !== metadata?.aiPrompt) {
+          console.log('🎯 Auto-detected prompt:', title);
+          setMetadata(prev => ({
+            ...prev,
+            aiPrompt: title
+          }));
+        }
+      } catch (error) {
+        console.error('Error in auto-detect prompt:', error);
       }
-    }, [title, setMetadata]);
+    }, [title, setMetadata, metadata?.aiPrompt]);
 
     // Test function to generate a sample base64 video for development
     const generateTestVideo = () => {
@@ -376,20 +390,20 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
                 <span className="font-medium text-blue-800">Auto-detected Prompt:</span>
               </div>
               <p className="text-blue-700 font-medium text-lg">
-                {metadata.aiPrompt || 'No prompt detected'}
+                {metadata?.aiPrompt || 'No prompt detected'}
               </p>
             </div>
 
             {/* Video configuration dropdowns */}
-            {!metadata.isComplete && (
+            {!metadata?.isComplete && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Video Type</Label>
-                  <Select 
-                    value={metadata.videoType} 
-                    onValueChange={(value) => setMetadata(prev => ({ 
-                      ...prev, 
-                      videoType: value as any 
+                  <Select
+                    value={metadata?.videoType || 'youtube-shorts'}
+                    onValueChange={(value) => setMetadata(prev => ({
+                      ...prev,
+                      videoType: value as any
                     }))}
                   >
                     <SelectTrigger>
@@ -417,11 +431,11 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
 
                 <div>
                   <Label className="text-sm font-medium mb-2 block">Duration</Label>
-                  <Select 
-                    value={metadata.duration.toString()} 
-                    onValueChange={(value) => setMetadata(prev => ({ 
-                      ...prev, 
-                      duration: parseInt(value) as any 
+                  <Select
+                    value={metadata?.duration?.toString() || '60'}
+                    onValueChange={(value) => setMetadata(prev => ({
+                      ...prev,
+                      duration: parseInt(value) as any
                     }))}
                   >
                     <SelectTrigger>
@@ -440,11 +454,11 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
             )}
 
             {/* Generate buttons */}
-            {!metadata.isComplete && !metadata.isGenerating && (
+            {!metadata?.isComplete && !metadata?.isGenerating && (
               <div className="space-y-3">
                 <Button
                   onClick={generateCompleteVideo}
-                  disabled={!metadata.aiPrompt}
+                  disabled={!metadata?.aiPrompt}
                   className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                 >
                   ⚡ Generate Complete Video
@@ -462,7 +476,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
             )}
 
             {/* Progress bar and status */}
-            {metadata.isGenerating && (
+            {metadata?.isGenerating && (
               <div className="space-y-4">
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
                   <div className="flex items-center justify-between mb-3">
@@ -480,7 +494,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
             )}
 
             {/* Final video preview */}
-            {metadata.isComplete && metadata.finalVideoUrl && (
+            {metadata?.isComplete && metadata?.finalVideoUrl && (
               <div className="space-y-6">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-2">
