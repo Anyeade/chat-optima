@@ -5,12 +5,13 @@ import {
   PlayIcon,
   DownloadIcon,
 } from '@/components/icons';
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { VideoGeneratorFFmpeg } from '@/components/video-generator-ffmpeg';
 
 // Simple Progress component
 const Progress = ({ value, className }: { value: number; className?: string }) => (
@@ -114,6 +115,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
     }
 
     const [aiEditPrompt, setAiEditPrompt] = useState('');
+    const ffmpegRef = useRef<{ generateVideo: (scenes: any[], script: string, voiceUrl: string, musicUrl: string) => Promise<void> }>(null);
 
     // Auto-detect prompt from title
     useEffect(() => {
@@ -259,79 +261,29 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
           ...prev, 
           generationProgress: 85,
           generationStep: 'Applying transitions and synchronizing...'
-        }));
-
-        // Step 6: Generate final video (100%)
+        }));        // Step 6: Generate final video (100%)
         setMetadata(prev => ({ 
           ...prev, 
           generationProgress: 95,
           generationStep: 'Rendering final video...'
-        }));        const finalResponse = await fetch('/api/video-generator/render', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            script,
-            voiceUrl,
-            musicUrl,
-            scenes,
-            videoType: metadata.videoType,
-            duration: metadata.duration
-          })
-        });
-
-        if (!finalResponse.ok) {
-          const errorText = await finalResponse.text();
-          console.error('Video rendering API error:', {
-            status: finalResponse.status,
-            statusText: finalResponse.statusText,
-            error: errorText
-          });
-          throw new Error(`Final video rendering failed: ${finalResponse.status} ${finalResponse.statusText}`);
-        }
-        
-        const responseData = await finalResponse.json();
-        const { videoUrl, error } = responseData;
-
-        // Debug logging
-        console.log('🎬 Video generation API response:', {
-          hasVideoUrl: !!videoUrl,
-          videoUrl: videoUrl ? (videoUrl.length > 100 ? `${videoUrl.substring(0, 100)}...` : videoUrl) : 'null',
-          isBase64: videoUrl?.startsWith('data:'),
-          urlLength: videoUrl?.length,
-          hasError: !!error,
-          error: error
-        });
-
-        // Validate video URL
-        if (!videoUrl) {
-          console.warn('⚠️ No video URL returned from API');
-          if (error) {
-            throw new Error(`Video generation failed: ${error}`);
-          }
-          throw new Error('No video URL returned from rendering API');
-        }
-
-        // Additional validation for base64 videos
-        if (videoUrl.startsWith('data:')) {
-          const [header, base64Data] = videoUrl.split(',');
-          if (!base64Data || base64Data.length < 100) {
-            console.warn('⚠️ Base64 video data seems too short:', {
-              headerLength: header?.length,
-              dataLength: base64Data?.length
-            });
-          }
-        }
-
-        setMetadata(prev => ({
-          ...prev,
-          finalVideoUrl: videoUrl,
-          isComplete: true,
-          isGenerating: false,
-          generationProgress: 100,
-          generationStep: 'Video complete!'
         }));
 
-        toast.success('🎉 Video generated successfully!');
+        // Use FFmpeg component for client-side rendering
+        if (ffmpegRef.current) {
+          await ffmpegRef.current.generateVideo(scenes, script, voiceUrl, musicUrl);
+          
+          setMetadata(prev => ({
+            ...prev,
+            isComplete: true,
+            isGenerating: false,
+            generationProgress: 100,
+            generationStep: 'Video complete!'
+          }));
+
+          toast.success('🎉 Video generated successfully!');
+        } else {
+          throw new Error('FFmpeg component not ready');
+        }
 
       } catch (error) {
         console.error('Video generation failed:', error);
@@ -759,10 +711,24 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
                     </div>
                   </CardContent>
                 </Card>
-              </div>
-            )}
+              </div>            )}
           </CardContent>
         </Card>
+
+        {/* Hidden FFmpeg Component for video rendering */}
+        <div style={{ display: 'none' }}>
+          <VideoGeneratorFFmpeg
+            ref={ffmpegRef}
+            scenes={metadata.scenes || []}
+            onVideoGenerated={(blob) => {
+              const url = URL.createObjectURL(blob);
+              setMetadata(prev => ({
+                ...prev,
+                finalVideoUrl: url
+              }));
+            }}
+          />
+        </div>
       </div>
     );
   },
