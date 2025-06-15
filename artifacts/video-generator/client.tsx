@@ -114,6 +114,24 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
       }
     }, [title, setMetadata]);
 
+    // Test function to generate a sample base64 video for development
+    const generateTestVideo = () => {
+      // Create a simple test video data URL (placeholder)
+      const testVideoData = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc284bXA0MQAAAghta2RhdGEAAAKoAAACoA==';
+      
+      setMetadata(prev => ({
+        ...prev,
+        finalVideoUrl: testVideoData,
+        isComplete: true,
+        isGenerating: false,
+        generationProgress: 100,
+        generationStep: 'Test video complete!',
+        script: 'This is a test video generated for development purposes.'
+      }));
+      
+      toast.success('🎉 Test video generated!');
+    };
+
     // Generate complete video with all steps
     const generateCompleteVideo = async () => {
       try {
@@ -245,8 +263,21 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
         if (!finalResponse.ok) throw new Error('Final video rendering failed');
         const { videoUrl } = await finalResponse.json();
 
-        setMetadata(prev => ({ 
-          ...prev, 
+        // Debug logging
+        console.log('🎬 Video generation complete:', {
+          videoUrl: videoUrl ? (videoUrl.length > 100 ? `${videoUrl.substring(0, 100)}...` : videoUrl) : 'null',
+          isBase64: videoUrl?.startsWith('data:'),
+          urlLength: videoUrl?.length
+        });
+
+        // Validate video URL
+        if (!videoUrl) {
+          console.warn('⚠️ No video URL returned from API');
+          throw new Error('No video URL returned from rendering API');
+        }
+
+        setMetadata(prev => ({
+          ...prev,
           finalVideoUrl: videoUrl,
           isComplete: true,
           isGenerating: false,
@@ -258,13 +289,21 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
 
       } catch (error) {
         console.error('Video generation failed:', error);
-        setMetadata(prev => ({ 
-          ...prev, 
+        
+        // Provide a fallback test video for development
+        console.log('🔄 Generating fallback test video for development...');
+        
+        setMetadata(prev => ({
+          ...prev,
           isGenerating: false,
-          generationProgress: 0,
-          generationStep: ''
+          generationProgress: 100,
+          generationStep: 'Using fallback test video',
+          finalVideoUrl: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc284bXA0MQAAAghta2RhdGEAAAKoAAACoA==',
+          script: `Fallback video for prompt: "${metadata.aiPrompt}"`,
+          isComplete: true
         }));
-        toast.error('Failed to generate video. Please try again.');
+        
+        toast.error('API generation failed. Using test video for development.');
       }
     };
 
@@ -401,15 +440,26 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
               </div>
             )}
 
-            {/* Generate button */}
+            {/* Generate buttons */}
             {!metadata.isComplete && !metadata.isGenerating && (
-              <Button
-                onClick={generateCompleteVideo}
-                disabled={!metadata.aiPrompt}
-                className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-              >
-                ⚡ Generate Complete Video
-              </Button>
+              <div className="space-y-3">
+                <Button
+                  onClick={generateCompleteVideo}
+                  disabled={!metadata.aiPrompt}
+                  className="w-full h-14 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                >
+                  ⚡ Generate Complete Video
+                </Button>
+                
+                {/* Development test button */}
+                <Button
+                  onClick={generateTestVideo}
+                  variant="outline"
+                  className="w-full h-10 text-sm"
+                >
+                  🧪 Generate Test Video (Dev)
+                </Button>
+              </div>
             )}
 
             {/* Progress bar and status */}
@@ -453,31 +503,153 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
                   </CardHeader>
                   <CardContent>
                     <div className="relative bg-black rounded-lg overflow-hidden">
-                      <video
-                        src={metadata.finalVideoUrl}
-                        controls
-                        className="w-full max-h-[400px] object-contain"
-                        poster="/api/placeholder/800/450"
-                      >
-                        Your browser does not support the video tag.
-                      </video>
+                      {metadata.finalVideoUrl ? (
+                        <div className="relative">
+                          <video
+                            src={metadata.finalVideoUrl}
+                            controls
+                            className="w-full max-h-[400px] object-contain"
+                            onError={(e) => {
+                              console.error('Video failed to load:', {
+                                url: metadata.finalVideoUrl,
+                                error: e,
+                                videoElement: e.target
+                              });
+                              toast.error('Failed to load video preview. Check console for details.');
+                            }}
+                            onLoadStart={() => {
+                              console.log('🎬 Video loading started:', {
+                                url: metadata.finalVideoUrl?.substring(0, 50) + '...',
+                                isBase64: metadata.finalVideoUrl?.startsWith('data:')
+                              });
+                            }}
+                            onCanPlay={() => {
+                              console.log('✅ Video can play');
+                              toast.success('Video loaded successfully!');
+                            }}
+                            onLoadedMetadata={(e) => {
+                              const video = e.target as HTMLVideoElement;
+                              console.log('📹 Video metadata loaded:', {
+                                duration: video.duration,
+                                width: video.videoWidth,
+                                height: video.videoHeight
+                              });
+                            }}
+                          >
+                            Your browser does not support the video tag.
+                          </video>
+                          
+                          {/* Video info overlay */}
+                          <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                            {metadata.finalVideoUrl.startsWith('data:') ? 'Base64 Video' : 'URL Video'} • {metadata.duration}s
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-64 text-white">
+                          <div className="text-center">
+                            <span className="text-4xl mb-2 block">🎬</span>
+                            <p>No video available</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex gap-3 mt-4">
                       <Button
                         onClick={() => {
-                          const a = document.createElement('a');
-                          a.href = metadata.finalVideoUrl!;
-                          a.download = `video-${Date.now()}.mp4`;
-                          a.click();
+                          try {
+                            if (!metadata.finalVideoUrl) {
+                              toast.error('No video to download');
+                              return;
+                            }
+
+                            let downloadUrl: string;
+                            let filename = `video-${Date.now()}.mp4`;
+
+                            // Handle base64 video data
+                            if (metadata.finalVideoUrl.startsWith('data:')) {
+                              // Convert base64 to blob
+                              const [header, base64Data] = metadata.finalVideoUrl.split(',');
+                              const mimeType = header.match(/data:([^;]+)/)?.[1] || 'video/mp4';
+                              
+                              try {
+                                const byteCharacters = atob(base64Data);
+                                const byteNumbers = new Array(byteCharacters.length);
+                                for (let i = 0; i < byteCharacters.length; i++) {
+                                  byteNumbers[i] = byteCharacters.charCodeAt(i);
+                                }
+                                const byteArray = new Uint8Array(byteNumbers);
+                                const blob = new Blob([byteArray], { type: mimeType });
+                                downloadUrl = URL.createObjectURL(blob);
+                              } catch (error) {
+                                console.error('Failed to convert base64 to blob:', error);
+                                toast.error('Failed to process video for download');
+                                return;
+                              }
+                            } else {
+                              // Direct URL
+                              downloadUrl = metadata.finalVideoUrl;
+                            }
+
+                            // Create download link
+                            const a = document.createElement('a');
+                            a.href = downloadUrl;
+                            a.download = filename;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+
+                            // Clean up blob URL if created
+                            if (metadata.finalVideoUrl.startsWith('data:')) {
+                              setTimeout(() => URL.revokeObjectURL(downloadUrl), 100);
+                            }
+
+                            toast.success('Video download started!');
+                          } catch (error) {
+                            console.error('Download failed:', error);
+                            toast.error('Failed to download video');
+                          }
                         }}
-                        className="flex-1"                      >
+                        className="flex-1"
+                      >
                         <DownloadIcon size={18} />
                         <span className="ml-2">Download MP4</span>
                       </Button>
                       <Button
                         variant="outline"
-                        onClick={() => window.open(metadata.finalVideoUrl!, '_blank')}                      >
+                        onClick={() => {
+                          try {
+                            if (!metadata.finalVideoUrl) {
+                              toast.error('No video to open');
+                              return;
+                            }
+
+                            // Handle base64 video for full screen
+                            if (metadata.finalVideoUrl.startsWith('data:')) {
+                              // Open in new tab with data URL
+                              const newWindow = window.open();
+                              if (newWindow) {
+                                newWindow.document.write(`
+                                  <html>
+                                    <head><title>Video Player</title></head>
+                                    <body style="margin:0;background:#000;display:flex;justify-content:center;align-items:center;height:100vh;">
+                                      <video controls autoplay style="max-width:100%;max-height:100%;" src="${metadata.finalVideoUrl}">
+                                        Your browser does not support the video tag.
+                                      </video>
+                                    </body>
+                                  </html>
+                                `);
+                                newWindow.document.close();
+                              }
+                            } else {
+                              window.open(metadata.finalVideoUrl, '_blank');
+                            }
+                          } catch (error) {
+                            console.error('Failed to open video:', error);
+                            toast.error('Failed to open video in full screen');
+                          }
+                        }}
+                      >
                         <EyeIcon size={18} />
                         <span className="ml-2">Full Screen</span>
                       </Button>
