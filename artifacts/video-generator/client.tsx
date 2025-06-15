@@ -568,3 +568,5 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
   ],
   toolbar: [],
 });
+
+export const videoGeneratorArtifact = videoGeneratorClient;
