@@ -58,32 +58,18 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       });      // Try different loading strategies - ONLY Cloudflare CDN
       const strategies = [
         {
-          name: "Cloudflare CDN (Correct Config)",
+          name: "Cloudflare CDN (Auto - Recommended)",
           load: async () => {
-            // Correct configuration: 814.ffmpeg.js is the worker, not WASM
-            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/umd";
-            await ffmpeg.load({
-              coreURL: await toBlobURL(`${baseURL}/ffmpeg.min.js`, "text/javascript"),
-              workerURL: await toBlobURL(`${baseURL}/814.ffmpeg.min.js`, "text/javascript"),
-            });
+            // This strategy works! Let FFmpeg auto-detect and use default paths
+            // It will use the installed @ffmpeg/core package
+            await ffmpeg.load();
           }
         },
         {
-          name: "Cloudflare CDN (Standard)",
+          name: "Cloudflare CDN (Core Files)",
           load: async () => {
-            // Standard non-minified version
-            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/umd";
-            await ffmpeg.load({
-              coreURL: await toBlobURL(`${baseURL}/ffmpeg.js`, "text/javascript"),
-              workerURL: await toBlobURL(`${baseURL}/814.ffmpeg.js`, "text/javascript"),
-            });
-          }
-        },
-        {
-          name: "Cloudflare CDN (Core Only)",
-          load: async () => {
-            // Use older but stable ffmpeg-core from Cloudflare
-            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.11.0/dist/umd";
+            // Try to use the npm package structure with Cloudflare
+            const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
             await ffmpeg.load({
               coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
               wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
@@ -92,10 +78,25 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
           }
         },
         {
-          name: "Cloudflare CDN (Auto)",
+          name: "Cloudflare CDN (UMD)",
           load: async () => {
-            // Let FFmpeg auto-detect files
-            await ffmpeg.load();
+            // Use the available Cloudflare UMD files
+            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/umd";
+            await ffmpeg.load({
+              coreURL: await toBlobURL(`${baseURL}/ffmpeg.min.js`, "text/javascript"),
+              workerURL: await toBlobURL(`${baseURL}/814.ffmpeg.min.js`, "text/javascript"),
+            });
+          }
+        },
+        {
+          name: "Cloudflare CDN (ESM)",
+          load: async () => {
+            // Try ESM approach
+            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/esm";
+            await ffmpeg.load({
+              coreURL: await toBlobURL(`${baseURL}/index.min.js`, "text/javascript"),
+              workerURL: await toBlobURL(`${baseURL}/worker.min.js`, "text/javascript"),
+            });
           }
         }
       ];

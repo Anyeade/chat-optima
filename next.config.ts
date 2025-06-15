@@ -21,7 +21,7 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'inline-speculation-rules' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com chrome-extension://40131f7c-cce9-4d0c-90ef-ea4cfe3f5e41/",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' 'inline-speculation-rules' https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com blob: chrome-extension://40131f7c-cce9-4d0c-90ef-ea4cfe3f5e41/",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "media-src 'self' data: blob:",
