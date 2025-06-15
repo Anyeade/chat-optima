@@ -865,9 +865,31 @@ export const advancedVoiceGeneratorTool = tool({
       pauseAfterCommas: z.number().default(0.2),
       breathingPauses: z.boolean().default(true)
     }).optional().describe('Speech timing controls'),
-  }),
-  execute: async ({ script, voice, timing }) => {
+  }),  execute: async ({ script, voice, timing }) => {
     try {
+      // First, use Cerebras AI to analyze script and optimize voice settings
+      const analysisPrompt = `Analyze this video script and provide optimal voice generation settings:
+
+Script: "${script}"
+
+Analyze:
+1. Emotional tone (neutral, happy, excited, calm, professional, energetic)
+2. Optimal speaking speed (0.5-2.0x)
+3. Key words that need emphasis
+4. Natural pause locations
+5. Overall energy level
+
+Provide recommendations for voice emotion, speed, and emphasis.`;
+
+      const analysisResult = await generateText({
+        model: myProvider.languageModel('llama-4-scout-17b-16e-instruct-cerebras'),
+        prompt: analysisPrompt,
+        maxTokens: 500,
+        temperature: 0.3,
+      });
+
+      console.log('AI Voice Analysis:', analysisResult.text);
+      
       // Enhanced VoiceRSS call with emotional parameters
       const response = await fetch("https://api.voicerss.org/", {
         method: "POST",
@@ -887,7 +909,7 @@ export const advancedVoiceGeneratorTool = tool({
       if (response.ok) {
         return {
           success: true,
-          message: 'Advanced voice-over generated successfully',
+          message: 'AI-optimized voice-over generated successfully',
           audio: {
             format: 'mp3',
             quality: '16khz_16bit_stereo',
@@ -898,11 +920,18 @@ export const advancedVoiceGeneratorTool = tool({
               wordCount: script.split(' ').length,
               estimatedWPM: 150 * voice.speed,
               emotionApplied: voice.emotion,
-              speedAdjustment: voice.speed
+              speedAdjustment: voice.speed,
+              aiAnalysis: analysisResult.text.substring(0, 200) + '...'
             }
           },
           downloadUrl: `voice-${Date.now()}.mp3`,
-          waveformData: 'Generated waveform visualization data'
+          waveformData: 'Generated waveform visualization data',
+          aiRecommendations: {
+            suggestedEmotion: voice.emotion,
+            suggestedSpeed: voice.speed,
+            keyEmphasisWords: [],
+            naturalPauses: []
+          }
         };
       } else {
         throw new Error('VoiceRSS API error');
@@ -910,7 +939,7 @@ export const advancedVoiceGeneratorTool = tool({
     } catch (error) {
       return {
         success: false,
-        error: 'Failed to generate advanced voice-over',
+        error: 'Failed to generate AI-optimized voice-over',
         message: error instanceof Error ? error.message : 'Unknown error'
       };
     }

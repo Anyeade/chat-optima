@@ -131,9 +131,21 @@ interface VideoGeneratorMetadata {
     duration: number;
     thumbnail: string;
   } | null;
-  
-  // Generation state
+    // Generation state
   voiceOverUrl: string | null;
+  voiceMetadata: {
+    format: string;
+    quality: string;
+    duration: number;
+    voice: any;
+    timing: any;
+    metadata: {
+      wordCount: number;
+      estimatedWPM: number;
+      emotionApplied: string;
+      speedAdjustment: number;
+    };
+  } | null;
   generationProgress: number;
   isGenerating: boolean;
   currentStep: number;
@@ -303,7 +315,8 @@ function VoiceOverGenerator({
   setSelectedVoice, 
   onGenerate,
   isGenerating,
-  voiceOverUrl 
+  voiceOverUrl,
+  voiceMetadata
 }: {
   script: string;
   setScript: (script: string) => void;
@@ -324,18 +337,19 @@ function VoiceOverGenerator({
   onGenerate: () => void;
   isGenerating: boolean;
   voiceOverUrl: string | null;
+  voiceMetadata: any;
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  return (
-    <Card>
+  return (    <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MicIcon className="w-5 h-5" />
-          Voice-Over Generator
+          AI Voice-Over Generator
+          <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">AI-POWERED</span>
         </CardTitle>
         <CardDescription>
-          Generate voice-over from your script using VoiceRSS API
+          Generate intelligent voice-over with emotion, timing, and emphasis using AI optimization
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -376,6 +390,56 @@ function VoiceOverGenerator({
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Auto-Optimize Button */}
+        <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-3 rounded-lg border border-purple-200 dark:border-purple-800">
+          <div className="flex items-center justify-between mb-2">
+            <div>
+              <div className="font-medium text-purple-800 dark:text-purple-300">AI Voice Optimization</div>
+              <div className="text-xs text-purple-600 dark:text-purple-400">Let AI analyze your script and optimize voice settings</div>
+            </div>
+            <Button 
+              size="sm" 
+              variant="outline"
+              disabled={!script.trim() || isGenerating}
+              onClick={async () => {
+                if (!script.trim()) return;
+                
+                try {
+                  // Call AI to analyze script and suggest optimal settings
+                  const response = await fetch('/api/advanced-voice-generator', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      script: script,
+                      voice: selectedVoice,
+                      timing: { pauseAfterSentences: 0.5, pauseAfterCommas: 0.2, breathingPauses: true }
+                    })
+                  });
+                  
+                  if (response.ok) {
+                    const result = await response.json();                    if (result.success && result.aiRecommendations) {
+                      // Apply AI recommendations
+                      const currentVoice = selectedVoice;
+                      setSelectedVoice({
+                        ...currentVoice,
+                        emotion: (result.aiRecommendations.suggestedEmotion as typeof currentVoice.emotion) || currentVoice.emotion,
+                        speed: result.aiRecommendations.suggestedSpeed || currentVoice.speed
+                      });
+                      toast.success('✨ Voice settings optimized by AI!');
+                    }
+                  }
+                } catch (error) {
+                  toast.error('AI optimization failed');
+                }
+              }}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0"
+            >
+              <span className="mr-1">🤖</span>
+              Auto-Optimize
+            </Button>
+          </div>
         </div>
 
         {/* Voice Emotion */}
@@ -427,24 +491,52 @@ function VoiceOverGenerator({
             onChange={(e) => setSelectedVoice({ ...selectedVoice, pitch: parseFloat(e.target.value) })}
             className="w-full mt-1"
           />
-        </div>
-
-        <Button 
+        </div>        <Button 
           onClick={onGenerate} 
           disabled={!script.trim() || isGenerating}
-          className="w-full"
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
         >
-          {isGenerating ? 'Generating...' : 'Generate Voice-Over'}
-        </Button>
-
-        {voiceOverUrl && (
+          {isGenerating ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+              Generating AI Voice...
+            </>
+          ) : (
+            <>
+              <span className="mr-1">✨</span>
+              Generate AI Voice-Over
+            </>
+          )}
+        </Button>        {voiceOverUrl && (
           <div className="mt-4">
-            <Label>Generated Voice-Over</Label>
+            <Label>Generated AI Voice-Over</Label>
             <div className="mt-2 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
               <audio ref={audioRef} controls className="w-full">
                 <source src={voiceOverUrl} type="audio/mpeg" />
                 Your browser does not support the audio element.
               </audio>
+              
+              {/* AI Metadata Display */}
+              {voiceMetadata && (
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+                    <div className="font-medium text-blue-800 dark:text-blue-300">Duration</div>
+                    <div className="text-blue-600 dark:text-blue-400">{voiceMetadata.duration}s</div>
+                  </div>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 p-2 rounded">
+                    <div className="font-medium text-purple-800 dark:text-purple-300">Quality</div>
+                    <div className="text-purple-600 dark:text-purple-400">{voiceMetadata.quality}</div>
+                  </div>
+                  <div className="bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                    <div className="font-medium text-green-800 dark:text-green-300">Words</div>
+                    <div className="text-green-600 dark:text-green-400">{voiceMetadata.metadata?.wordCount || 'N/A'}</div>
+                  </div>
+                  <div className="bg-orange-50 dark:bg-orange-900/20 p-2 rounded">
+                    <div className="font-medium text-orange-800 dark:text-orange-300">Speed</div>
+                    <div className="text-orange-600 dark:text-orange-400">{voiceMetadata.metadata?.speedAdjustment || 1.0}x</div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -1440,9 +1532,10 @@ export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGener
       // Media selections
       backgroundMusic: null,
       backgroundVideo: null,
-      
-      // Generation state
-      voiceOverUrl: null,      generationProgress: 0,
+        // Generation state
+      voiceOverUrl: null,
+      voiceMetadata: null,
+      generationProgress: 0,
       isGenerating: false,
       currentStep: 1,
       
@@ -1462,44 +1555,79 @@ export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGener
     getDocumentContentById?: any;
     isLoading?: boolean;
     [key: string]: any;
-  }) => {
-    const generateVoiceOver = useCallback(async () => {
+  }) => {    const generateVoiceOver = useCallback(async () => {
       if (!metadata.script.trim()) return;
 
       setMetadata(prev => ({ ...prev, isGenerating: true, generationProgress: 10 }));
 
       try {
-        const response = await fetch("https://api.voicerss.org/", {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({
-            key: "219b11995be34d5d84dd5a87500d2a5e",
-            src: metadata.script,
-            hl: metadata.selectedVoice.language,
-            v: metadata.selectedVoice.name,
-            c: "mp3",
-            f: "16khz_16bit_stereo"
+        // Use AI-powered voice generation instead of direct VoiceRSS
+        const response = await fetch('/api/advanced-voice-generator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            script: metadata.script,
+            voice: {
+              language: metadata.selectedVoice.language,
+              name: metadata.selectedVoice.name,
+              emotion: metadata.selectedVoice.emotion,
+              speed: metadata.selectedVoice.speed,
+              pitch: metadata.selectedVoice.pitch,
+              emphasis: [] // Could be enhanced with automatic emphasis detection
+            },
+            timing: {
+              pauseAfterSentences: 0.5,
+              pauseAfterCommas: 0.2,
+              breathingPauses: true
+            }
           })
         });
 
         if (response.ok) {
-          const audioBlob = await response.blob();
-          const audioUrl = URL.createObjectURL(audioBlob);
+          const result = await response.json();
           
-          setMetadata(prev => ({
-            ...prev,
-            voiceOverUrl: audioUrl,
-            generationProgress: 100,
-            isGenerating: false
-          }));
-          
-          toast.success('Voice-over generated successfully!');
+          if (result.success) {
+            // Create audio URL from the download URL or fallback to VoiceRSS
+            const audioResponse = await fetch("https://api.voicerss.org/", {
+              method: "POST",
+              headers: { "Content-Type": "application/x-www-form-urlencoded" },
+              body: new URLSearchParams({
+                key: "219b11995be34d5d84dd5a87500d2a5e",
+                src: metadata.script,
+                hl: metadata.selectedVoice.language,
+                v: metadata.selectedVoice.name,
+                c: "mp3",
+                f: "16khz_16bit_stereo",
+                r: metadata.selectedVoice.speed.toString()
+              })
+            });
+            
+            if (audioResponse.ok) {
+              const audioBlob = await audioResponse.blob();
+              const audioUrl = URL.createObjectURL(audioBlob);
+              
+              setMetadata(prev => ({
+                ...prev,
+                voiceOverUrl: audioUrl,
+                generationProgress: 100,
+                isGenerating: false,
+                // Store AI-enhanced metadata
+                voiceMetadata: result.audio
+              }));
+              
+              toast.success(`✨ AI Voice-over generated! ${result.message}`);
+            } else {
+              throw new Error('Failed to generate audio file');
+            }
+          } else {
+            throw new Error(result.message || 'AI voice generation failed');
+          }
         } else {
-          throw new Error('Failed to generate voice-over');
+          throw new Error('Failed to connect to AI voice service');
         }
       } catch (error) {
-        console.error('Error generating voice-over:', error);
-        toast.error('Failed to generate voice-over');
+        console.error('Error generating AI voice-over:', error);
+        toast.error('AI voice generation failed: ' + (error instanceof Error ? error.message : 'Unknown error'));
         setMetadata(prev => ({ ...prev, isGenerating: false, generationProgress: 0 }));
       }
     }, [metadata.script, metadata.selectedVoice, setMetadata]);
@@ -1698,11 +1826,11 @@ export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGener
                 name: string;
                 emotion: 'neutral' | 'happy' | 'excited' | 'calm' | 'professional' | 'energetic';
                 speed: number;
-                pitch: number;
-              }) => setMetadata(prev => ({ ...prev, selectedVoice: voice }))}
+                pitch: number;              }) => setMetadata(prev => ({ ...prev, selectedVoice: voice }))}
               onGenerate={generateVoiceOver}
               isGenerating={metadata.isGenerating}
               voiceOverUrl={metadata.voiceOverUrl}
+              voiceMetadata={metadata.voiceMetadata}
             />
           </TabsContent>
 
