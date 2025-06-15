@@ -29,9 +29,9 @@ export interface VideoGeneratorFFmpegRef {
 }
 
 export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGeneratorFFmpegProps>(
-  ({ scenes, prompt = "AI Generated Video", onVideoGenerated }, ref) => {
-  const [loaded, setLoaded] = useState(false);
+  ({ scenes, prompt = "AI Generated Video", onVideoGenerated }, ref) => {  const [loaded, setLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStatus, setLoadingStatus] = useState<string>("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [videoUrl, setVideoUrl] = useState<string>("");
@@ -39,13 +39,11 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
   
   const ffmpegRef = useRef(new FFmpeg());
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const messageRef = useRef<HTMLParagraphElement | null>(null);  const load = useCallback(async () => {
-    try {
+  const messageRef = useRef<HTMLParagraphElement | null>(null);  const load = useCallback(async () => {    try {
       setIsLoading(true);
       setError("");
+      setLoadingStatus("Initializing...");
       
-      // Use jsdelivr CDN which is more reliable for FFmpeg
-      const baseURL = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.10/dist/umd";
       const ffmpeg = ffmpegRef.current;
       
       ffmpeg.on("log", ({ message }) => {
@@ -57,23 +55,80 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
 
       ffmpeg.on("progress", ({ progress }) => {
         setProgress(Math.round(progress * 100));
-      });
-
-      // Load FFmpeg core from jsdelivr CDN
-      await ffmpeg.load({
-        coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
-        wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
-        workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
-      });
+      });      // Try different loading strategies - ONLY Cloudflare CDN
+      const strategies = [
+        {
+          name: "Cloudflare CDN (Correct Config)",
+          load: async () => {
+            // Correct configuration: 814.ffmpeg.js is the worker, not WASM
+            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/umd";
+            await ffmpeg.load({
+              coreURL: await toBlobURL(`${baseURL}/ffmpeg.min.js`, "text/javascript"),
+              workerURL: await toBlobURL(`${baseURL}/814.ffmpeg.min.js`, "text/javascript"),
+            });
+          }
+        },
+        {
+          name: "Cloudflare CDN (Standard)",
+          load: async () => {
+            // Standard non-minified version
+            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg/0.12.15/umd";
+            await ffmpeg.load({
+              coreURL: await toBlobURL(`${baseURL}/ffmpeg.js`, "text/javascript"),
+              workerURL: await toBlobURL(`${baseURL}/814.ffmpeg.js`, "text/javascript"),
+            });
+          }
+        },
+        {
+          name: "Cloudflare CDN (Core Only)",
+          load: async () => {
+            // Use older but stable ffmpeg-core from Cloudflare
+            const baseURL = "https://cdnjs.cloudflare.com/ajax/libs/ffmpeg-core/0.11.0/dist/umd";
+            await ffmpeg.load({
+              coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, "text/javascript"),
+              wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, "application/wasm"),
+              workerURL: await toBlobURL(`${baseURL}/ffmpeg-core.worker.js`, "text/javascript"),
+            });
+          }
+        },
+        {
+          name: "Cloudflare CDN (Auto)",
+          load: async () => {
+            // Let FFmpeg auto-detect files
+            await ffmpeg.load();
+          }
+        }
+      ];
+      
+      let loaded = false;
+      let lastError = null;
+        for (const strategy of strategies) {
+        try {
+          setLoadingStatus(`Trying ${strategy.name}...`);
+          console.log(`Trying FFmpeg loading strategy: ${strategy.name}...`);
+          await strategy.load();
+          loaded = true;
+          setLoadingStatus(`Successfully loaded using ${strategy.name}`);
+          console.log(`FFmpeg loaded successfully using ${strategy.name}`);
+          break;
+        } catch (err) {
+          lastError = err;
+          console.warn(`Strategy ${strategy.name} failed:`, err);
+          continue;
+        }
+      }
+      
+      if (!loaded) {
+        throw lastError || new Error("All FFmpeg loading strategies failed");
+      }
       
       setLoaded(true);
-      console.log("FFmpeg loaded successfully");
     } catch (err) {
       console.error("Failed to load FFmpeg:", err);
-      setError(`Failed to load FFmpeg: ${err instanceof Error ? err.message : 'Unknown error'}`);
-    } finally {
+      setError(`Failed to load FFmpeg: ${err instanceof Error ? err.message : 'Unknown error'}`);    } finally {
       setIsLoading(false);
-    }  }, []);
+      setLoadingStatus("");
+    }}, []);
   // Auto-load FFmpeg on component mount
   useEffect(() => {
     if (!loaded && !isLoading) {
@@ -267,11 +322,10 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             disabled={isLoading}
             className="bg-blue-500 hover:bg-blue-700 text-white"
             size="lg"
-          >
-            {isLoading ? (
+          >            {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Loading FFmpeg Core...
+                {loadingStatus || "Loading FFmpeg Core..."}
               </>
             ) : (
               "Load FFmpeg Engine"
@@ -306,12 +360,28 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             )}
           </div>
         )}
-      </div>
-
-      {error && (
+      </div>      {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-600 font-medium">Error:</p>
-          <p className="text-red-500 text-sm">{error}</p>
+          <p className="text-red-500 text-sm mb-3">{error}</p>
+          {!loaded && (
+            <Button
+              onClick={load}
+              disabled={isLoading}
+              variant="outline"
+              size="sm"
+              className="border-red-300 text-red-600 hover:bg-red-100"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                "Retry Loading FFmpeg"
+              )}
+            </Button>
+          )}
         </div>
       )}
 
@@ -353,9 +423,7 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         <div className="bg-gray-50 border rounded p-3">
           <p className="text-xs text-gray-600 font-mono" ref={messageRef}></p>
         </div>
-      )}
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      )}      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-medium text-blue-800 mb-2">Video Generation Process:</h4>
         <ol className="text-sm text-blue-700 space-y-1">
           <li>1. Load FFmpeg WebAssembly engine</li>
@@ -364,7 +432,12 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
           <li>4. Combine images into video using FFmpeg</li>
           <li>5. Export as MP4 with audio track</li>
         </ol>
-      </div>    </div>
+        {loadingStatus && (
+          <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
+            <strong>Status:</strong> {loadingStatus}
+          </div>
+        )}
+      </div></div>
   );
 });
 
