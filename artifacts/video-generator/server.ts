@@ -55,10 +55,14 @@ import { createDocumentHandler } from '@/lib/artifacts/server';
 export const videoGeneratorDocumentHandler = createDocumentHandler<'video-generator'>({
   kind: 'video-generator',
   onCreateDocument: async ({ title, dataStream }) => {
-    // Create initial video generator configuration
+    // Initialize with the original prompt (title) that will be passed to client
+    // The title parameter contains the user's original prompt that triggered the video creation
+    
+    // Create initial video generator configuration with the original prompt
     const initialConfig = {
       project: {
         title,
+        originalPrompt: title, // Store the original prompt for AI processing
         created: new Date().toISOString(),
         type: 'video-generator'
       },

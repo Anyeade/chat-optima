@@ -1599,17 +1599,14 @@ function MagicBox({
 
 export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGeneratorMetadata>({
   kind: 'video-generator',
-  description: 'Create videos with voice-over, background music, and video from multiple sources.',
-  initialize: async ({ 
-    setMetadata, 
-    title 
+  description: 'Create videos with voice-over, background music, and video from multiple sources.',  initialize: async ({ 
+    setMetadata
   }: { 
     setMetadata: React.Dispatch<React.SetStateAction<VideoGeneratorMetadata>>;
-    title?: string;
   }) => {
     setMetadata({
-      // InVideo.ai-style initialization with the original prompt
-      aiPrompt: title || '', // Use the original prompt that triggered the artifact creation
+      // InVideo.ai-style initialization - title will be set from the content component
+      aiPrompt: '', // Will be populated from the title prop in the content component
       workflow: 'explainer',
       targetAudience: {
         demographic: 'general',
@@ -1653,10 +1650,11 @@ export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGener
       selectedTemplate: null,
       previewMode: 'timeline'
     });
-  },  content: ({ metadata, setMetadata, content, mode, isLoading, ...props }: {
+  },  content: ({ metadata, setMetadata, content, mode, isLoading, title, ...props }: {
     metadata: VideoGeneratorMetadata;
     setMetadata: React.Dispatch<React.SetStateAction<VideoGeneratorMetadata>>;
     content: string;
+    title: string;
     mode?: string;
     isCurrentVersion?: boolean;
     currentVersionIndex?: number;
@@ -1664,7 +1662,17 @@ export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGener
     getDocumentContentById?: any;
     isLoading?: boolean;
     [key: string]: any;
-  }) => {
+  }) => {    // Set the aiPrompt from the title when component mounts (prompt detection)
+    useEffect(() => {
+      if (title && !metadata.aiPrompt) {
+        console.log('🎯 Video Generator: Setting aiPrompt from title:', title);
+        setMetadata(prev => ({
+          ...prev,
+          aiPrompt: title
+        }));
+      }
+    }, [title, metadata.aiPrompt, setMetadata]);
+
     // Auto-generate video when prompt is provided (InVideo.ai style)
     useEffect(() => {
       if (metadata.aiPrompt && !metadata.script && !metadata.isGenerating) {
@@ -2025,14 +2033,20 @@ export const videoGeneratorArtifact = new Artifact<'video-generator', VideoGener
                   The AI detected your video request from the chat conversation
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <CardContent className="space-y-4">                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                   <Label className="text-sm font-medium text-blue-800 dark:text-blue-300">Original Chat Prompt:</Label>
                   <div className="mt-2 p-3 bg-white dark:bg-gray-800 border rounded-lg">
                     <p className="text-gray-800 dark:text-gray-200 italic">
-                      "{metadata.aiPrompt || 'No prompt detected'}"
+                      {metadata.aiPrompt ? `"${metadata.aiPrompt}"` : 
+                       title ? `"${title}" (Loading...)` : 
+                       '"No prompt detected"'}
                     </p>
                   </div>
+                  {!metadata.aiPrompt && title && (
+                    <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                      ⏳ Processing prompt from title: "{title}"
+                    </div>
+                  )}
                 </div>
                 
                 {metadata.aiPrompt && (
