@@ -3,11 +3,6 @@ import { promises as fs } from 'fs';
 import path from 'path';
 import os from 'os';
 import { spawn } from 'child_process';
-import ffmpeg from 'fluent-ffmpeg';
-import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
-
-// Set FFmpeg path
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
 
 interface Scene {
   title: string;
@@ -25,11 +20,40 @@ interface FrameData {
   data: Uint8Array;
 }
 
-export async function POST(request: NextRequest) {
+// Lazy-load FFmpeg to avoid build-time issues
+async function getFFmpeg() {
   try {
-    const { script, voiceUrl, musicUrl, scenes, videoType, duration } = await request.json();
+    const ffmpeg = (await import('fluent-ffmpeg')).default;
+    const ffmpegInstaller = (await import('@ffmpeg-installer/ffmpeg')).default;
+    
+    // Set FFmpeg path
+    ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+    
+    return ffmpeg;
+  } catch (error) {
+    console.error('⚠️ FFmpeg not available:', error);
+    throw new Error('FFmpeg is not available in this environment');
+  }
+}
 
-    if (!script || !scenes || !videoType || !duration) {
+export async function POST(request: NextRequest) {
+  let script: string = '';
+  let voiceUrl: string | undefined;
+  let musicUrl: string | undefined;
+  let scenes: Scene[] = [];
+  let videoType: string = '';
+  let duration: number = 0;
+  let width: number = 1920;
+  let height: number = 1080;
+  
+  try {
+    const requestData = await request.json();
+    script = requestData.script;
+    voiceUrl = requestData.voiceUrl;
+    musicUrl = requestData.musicUrl;
+    scenes = requestData.scenes;
+    videoType = requestData.videoType;
+    duration = requestData.duration;    if (!script || !scenes || !videoType || !duration) {
       return NextResponse.json(
         { error: 'Missing required parameters for video rendering' },
         { status: 400 }
@@ -39,7 +63,9 @@ export async function POST(request: NextRequest) {
     console.log('🎬 Starting REAL video generation with FFmpeg...');
     
     // Get video dimensions
-    const { width, height } = getVideoDimensions(videoType);
+    const dimensions = getVideoDimensions(videoType);
+    width = dimensions.width;
+    height = dimensions.height;
     
     // Generate real video content using browser canvas + FFmpeg
     const videoData = await generateRealVideoWithFFmpeg({
@@ -75,9 +101,37 @@ export async function POST(request: NextRequest) {
         isRealVideo: true
       }
     });
-
   } catch (error) {
     console.error('Video rendering error:', error);
+    
+    // If FFmpeg is not available, provide a fallback response
+    if (error instanceof Error && error.message.includes('FFmpeg')) {
+      console.log('🔄 FFmpeg not available - providing fallback response');
+      
+      return NextResponse.json({
+        videoUrl: 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc284bXA0MQAAAghta2RhdGEAAAKoAAACoA==',
+        isBase64: true,
+        urlLength: 94,
+        error: 'FFmpeg not available in build environment - using fallback',
+        metadata: {
+          videoType,
+          duration,
+          sceneCount: scenes.length,
+          aspectRatio: getAspectRatio(videoType),
+          resolution: `${width}x${height}`,
+          voiceProvider: voiceUrl ? 'Custom' : 'None',
+          musicProvider: musicUrl ? 'Custom' : 'None',
+          renderingSteps: ['Error: FFmpeg unavailable'],
+          renderedAt: new Date().toISOString(),
+          fileSize: 'Unknown',
+          format: 'MP4',
+          encoding: 'base64',
+          isRealVideo: false,
+          fallbackReason: 'FFmpeg not available in deployment environment'
+        }
+      });
+    }
+    
     return NextResponse.json(
       { error: 'Failed to render video: ' + (error as Error).message },
       { status: 500 }
@@ -488,20 +542,24 @@ async function encodeVideoWithFFmpeg(options: {
 }): Promise<void> {
   const { framePaths, outputPath, width, height, frameRate, duration, voiceUrl, musicUrl, tempDir } = options;
   
-  return new Promise((resolve, reject) => {
-    console.log('🎬 Starting FFmpeg encoding...');
-    
-    // Create FFmpeg command
-    const command = ffmpeg()
-      .input(path.join(tempDir, 'frame_%06d.bmp'))
-      .inputFPS(frameRate)
-      .videoCodec('libx264')
-      .outputOptions([
-        '-preset fast',
-        '-crf 23',
-        '-pix_fmt yuv420p',
-        `-vf scale=${width}:${height}`,
-        `-t ${duration}`
+  return new Promise(async (resolve, reject) => {
+    try {
+      console.log('🎬 Starting FFmpeg encoding...');
+      
+      // Lazy-load FFmpeg
+      const ffmpeg = await getFFmpeg();
+      
+      // Create FFmpeg command
+      const command = ffmpeg()
+        .input(path.join(tempDir, 'frame_%06d.bmp'))
+        .inputFPS(frameRate)
+        .videoCodec('libx264')
+        .outputOptions([
+          '-preset fast',
+          '-crf 23',
+          '-pix_fmt yuv420p',
+          `-vf scale=${width}:${height}`,
+          `-t ${duration}`
       ]);
 
     // Add audio if provided
@@ -536,15 +594,19 @@ async function encodeVideoWithFFmpeg(options: {
         if (progress.percent) {
           process.stdout.write(`\rEncoding progress: ${Math.round(progress.percent)}%`);
         }
-      })
-      .on('end', () => {
+      })      .on('end', () => {
         console.log('\n✅ FFmpeg encoding completed successfully');
         resolve();
       })
       .on('error', (error) => {
         console.error('\n❌ FFmpeg encoding failed:', error.message);
         reject(error);
-      })      .run();
+      })
+      .run();
+    } catch (error) {
+      console.error('❌ Failed to initialize FFmpeg:', error);
+      reject(error);
+    }
   });
 }
 
