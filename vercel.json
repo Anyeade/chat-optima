@@ -1,0 +1,8 @@
+{
+  "build": {
+    "env": {
+      "DISABLE_CANVAS": "true"
+    }
+  },
+  "installCommand": "pnpm install --ignore-optional"
+}
