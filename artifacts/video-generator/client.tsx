@@ -1,18 +1,12 @@
 import { Artifact } from '@/components/create-artifact';
-import { DiffView } from '@/components/diffview';
-import { DocumentSkeleton } from '@/components/document-skeleton';
 import { toast } from 'sonner';
 import {
-  CopyIcon,
-  UndoIcon,
-  RedoIcon,
   EyeIcon,
   PlayIcon,
   DownloadIcon,
 } from '@/components/icons';
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -116,20 +110,25 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
 
     // Test function to generate a sample base64 video for development
     const generateTestVideo = () => {
-      // Create a simple test video data URL (placeholder)
-      const testVideoData = 'data:video/mp4;base64,AAAAIGZ0eXBpc29tAAACAGlzb21pc284bXA0MQAAAghta2RhdGEAAAKoAAACoA==';
-      
-      setMetadata(prev => ({
-        ...prev,
-        finalVideoUrl: testVideoData,
-        isComplete: true,
-        isGenerating: false,
-        generationProgress: 100,
-        generationStep: 'Test video complete!',
-        script: 'This is a test video generated for development purposes.'
-      }));
-      
-      toast.success('🎉 Test video generated!');
+      try {
+        // Create a sample video URL for testing
+        const testVideoUrl = 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4';
+        
+        setMetadata(prev => ({
+          ...prev,
+          finalVideoUrl: testVideoUrl,
+          isComplete: true,
+          isGenerating: false,
+          generationProgress: 100,
+          generationStep: 'Test video complete!',
+          script: 'This is a test video generated for development purposes.'
+        }));
+        
+        toast.success('🎉 Test video generated!');
+      } catch (error) {
+        console.error('Test video generation failed:', error);
+        toast.error('Failed to generate test video');
+      }
     };
 
     // Generate complete video with all steps
@@ -706,7 +705,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
   },
   actions: [
     {
-      icon: <CopyIcon size={18} />,
+      icon: <span>📋</span>,
       description: 'Copy configuration',
       onClick: async ({ content }: { content: string }) => {
         await navigator.clipboard.writeText(content);
