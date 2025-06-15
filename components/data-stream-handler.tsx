@@ -16,6 +16,7 @@ export type DataStreamDelta = {
     | 'svg-delta'
     | 'diagram-delta'
     | 'sandbox-delta'
+    | 'video-generator-delta'
     | 'html-smart-update'
     | 'title'
     | 'id'
@@ -149,6 +150,13 @@ export function DataStreamHandler({ id }: { id: string }) {
             return {
               ...draftArtifact,
               webScraperResult: delta.content as string,
+            };
+
+          case 'video-generator-delta':
+            return {
+              ...draftArtifact,
+              content: delta.content as string,
+              status: 'streaming',
             };
 
           default:

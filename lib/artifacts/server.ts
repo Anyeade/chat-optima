@@ -6,6 +6,7 @@ import { htmlDocumentHandler } from '@/artifacts/html/server';
 import { svgDocumentHandler } from '@/artifacts/svg/server';
 import { diagramDocumentHandler } from '@/artifacts/diagram/server';
 import { sandboxDocumentHandler } from '@/artifacts/sandbox/server';
+import { videoGeneratorDocumentHandler } from '@/artifacts/video-generator/server';
 import type { ArtifactKind } from '@/components/artifact';
 import type { DataStreamWriter } from 'ai';
 import type { Document } from '../db/schema';
@@ -106,6 +107,7 @@ export const documentHandlersByArtifactKind: Array<DocumentHandler> = [
   svgDocumentHandler,
   diagramDocumentHandler,
   sandboxDocumentHandler,
+  videoGeneratorDocumentHandler,
 ];
 
-export const artifactKinds = ['text', 'code', 'image', 'sheet', 'html', 'svg', 'diagram', 'sandbox'] as const;
+export const artifactKinds = ['text', 'code', 'image', 'sheet', 'html', 'svg', 'diagram', 'sandbox', 'video-generator'] as const;

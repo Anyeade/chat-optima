@@ -29,6 +29,7 @@ import { htmlArtifact } from '@/artifacts/html/client';
 import { svgArtifact } from '@/artifacts/svg/client';
 import { diagramArtifact } from '@/artifacts/diagram/client';
 import { sandboxArtifact } from '@/artifacts/sandbox/client';
+import { videoGeneratorArtifact } from '@/artifacts/video-generator/client';
 import equal from 'fast-deep-equal';
 import type { UseChatHelpers } from '@ai-sdk/react';
 import type { VisibilityType } from './visibility-selector';
@@ -42,6 +43,7 @@ export const artifactDefinitions = [
   svgArtifact,
   diagramArtifact,
   sandboxArtifact,
+  videoGeneratorArtifact,
 ];
 export type ArtifactKind = (typeof artifactDefinitions)[number]['kind'];
 
