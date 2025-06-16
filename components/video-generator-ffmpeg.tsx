@@ -243,64 +243,67 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       setError("");
       setProgress(0);
       
-      const ffmpeg = ffmpegRef.current;
-
-      console.log("Starting enhanced video generation with:", {
+      const ffmpeg = ffmpegRef.current;      console.log("Starting enhanced video generation with:", {
         scenes: targetScenes.length,
         hasVoiceUrl: !!voiceUrl,
         hasMusicUrl: !!musicUrl,
-        script: script?.substring(0, 50) + "..."
-      });      // Download and process voice-over and music if provided
+        script: script?.substring(0, 50) + "...",
+        scenesWithText: targetScenes.filter(s => s.onScreenText || s.voiceText).length
+      });// Download and process voice-over and music if provided
       let voiceData: Uint8Array | null = null;
-      let musicData: Uint8Array | null = null;
-
-      if (voiceUrl) {
+      let musicData: Uint8Array | null = null;      if (voiceUrl) {
         try {
-          console.log("Processing voice-over audio...");
+          console.log("Downloading voice-over audio (same approach as videos)...");
           
-          // For data URIs, convert directly without fetch (CSP-friendly)
-          if (voiceUrl.startsWith('data:')) {
-            voiceData = dataUriToUint8Array(voiceUrl);
-            if (voiceData) {
-              await ffmpeg.writeFile('voice.mp3', voiceData);
-              console.log("Voice-over audio processed successfully from data URI");
-            } else {
-              console.warn("Failed to process voice-over data URI");
-            }
-          } else {
-            // For HTTP URLs, use fetch
-            voiceData = await fetchFile(voiceUrl);
-            await ffmpeg.writeFile('voice.mp3', voiceData);
-            console.log("Voice-over audio downloaded successfully from URL");
-          }
+          // Use the same approach as videos - fetchFile handles all URL types
+          voiceData = await fetchFile(voiceUrl);
+          await ffmpeg.writeFile('voice.mp3', voiceData);
+          console.log("Voice-over audio downloaded successfully:", voiceUrl.substring(0, 50) + '...');
           setProgress(15);
         } catch (err) {
-          console.warn("Failed to process voice-over:", err);
-        }
-      }
-
-      if (musicUrl) {
-        try {
-          console.log("Processing background music...");
+          console.warn("Failed to download voice-over:", err);
+          console.warn("Voice URL:", voiceUrl.substring(0, 100) + '...');
           
-          // For data URIs, convert directly without fetch (CSP-friendly)
-          if (musicUrl.startsWith('data:')) {
-            musicData = dataUriToUint8Array(musicUrl);
-            if (musicData) {
-              await ffmpeg.writeFile('music.mp3', musicData);
-              console.log("Background music processed successfully from data URI");
-            } else {
-              console.warn("Failed to process background music data URI");
+          // Fallback: try data URI conversion if it's a data URI
+          if (voiceUrl.startsWith('data:')) {
+            try {
+              voiceData = dataUriToUint8Array(voiceUrl);
+              if (voiceData) {
+                await ffmpeg.writeFile('voice.mp3', voiceData);
+                console.log("Voice-over audio processed via data URI fallback");
+                setProgress(15);
+              }
+            } catch (fallbackErr) {
+              console.warn("Data URI fallback also failed:", fallbackErr);
             }
-          } else {
-            // For HTTP URLs, use fetch
-            musicData = await fetchFile(musicUrl);
-            await ffmpeg.writeFile('music.mp3', musicData);
-            console.log("Background music downloaded successfully from URL");
           }
+        }
+      }      if (musicUrl) {
+        try {
+          console.log("Downloading background music (same approach as videos)...");
+          
+          // Use the same approach as videos - fetchFile handles all URL types
+          musicData = await fetchFile(musicUrl);
+          await ffmpeg.writeFile('music.mp3', musicData);
+          console.log("Background music downloaded successfully:", musicUrl.substring(0, 50) + '...');
           setProgress(25);
         } catch (err) {
-          console.warn("Failed to process background music:", err);
+          console.warn("Failed to download background music:", err);
+          console.warn("Music URL:", musicUrl.substring(0, 100) + '...');
+          
+          // Fallback: try data URI conversion if it's a data URI
+          if (musicUrl.startsWith('data:')) {
+            try {
+              musicData = dataUriToUint8Array(musicUrl);
+              if (musicData) {
+                await ffmpeg.writeFile('music.mp3', musicData);
+                console.log("Background music processed via data URI fallback");
+                setProgress(25);
+              }
+            } catch (fallbackErr) {
+              console.warn("Data URI fallback also failed:", fallbackErr);
+            }
+          }
         }
       }
         // Generate images for each scene with enhanced processing
@@ -396,16 +399,33 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         const scene = processedScenes[i];
         const inputIdx = videoInputStart + i;
         
-        // Basic video processing
-        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30`;
-          // Add typewriter text overlay if scene has text
-        const textToDisplay = scene.onScreenText || scene.voiceText;
+        // Basic video processing        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30`;
+            // Add typewriter text overlay if scene has text
+        let textToDisplay = scene.onScreenText || scene.voiceText;
+        
+        // If no text in scene but we have a script, try to extract relevant text
+        if ((!textToDisplay || textToDisplay.trim().length === 0) && script) {
+          // Simple approach: use a portion of the script for each scene
+          const scriptWords = script.split(/\s+/).filter(word => word.length > 0);
+          const wordsPerScene = Math.ceil(scriptWords.length / targetScenes.length);
+          const startIdx = i * wordsPerScene;
+          const endIdx = Math.min(startIdx + wordsPerScene, scriptWords.length);
+          textToDisplay = scriptWords.slice(startIdx, endIdx).join(' ');
+          console.log(`Scene ${i}: Using script text (${startIdx}-${endIdx}):`, textToDisplay.substring(0, 50) + '...');
+        }
+        
+        // Final fallback: provide default text
+        if (!textToDisplay || textToDisplay.trim().length === 0) {
+          textToDisplay = `Scene ${i + 1} - Uplifting moments to brighten your day`;
+          console.log(`Scene ${i}: Using fallback text:`, textToDisplay);
+        }
+        
         if (textToDisplay && textToDisplay.trim().length > 0) {
           console.log(`Adding typewriter effect for scene ${i}:`, textToDisplay.substring(0, 50) + '...');
           
           // Create typewriter effect with word-by-word reveal
           const words = textToDisplay.trim().split(/\s+/).filter(word => word.length > 0);
-          const timePerWord = (scene.duration * 0.9) / words.length; // Use 90% of scene duration
+          const timePerWord = Math.max(0.3, (scene.duration * 0.9) / words.length); // Min 0.3s per word, use 90% of scene duration
           
           console.log(`Scene ${i}: ${words.length} words, ${timePerWord.toFixed(2)}s per word`);
           
@@ -420,16 +440,20 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
               .replace(/:/g, "\\:")
               .replace(/\[/g, "\\[")
               .replace(/\]/g, "\\]")
-              .replace(/,/g, "\\,");
+              .replace(/,/g, "\\,")
+              .replace(/"/g, '\\"');
             
             const startFrame = Math.floor(startTime * 30); // 30 fps
             const endFrame = Math.floor(scene.duration * 30);
             
-            textFilter += `,drawtext=text='${escapedText}':fontsize=48:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:box=1:boxcolor=black@0.5:boxborderw=10:x=(w-text_w)/2:y=h-150:enable='between(n\\,${startFrame}\\,${endFrame})'`;
+            // Add typewriter text overlay with improved styling
+            textFilter += `,drawtext=text='${escapedText}':fontsize=36:fontcolor=white:shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.7:boxborderw=15:x=(w-text_w)/2:y=h-120:enable='between(n\\,${startFrame}\\,${endFrame})'`;
           });
           
           filterComplex += textFilter;
-          console.log(`Scene ${i}: Added ${words.length} text animation steps`);
+          console.log(`Scene ${i}: Added ${words.length} text animation steps with typewriter effect`);
+        } else {
+          console.log(`Scene ${i}: No text to display`);
         }
         
         filterComplex += `[v${i}];`;

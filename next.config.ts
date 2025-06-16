@@ -25,7 +25,7 @@ const nextConfig: NextConfig = {
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob: https:",
               "media-src 'self' data: blob:",
-              "connect-src 'self' wss: ws: https: https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
+              "connect-src 'self' wss: ws: https: blob: data: https://cdn.jsdelivr.net https://unpkg.com https://cdnjs.cloudflare.com",
               "font-src 'self' data:",
               "worker-src 'self' blob:",
               "child-src 'self' blob:",
