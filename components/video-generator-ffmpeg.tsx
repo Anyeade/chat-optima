@@ -156,7 +156,6 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       await generateVideo(scenesData, script, voiceUrl, musicUrl);
     }
   }), [loaded]);
-
   const generateFallbackImage = useCallback(async (scene: Scene, index: number): Promise<Uint8Array> => {
     const canvas = document.createElement('canvas');
     canvas.width = 1280;
@@ -171,38 +170,24 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add text
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 48px Arial';
+    // Add a subtle pattern overlay
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+    for (let x = 0; x < canvas.width; x += 50) {
+      for (let y = 0; y < canvas.height; y += 50) {
+        ctx.fillRect(x, y, 1, 1);
+      }
+    }
+      // Add centered title text (will be overlaid with typewriter effect by FFmpeg)
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.font = 'bold 64px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Word wrap text
-    const text = scene.onScreenText || scene.voiceText || `Scene ${index + 1}`;
-    const words = text.split(' ');
-    const lines: string[] = [];
-    let currentLine = '';
+    const sceneTitle = `Scene ${index + 1}`;
+    ctx.fillText(sceneTitle, canvas.width / 2, canvas.height / 2);
     
-    for (const word of words) {
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
-      const metrics = ctx.measureText(testLine);
-      
-      if (metrics.width > canvas.width - 100 && currentLine) {
-        lines.push(currentLine);
-        currentLine = word;
-      } else {
-        currentLine = testLine;
-      }
-    }
-    if (currentLine) lines.push(currentLine);
-    
-    // Draw lines
-    const lineHeight = 60;
-    const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
-    
-    lines.forEach((line, lineIndex) => {
-      ctx.fillText(line, canvas.width / 2, startY + lineIndex * lineHeight);
-    });
+    // Note: The actual text overlay with typewriter effect will be added by FFmpeg
+    // This fallback image provides a clean background for the text overlay
     
     // Convert canvas to Uint8Array
     const blob = await new Promise<Blob>((resolve) => {
@@ -211,11 +196,11 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     
     return new Uint8Array(await blob.arrayBuffer());
   }, []);
-
-  const dataUriToBlob = useCallback((dataUri: string): string | null => {
+  const dataUriToUint8Array = useCallback((dataUri: string): Uint8Array | null => {
     try {
-      if (!dataUri.startsWith('data:')) {
-        return dataUri; // Return as-is if it's already a regular URL
+      if (!dataUri || !dataUri.startsWith('data:')) {
+        console.warn('Invalid or empty data URI');
+        return null;
       }
       
       const [header, data] = dataUri.split(',');
@@ -224,26 +209,21 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         return null;
       }
       
-      const mimeMatch = header.match(/data:([^;]+)/);
-      const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
       const isBase64 = header.includes('base64');
       
-      let bytes: Uint8Array;
       if (isBase64) {
         const binaryString = atob(data);
-        bytes = new Uint8Array(binaryString.length);
+        const bytes = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           bytes[i] = binaryString.charCodeAt(i);
         }
+        return bytes;
       } else {
         const decodedData = decodeURIComponent(data);
-        bytes = new TextEncoder().encode(decodedData);
+        return new TextEncoder().encode(decodedData);
       }
-      
-      const blob = new Blob([bytes], { type: mimeType });
-      return URL.createObjectURL(blob);
     } catch (err) {
-      console.warn('Failed to convert data URI to blob:', err);
+      console.warn('Failed to convert data URI:', err);
       return null;
     }
   }, []);
@@ -276,49 +256,51 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
 
       if (voiceUrl) {
         try {
-          console.log("Downloading voice-over audio...");
+          console.log("Processing voice-over audio...");
           
-          // Convert data URI to blob URL if needed (CSP-friendly)
-          const processedVoiceUrl = dataUriToBlob(voiceUrl);
-          if (processedVoiceUrl) {
-            voiceData = await fetchFile(processedVoiceUrl);
-            await ffmpeg.writeFile('voice.mp3', voiceData);
-            console.log("Voice-over audio downloaded successfully");
-            
-            // Clean up blob URL if we created one
-            if (processedVoiceUrl !== voiceUrl) {
-              URL.revokeObjectURL(processedVoiceUrl);
+          // For data URIs, convert directly without fetch (CSP-friendly)
+          if (voiceUrl.startsWith('data:')) {
+            voiceData = dataUriToUint8Array(voiceUrl);
+            if (voiceData) {
+              await ffmpeg.writeFile('voice.mp3', voiceData);
+              console.log("Voice-over audio processed successfully from data URI");
+            } else {
+              console.warn("Failed to process voice-over data URI");
             }
           } else {
-            console.warn("Failed to process voice-over URL");
+            // For HTTP URLs, use fetch
+            voiceData = await fetchFile(voiceUrl);
+            await ffmpeg.writeFile('voice.mp3', voiceData);
+            console.log("Voice-over audio downloaded successfully from URL");
           }
           setProgress(15);
         } catch (err) {
-          console.warn("Failed to download voice-over:", err);
+          console.warn("Failed to process voice-over:", err);
         }
       }
 
       if (musicUrl) {
         try {
-          console.log("Downloading background music...");
+          console.log("Processing background music...");
           
-          // Convert data URI to blob URL if needed (CSP-friendly)
-          const processedMusicUrl = dataUriToBlob(musicUrl);
-          if (processedMusicUrl) {
-            musicData = await fetchFile(processedMusicUrl);
-            await ffmpeg.writeFile('music.mp3', musicData);
-            console.log("Background music downloaded successfully");
-            
-            // Clean up blob URL if we created one
-            if (processedMusicUrl !== musicUrl) {
-              URL.revokeObjectURL(processedMusicUrl);
+          // For data URIs, convert directly without fetch (CSP-friendly)
+          if (musicUrl.startsWith('data:')) {
+            musicData = dataUriToUint8Array(musicUrl);
+            if (musicData) {
+              await ffmpeg.writeFile('music.mp3', musicData);
+              console.log("Background music processed successfully from data URI");
+            } else {
+              console.warn("Failed to process background music data URI");
             }
           } else {
-            console.warn("Failed to process background music URL");
+            // For HTTP URLs, use fetch
+            musicData = await fetchFile(musicUrl);
+            await ffmpeg.writeFile('music.mp3', musicData);
+            console.log("Background music downloaded successfully from URL");
           }
           setProgress(25);
         } catch (err) {
-          console.warn("Failed to download background music:", err);
+          console.warn("Failed to process background music:", err);
         }
       }
         // Generate images for each scene with enhanced processing
@@ -404,16 +386,54 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
           );
         }
         inputIndex++;
-      }
-
-      // Create comprehensive filter complex
+      }      // Create comprehensive filter complex with typewriter text overlay
       let filterComplex = '';
       const videoInputStart = (voiceData ? 1 : 0) + (musicData ? 1 : 0);
       
-      // Process video clips/images
+      // Process video clips/images with text overlay
+      let cumulativeTime = 0;
       for (let i = 0; i < processedScenes.length; i++) {
+        const scene = processedScenes[i];
         const inputIdx = videoInputStart + i;
-        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30[v${i}];`;
+        
+        // Basic video processing
+        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30`;
+          // Add typewriter text overlay if scene has text
+        const textToDisplay = scene.onScreenText || scene.voiceText;
+        if (textToDisplay && textToDisplay.trim().length > 0) {
+          console.log(`Adding typewriter effect for scene ${i}:`, textToDisplay.substring(0, 50) + '...');
+          
+          // Create typewriter effect with word-by-word reveal
+          const words = textToDisplay.trim().split(/\s+/).filter(word => word.length > 0);
+          const timePerWord = (scene.duration * 0.9) / words.length; // Use 90% of scene duration
+          
+          console.log(`Scene ${i}: ${words.length} words, ${timePerWord.toFixed(2)}s per word`);
+          
+          let textFilter = '';
+          words.forEach((word, wordIndex) => {
+            const startTime = wordIndex * timePerWord;
+            const cumulativeText = words.slice(0, wordIndex + 1).join(' ');
+            
+            // Escape text for FFmpeg
+            const escapedText = cumulativeText
+              .replace(/'/g, "\\'")
+              .replace(/:/g, "\\:")
+              .replace(/\[/g, "\\[")
+              .replace(/\]/g, "\\]")
+              .replace(/,/g, "\\,");
+            
+            const startFrame = Math.floor(startTime * 30); // 30 fps
+            const endFrame = Math.floor(scene.duration * 30);
+            
+            textFilter += `,drawtext=text='${escapedText}':fontsize=48:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:box=1:boxcolor=black@0.5:boxborderw=10:x=(w-text_w)/2:y=h-150:enable='between(n\\,${startFrame}\\,${endFrame})'`;
+          });
+          
+          filterComplex += textFilter;
+          console.log(`Scene ${i}: Added ${words.length} text animation steps`);
+        }
+        
+        filterComplex += `[v${i}];`;
+        cumulativeTime += scene.duration;
       }
 
       // Concatenate video streams
@@ -493,6 +513,67 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
   const handleGenerateVideo = useCallback(() => {
     generateVideo();
   }, [generateVideo]);
+
+  // Helper function to calculate word timing for typewriter effect
+  const calculateWordTimings = useCallback((text: string, duration: number, startTime: number = 0) => {
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    if (words.length === 0) return [];
+
+    // Calculate timing per word (leaving some buffer time)
+    const availableTime = duration * 0.9; // Use 90% of duration for text
+    const timePerWord = availableTime / words.length;
+    
+    return words.map((word, index) => ({
+      word,
+      startTime: startTime + (index * timePerWord),
+      endTime: startTime + ((index + 1) * timePerWord),
+      cumulativeText: words.slice(0, index + 1).join(' ')
+    }));
+  }, []);
+
+  // Helper function to create typewriter text overlay filters
+  const createTypewriterTextFilter = useCallback((text: string, duration: number, sceneIndex: number, fps: number = 30) => {
+    if (!text || text.trim().length === 0) return '';
+
+    const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+    if (words.length === 0) return '';
+
+    // Calculate word timings
+    const wordTimings = calculateWordTimings(text, duration);
+    
+    // Create progressive text reveals using FFmpeg's drawtext filter
+    let textFilters = '';
+    
+    wordTimings.forEach((timing, index) => {
+      const startFrame = Math.floor(timing.startTime * fps);
+      const endFrame = Math.floor((timing.startTime + duration) * fps);
+      
+      // Escape text for FFmpeg
+      const escapedText = timing.cumulativeText
+        .replace(/'/g, "\\'")
+        .replace(/:/g, "\\:")
+        .replace(/\[/g, "\\[")
+        .replace(/\]/g, "\\]")
+        .replace(/,/g, "\\,");
+      
+      textFilters += `drawtext=text='${escapedText}':` +
+        `fontfile=/System/Library/Fonts/Helvetica.ttc:` + // Fallback font path
+        `fontsize=48:` +
+        `fontcolor=white:` +
+        `shadowcolor=black:` +
+        `shadowx=2:` +
+        `shadowy=2:` +
+        `box=1:` +
+        `boxcolor=black@0.5:` +
+        `boxborderw=10:` +
+        `x=(w-text_w)/2:` +
+        `y=h-150:` +
+        `enable='between(n,${startFrame},${endFrame})':`;
+    });
+    
+    return textFilters;
+  }, [calculateWordTimings]);
+
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center">
@@ -613,13 +694,14 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         <h4 className="font-medium text-blue-800 mb-2">Enhanced Video Generation Process:</h4>
         <ol className="text-sm text-blue-700 space-y-1">
           <li>1. Load FFmpeg WebAssembly engine from Cloudflare CDN</li>
-          <li>2. Convert audio data URIs to blob URLs (CSP-friendly)</li>
-          <li>3. Download voice-over audio and background music</li>
+          <li>2. Convert audio data URIs directly to binary data (CSP-compliant)</li>
+          <li>3. Process voice-over audio and background music without network fetch</li>
           <li>4. Download or generate background videos/images for each scene</li>
-          <li>5. Process and write all media files to FFmpeg filesystem</li>
-          <li>6. Combine videos/images with comprehensive filter chains</li>
-          <li>7. Mix audio tracks (voice + music) with proper volumes</li>
-          <li>8. Export as MP4 with full audio-visual composition</li>
+          <li>5. Calculate word-by-word timing for typewriter text animation</li>
+          <li>6. Process and write all media files to FFmpeg filesystem</li>
+          <li>7. Combine videos/images with typewriter text overlays synced to voice</li>
+          <li>8. Mix audio tracks (voice + music) with proper volumes</li>
+          <li>9. Export as MP4 with full audio-visual composition and animated text</li>
         </ol>
         {loadingStatus && (
           <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
