@@ -351,16 +351,14 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         const FPS = 30;
         const totalDuration = targetScenes.reduce((sum, scene) => sum + scene.duration, 0);
         const totalFrames = totalDuration * FPS;
-        let currentFrame = 0;
-
-        // **PERFORMANCE OPTIMIZATION**: Use OffscreenCanvas for background processing
-        const useOffscreenCanvas = useCallback(() => {
+        let currentFrame = 0;        // **PERFORMANCE OPTIMIZATION**: Use OffscreenCanvas for background processing
+        const useOffscreenCanvas = () => {
           if ('OffscreenCanvas' in window && canvas.transferControlToOffscreen) {
             setLoadingStatus("Using OffscreenCanvas (Background processing)...");
             return canvas.transferControlToOffscreen();
           }
           return null;
-        }, []);
+        };
 
         // **GPU ACCELERATION**: Enable hardware acceleration hints
         ctx.imageSmoothingEnabled = true;
