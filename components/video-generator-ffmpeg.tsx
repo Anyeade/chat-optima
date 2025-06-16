@@ -778,12 +778,30 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
           await ffmpeg.writeFile(`image_${scene.index}.png`, scene.imageData);
           console.log(`Written background image ${scene.index} to FFmpeg filesystem`);
         }
-      }      setProgress(70);
+      }
+      
+      setProgress(70);
+
+      // Download and setup web font for text overlay
+      console.log("Setting up web font for text overlay...");
+      try {
+        // Download a free web font (Roboto) from Google Fonts
+        const fontResponse = await fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2');
+        if (fontResponse.ok) {
+          const fontData = await fontResponse.arrayBuffer();
+          await ffmpeg.writeFile('font.ttf', new Uint8Array(fontData));
+          console.log("Web font downloaded and ready for text overlay");
+        } else {
+          console.warn("Could not download web font, text overlay may not work");
+        }
+      } catch (fontErr) {
+        console.warn("Font download failed:", fontErr);
+      }
 
       // List all files in FFmpeg filesystem for debugging
       try {
         const files = await ffmpeg.listDir('/');
-        console.log("Files in FFmpeg filesystem:", files.map(f => f.name).filter(name => name.endsWith('.mp3') || name.endsWith('.mp4') || name.endsWith('.png')));
+        console.log("Files in FFmpeg filesystem:", files.map(f => f.name).filter(name => name.endsWith('.mp3') || name.endsWith('.mp4') || name.endsWith('.png') || name.endsWith('.ttf')));
       } catch (err) {
         console.log("Could not list FFmpeg filesystem files:", err);
       }
@@ -870,7 +888,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         
         // Basic video processing - scale and prepare video input
         filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30`;
-            // Add typewriter text overlay if scene has text
+        
+        // Add typewriter text overlay with web font
         let textToDisplay = scene.onScreenText || scene.voiceText;
         
         // If no text in scene but we have a script, try to extract relevant text
@@ -916,8 +935,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             const startFrame = Math.floor(startTime * 30); // 30 fps
             const endFrame = Math.floor(scene.duration * 30);
             
-            // Add typewriter text overlay without font dependencies
-            textFilter += `,drawtext=text='${escapedText}':fontsize=36:fontcolor=white:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
+            // Add typewriter text overlay with downloaded web font
+            textFilter += `,drawtext=text='${escapedText}':fontfile=font.ttf:fontsize=36:fontcolor=white:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
           });
           
           filterComplex += textFilter;
@@ -1112,7 +1131,7 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
               videoOnlyCommands.push(...videoInputs);
               
               const filterComplex = processedScenes.map((scene, i) => {
-                return `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30${scene.textAnimations ? scene.textAnimations.map(anim => `,drawtext=text='${anim.text.replace(/'/g, "\\'")}':fontsize=${anim.fontSize}:fontcolor=${anim.color}:x=${anim.x}:y=${anim.y}:enable='${anim.enable}'`).join('') : ''}[v${i}]`;
+                return `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30[v${i}]`;
               }).join(';');
               
               const finalFilter = filterComplex + ';' + processedScenes.map((_, i) => `[v${i}]`).join('') + `concat=n=${processedScenes.length}:v=1:a=0[outv]`;
@@ -1124,15 +1143,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
               videoOnlyCommands.push('-i', 'video_0.mp4');
               const scene = processedScenes[0];
               
-              if (scene.textAnimations && scene.textAnimations.length > 0) {
-                const drawTextFilters = scene.textAnimations.map(anim =>
-                  `drawtext=text='${anim.text.replace(/'/g, "\\'")}':fontsize=${anim.fontSize}:fontcolor=${anim.color}:x=${anim.x}:y=${anim.y}:enable='${anim.enable}'`
-                ).join(',');
-                
-                videoOnlyCommands.push('-vf', `scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30,${drawTextFilters}`);
-              } else {
-                videoOnlyCommands.push('-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30');
-              }
+              // Remove all text animations to avoid font dependencies
+              videoOnlyCommands.push('-vf', 'scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30');
             }
               // Add silent audio track
             videoOnlyCommands.push('-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100');
@@ -1392,3 +1404,5 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
 });
 
 VideoGeneratorFFmpeg.displayName = 'VideoGeneratorFFmpeg';
+
+export default VideoGeneratorFFmpeg;
