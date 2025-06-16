@@ -916,8 +916,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             const startFrame = Math.floor(startTime * 30); // 30 fps
             const endFrame = Math.floor(scene.duration * 30);
             
-            // Add typewriter text overlay with improved styling (font-independent)
-            textFilter += `,drawtext=text='${escapedText}':fontsize=36:fontcolor=white:shadowcolor=black:shadowx=2:shadowy=2:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
+            // Add typewriter text overlay without font dependencies
+            textFilter += `,drawtext=text='${escapedText}':fontsize=36:fontcolor=white:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
           });
           
           filterComplex += textFilter;
