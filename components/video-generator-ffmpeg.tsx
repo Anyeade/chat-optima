@@ -782,20 +782,40 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       
       setProgress(70);
 
-      // Download and setup web font for text overlay
-      console.log("Setting up web font for text overlay...");
+      // Load local Roboto font for text overlay
+      console.log("Loading local Roboto font for text overlay...");
       try {
-        // Download a free web font (Roboto) from Google Fonts
-        const fontResponse = await fetch('https://fonts.gstatic.com/s/roboto/v30/KFOmCnqEu92Fr1Mu4mxK.woff2');
-        if (fontResponse.ok) {
-          const fontData = await fontResponse.arrayBuffer();
-          await ffmpeg.writeFile('font.ttf', new Uint8Array(fontData));
-          console.log("Web font downloaded and ready for text overlay");
-        } else {
-          console.warn("Could not download web font, text overlay may not work");
+        // Try different possible Roboto font filenames
+        const possibleFonts = [
+          '/roboto/Roboto-Regular.ttf',
+          '/roboto/Roboto-Medium.ttf',
+          '/roboto/Roboto.ttf',
+          '/roboto/roboto-regular.ttf',
+          '/roboto/roboto.ttf'
+        ];
+        
+        let fontLoaded = false;
+        for (const fontPath of possibleFonts) {
+          try {
+            console.log(`Trying to load font: ${fontPath}`);
+            const fontResponse = await fetch(fontPath);
+            if (fontResponse.ok) {
+              const fontData = await fontResponse.arrayBuffer();
+              await ffmpeg.writeFile('roboto.ttf', new Uint8Array(fontData));
+              console.log(`Roboto font loaded successfully from: ${fontPath}`);
+              fontLoaded = true;
+              break;
+            }
+          } catch (individualErr) {
+            console.log(`Font ${fontPath} not found, trying next...`);
+          }
+        }
+        
+        if (!fontLoaded) {
+          console.warn("Could not load local Roboto font, text overlay may not work");
         }
       } catch (fontErr) {
-        console.warn("Font download failed:", fontErr);
+        console.warn("Font loading failed:", fontErr);
       }
 
       // List all files in FFmpeg filesystem for debugging
@@ -935,8 +955,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             const startFrame = Math.floor(startTime * 30); // 30 fps
             const endFrame = Math.floor(scene.duration * 30);
             
-            // Add typewriter text overlay with downloaded web font
-            textFilter += `,drawtext=text='${escapedText}':fontfile=font.ttf:fontsize=36:fontcolor=white:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
+            // Add typewriter text overlay with local Roboto font
+            textFilter += `,drawtext=text='${escapedText}':fontfile=roboto.ttf:fontsize=36:fontcolor=white:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
           });
           
           filterComplex += textFilter;

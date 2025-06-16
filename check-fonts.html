@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Roboto Fonts</title>
+</head>
+<body>
+    <h1>Roboto Font Checker</h1>
+    <p>Open browser console to see which Roboto fonts are available</p>
+    
+    <script>
+        const possibleFonts = [
+            '/roboto/Roboto-Regular.ttf',
+            '/roboto/Roboto-Medium.ttf', 
+            '/roboto/Roboto.ttf',
+            '/roboto/roboto-regular.ttf',
+            '/roboto/roboto.ttf',
+            '/roboto/Roboto-Bold.ttf',
+            '/roboto/Roboto-Light.ttf'
+        ];
+        
+        console.log('Checking available Roboto fonts...');
+        
+        possibleFonts.forEach(async (fontPath) => {
+            try {
+                const response = await fetch(fontPath);
+                if (response.ok) {
+                    console.log(`✅ FOUND: ${fontPath}`);
+                } else {
+                    console.log(`❌ NOT FOUND: ${fontPath} (${response.status})`);
+                }
+            } catch (err) {
+                console.log(`❌ ERROR: ${fontPath} - ${err.message}`);
+            }
+        });
+    </script>
+</body>
+</html>
