@@ -7,6 +7,7 @@ interface Scene {
   duration: number;
   backgroundVideo: string;
   imageUrl?: string;
+  onScreenText?: string;
   transition: 'fade' | 'slide' | 'zoom' | 'cut';
 }
 
@@ -457,8 +458,7 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       } catch (error) {
         console.warn("WebCodecs failed, falling back to Canvas:", error);
         return generateVideo(scenesData, musicUrl);
-      }
-    }, [generateVideo, hasWebCodecs]);
+      }    }, [generateVideo, hasWebCodecs]);
 
     // Expose the faster generateVideo function through ref
     useImperativeHandle(ref, () => ({

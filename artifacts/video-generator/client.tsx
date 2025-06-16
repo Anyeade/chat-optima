@@ -38,18 +38,15 @@ interface VideoGeneratorMetadata {
   duration: 15 | 30 | 60 | 120 | 300; // seconds
   
   // Generated content
-  script: string;
-  scenes: Array<{
+  script: string;  scenes: Array<{
     id: string;
     duration: number;
-    voiceText: string;
     onScreenText?: string;
     backgroundVideo: string;
+    imageUrl?: string;
     transition: 'fade' | 'slide' | 'zoom' | 'cut';
   }>;
-  
-  // Audio
-  voiceOverUrl: string | null;
+    // Audio
   backgroundMusicUrl: string | null;
   musicVolume: number; // 0-100, default 40
   
@@ -69,12 +66,10 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
   initialize: ({ setMetadata }: { setMetadata: React.Dispatch<React.SetStateAction<VideoGeneratorMetadata>> }) => {
     try {
       setMetadata({
-        aiPrompt: '',
-        videoType: 'youtube-shorts',
+        aiPrompt: '',        videoType: 'youtube-shorts',
         duration: 60,
         script: '',
         scenes: [],
-        voiceOverUrl: null,
         backgroundMusicUrl: null,
         musicVolume: 40,
         isGenerating: false,
@@ -115,7 +110,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
     }
 
     const [aiEditPrompt, setAiEditPrompt] = useState('');
-    const ffmpegRef = useRef<{ generateVideo: (scenes: any[], script: string, voiceUrl: string, musicUrl: string) => Promise<void> }>(null);
+    const ffmpegRef = useRef<{ generateVideo: (scenes: any[], musicUrl?: string) => Promise<void> }>(null);
 
     // Auto-detect prompt from title
     useEffect(() => {
@@ -169,7 +164,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
         setMetadata(prev => ({ 
           ...prev, 
           generationProgress: 10,
-          generationStep: 'Creating voice-over script...'
+          generationStep: 'Creating script...'
         }));
         
         const scriptResponse = await fetch('/api/video-generator/script', {
@@ -185,37 +180,10 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
         if (!scriptResponse.ok) throw new Error('Script generation failed');
         const { script } = await scriptResponse.json();
         
-        setMetadata(prev => ({ ...prev, script }));
-
-        // Step 2: Generate voice-over (30%)
+        setMetadata(prev => ({ ...prev, script }));        // Step 2: Generate background music (30%)
         setMetadata(prev => ({ 
           ...prev, 
           generationProgress: 30,
-          generationStep: 'Generating voice-over audio...'
-        }));
-
-        const voiceResponse = await fetch('/api/video-generator/voice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            script,
-            voiceSettings: {
-              language: 'en-US',
-              gender: 'neutral',
-              emotion: 'professional'
-            }
-          })
-        });
-
-        if (!voiceResponse.ok) throw new Error('Voice generation failed');
-        const { voiceUrl } = await voiceResponse.json();
-        
-        setMetadata(prev => ({ ...prev, voiceOverUrl: voiceUrl }));
-
-        // Step 3: Generate background music (50%)
-        setMetadata(prev => ({ 
-          ...prev, 
-          generationProgress: 50,
           generationStep: 'Adding background music...'
         }));
 
@@ -232,12 +200,10 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
         if (!musicResponse.ok) throw new Error('Music generation failed');
         const { musicUrl } = await musicResponse.json();
         
-        setMetadata(prev => ({ ...prev, backgroundMusicUrl: musicUrl }));
-
-        // Step 4: Generate scenes and background videos (70%)
+        setMetadata(prev => ({ ...prev, backgroundMusicUrl: musicUrl }));        // Step 3: Generate scenes and background videos (50%)
         setMetadata(prev => ({ 
           ...prev, 
-          generationProgress: 70,
+          generationProgress: 50,
           generationStep: 'Creating video scenes...'
         }));
 
@@ -254,14 +220,12 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
         if (!scenesResponse.ok) throw new Error('Scenes generation failed');
         const { scenes } = await scenesResponse.json();
         
-        setMetadata(prev => ({ ...prev, scenes }));
-
-        // Step 5: Apply transitions and sync (85%)
+        setMetadata(prev => ({ ...prev, scenes }));        // Step 4: Apply transitions and sync (75%)
         setMetadata(prev => ({ 
           ...prev, 
-          generationProgress: 85,
+          generationProgress: 75,
           generationStep: 'Applying transitions and synchronizing...'
-        }));        // Step 6: Generate final video (100%)
+        }));        // Step 5: Generate final video (95%)
         setMetadata(prev => ({ 
           ...prev, 
           generationProgress: 95,
@@ -270,7 +234,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
 
         // Use FFmpeg component for client-side rendering
         if (ffmpegRef.current) {
-          await ffmpegRef.current.generateVideo(scenes, script, voiceUrl, musicUrl);
+          await ffmpegRef.current.generateVideo(scenes, musicUrl);
           
           setMetadata(prev => ({
             ...prev,
@@ -364,7 +328,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
               </span>
             </CardTitle>
             <CardDescription>
-              Create professional videos with AI-powered voice-over, music, and visuals
+              Create professional videos with AI-powered music and visuals
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -487,7 +451,7 @@ export const videoGeneratorClient = new Artifact<'video-generator', VideoGenerat
                     <span className="font-semibold text-green-800">Video Generated Successfully!</span>
                   </div>
                   <p className="text-green-700">
-                    Your professional video is ready with voice-over, background music, and transitions.
+                    Your professional video is ready with background music and transitions.
                   </p>
                 </div>
 
