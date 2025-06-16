@@ -101,13 +101,16 @@ IMPORTANT: Ensure the voice-over text flows naturally and matches the estimated 
         onScreenText: `Scene ${index + 1}`,
         visualDescription: `Scene ${index + 1} visuals`
       }));
-    }
-
-    // Generate scenes with background videos using proper timing
+    }    // Generate scenes with background videos using proper timing
     const scenes = await Promise.all(
       scenesData.map(async (sceneData: any, index: number) => {
         const backgroundVideo = await findBackgroundVideo(sceneData.visualDescription || script);
         const sceneDuration = sceneBreaks[index]?.duration || 10; // Use calculated duration
+        
+        // Also generate a fallback image URL
+        const imageUrl = backgroundVideo.source === 'Pexels' && backgroundVideo.id ? 
+          `https://images.pexels.com/videos/${backgroundVideo.id}/free-video-${backgroundVideo.id}.jpg?auto=compress&cs=tinysrgb&h=720&w=1280` :
+          `https://via.placeholder.com/1280x720/667eea/ffffff?text=Scene+${index + 1}`;
         
         return {
           id: `scene-${index + 1}`,
@@ -115,6 +118,7 @@ IMPORTANT: Ensure the voice-over text flows naturally and matches the estimated 
           voiceText: sceneData.voiceText || sceneBreaks[index]?.text || `Scene ${index + 1} content`,
           onScreenText: sceneData.onScreenText || `Scene ${index + 1}`,
           backgroundVideo: backgroundVideo.url,
+          imageUrl: imageUrl, // Add image fallback
           transition: getTransition(index, sceneBreaks.length),
           metadata: {
             visualDescription: sceneData.visualDescription,
@@ -210,36 +214,38 @@ async function findBackgroundVideo(visualDescription: string) {
         // Try to get the best quality video file
         let videoFile = video.video_files.find((f: PexelsVideoFile) => f.quality === 'hd') ||
                        video.video_files.find((f: PexelsVideoFile) => f.quality === 'sd') ||
-                       video.video_files[0];
-        
-        if (videoFile && videoFile.link) {
+                       video.video_files[0];        if (videoFile && videoFile.link) {
           console.log(`Found Pexels video: ${video.id} - ${videoFile.quality} (${videoFile.width}x${videoFile.height})`);
+          
+          // Use video proxy to avoid CORS issues
+          const proxyUrl = `/api/video-proxy?url=${encodeURIComponent(videoFile.link)}`;
+          
           return {
-            url: videoFile.link,
+            url: proxyUrl,
+            originalUrl: videoFile.link,
             source: 'Pexels',
             query: searchQuery,
             id: video.id,
             quality: videoFile.quality,
-            dimensions: `${videoFile.width}x${videoFile.height}`
+            dimensions: `${videoFile.width}x${videoFile.height}`,
+            thumbnail: video.image // Add thumbnail for fallback
           };
         }
       }
     } else {
       console.warn(`Pexels API error: ${response.status} - ${response.statusText}`);
     }
-    
-    // Fallback to placeholder
+      // Fallback to static placeholder image instead of broken video API
     return {
-      url: '/api/placeholder/video/1920/1080',
+      url: 'https://via.placeholder.com/1920x1080/667eea/ffffff?text=Video+Placeholder',
       source: 'Placeholder',
       query: searchQuery,
       id: 'placeholder'
     };
-    
-  } catch (error) {
+      } catch (error) {
     console.error('Video search error:', error);
     return {
-      url: '/api/placeholder/video/1920/1080',
+      url: 'https://via.placeholder.com/1920x1080/764ba2/ffffff?text=Fallback+Image',
       source: 'Fallback',
       query: visualDescription,
       id: 'fallback'

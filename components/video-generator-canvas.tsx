@@ -80,22 +80,39 @@ export const VideoGeneratorCanvas = forwardRef<VideoGeneratorCanvasRef, VideoGen
         img.onerror = reject;
         img.src = src;
       });
-    }, []);
-
-    // Load video with CORS handling
+    }, []);    // Load video with CORS handling via proxy
     const loadVideo = useCallback((src: string): Promise<HTMLVideoElement> => {
       return new Promise((resolve, reject) => {
+        console.log(`🎬 Video loading started: {url: '${src}', isBase64: ${src.startsWith('data:')}}`);
+        
         const video = document.createElement('video');
         video.crossOrigin = 'anonymous';
         video.muted = true;
         video.playsInline = true;
         
-        video.onloadeddata = () => {
+        video.onloadedmetadata = () => {
+          console.log(`📹 Video metadata loaded: {duration: ${video.duration}, width: ${video.videoWidth}, height: ${video.videoHeight}}`);
+        };
+        
+        video.oncanplay = () => {
+          console.log(`✅ Video can play`);
           video.currentTime = 0;
           resolve(video);
         };
-        video.onerror = reject;
-        video.src = src;
+        
+        video.onerror = (e) => {
+          console.error(`❌ Video loading failed:`, e);
+          reject(new Error(`Failed to load video: ${src}`));
+        };
+        
+        // Use proxy for external URLs, direct for local/data URLs
+        if (src.startsWith('http') && !src.includes(window.location.hostname)) {
+          const proxyUrl = `/api/video-proxy?url=${encodeURIComponent(src)}`;
+          console.log(`🔄 Using video proxy: ${proxyUrl}`);
+          video.src = proxyUrl;
+        } else {
+          video.src = src;
+        }
       });
     }, []);
 
@@ -270,8 +287,7 @@ export const VideoGeneratorCanvas = forwardRef<VideoGeneratorCanvasRef, VideoGen
         }
 
         setLoadingStatus("Loading scene assets...");
-        
-        // Load all scene assets
+          // Load all scene assets
         const sceneAssets = await Promise.all(
           targetScenes.map(async (scene, index) => {
             setProgress(15 + (index / targetScenes.length) * 25); // 15-40%
@@ -279,29 +295,37 @@ export const VideoGeneratorCanvas = forwardRef<VideoGeneratorCanvasRef, VideoGen
             try {
               if (scene.backgroundVideo) {
                 // Try to load video first
+                console.log(`🎬 Loading video for scene ${index}: ${scene.backgroundVideo}`);
                 try {
                   const video = await loadVideo(scene.backgroundVideo);
+                  console.log(`✅ Video loaded successfully for scene ${index}`);
                   return { ...scene, asset: video, index };
                 } catch (videoError) {
-                  console.warn(`Failed to load video for scene ${index}, trying image fallback`);
+                  console.warn(`Failed to load video for scene ${index}, trying image fallback:`, videoError);
                   
                   if (scene.imageUrl) {
+                    console.log(`🖼️ Loading fallback image for scene ${index}: ${scene.imageUrl}`);
                     const image = await loadImage(scene.imageUrl);
+                    console.log(`✅ Fallback image loaded for scene ${index}`);
                     return { ...scene, asset: image, index };
                   } else {
+                    console.log(`🎨 Generating fallback gradient for scene ${index}`);
                     const fallback = generateFallbackImage(index);
                     return { ...scene, asset: fallback, index };
                   }
                 }
               } else if (scene.imageUrl) {
+                console.log(`🖼️ Loading image for scene ${index}: ${scene.imageUrl}`);
                 const image = await loadImage(scene.imageUrl);
+                console.log(`✅ Image loaded for scene ${index}`);
                 return { ...scene, asset: image, index };
               } else {
+                console.log(`🎨 Generating fallback gradient for scene ${index} (no media provided)`);
                 const fallback = generateFallbackImage(index);
                 return { ...scene, asset: fallback, index };
               }
             } catch (error) {
-              console.warn(`Failed to load asset for scene ${index}, using fallback`);
+              console.warn(`Failed to load asset for scene ${index}, using fallback:`, error);
               const fallback = generateFallbackImage(index);
               return { ...scene, asset: fallback, index };
             }
