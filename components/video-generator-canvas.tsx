@@ -10,17 +10,17 @@ interface Scene {
   transition: 'fade' | 'slide' | 'zoom' | 'cut';
 }
 
-interface VideoGeneratorFFmpegProps {
+interface VideoGeneratorCanvasProps {
   scenes: Scene[];
   prompt?: string;
   onVideoGenerated?: (blob: Blob) => void;
 }
 
-export interface VideoGeneratorFFmpegRef {
+export interface VideoGeneratorCanvasRef {
   generateVideo: (scenes: Scene[], musicUrl?: string) => Promise<void>;
 }
 
-export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGeneratorFFmpegProps>(
+export const VideoGeneratorCanvas = forwardRef<VideoGeneratorCanvasRef, VideoGeneratorCanvasProps>(
   ({ scenes, prompt = "AI Generated Video", onVideoGenerated }, ref) => {
     const [isGenerating, setIsGenerating] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -540,6 +540,6 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     );
   });
 
-VideoGeneratorFFmpeg.displayName = 'VideoGeneratorFFmpeg';
+VideoGeneratorCanvas.displayName = 'VideoGeneratorCanvas';
 
-export default VideoGeneratorFFmpeg;
+export default VideoGeneratorCanvas;
