@@ -3,6 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 const VOICE_RSS_API_KEY = '219b11995be34d5d84dd5a87500d2a5e';
 const VOICE_RSS_URL = 'https://api.voicerss.org/';
 
+// Initialize fetch for Node.js compatibility
+let fetch: any;
+async function initFetch() {
+  if (fetch) return fetch;
+  
+  try {
+    // Try to use global fetch first (Node 18+)
+    if (typeof globalThis.fetch !== 'undefined') {
+      fetch = globalThis.fetch;
+      return fetch;
+    }
+    throw new Error('Native fetch not available');
+  } catch (error) {
+    // Fallback to dynamic import for node-fetch
+    const { default: nodeFetch } = await import('node-fetch');
+    fetch = nodeFetch;
+    return fetch;
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     const { script, voiceSettings } = await request.json();
@@ -27,6 +47,9 @@ export async function POST(request: NextRequest) {
     // Create form data for VoiceRSS API
     const formData = new URLSearchParams(voiceParams);
 
+    // Initialize fetch
+    await initFetch();
+    
     const response = await fetch(VOICE_RSS_URL, {
       method: 'POST',
       headers: {
@@ -39,26 +62,39 @@ export async function POST(request: NextRequest) {
       throw new Error(`VoiceRSS API error: ${response.status}`);
     }
 
-    // Get the audio data
+    // Get the audio data - handle exactly like our working test script
     const audioBuffer = await response.arrayBuffer();
+    const audioBufferNode = Buffer.from(audioBuffer);
     
     // Validate the audio data
-    if (!audioBuffer || audioBuffer.byteLength < 1000) {
+    if (!audioBufferNode || audioBufferNode.length < 1000) {
       throw new Error('VoiceRSS returned invalid or empty audio data');
     }
     
     // Check for valid MP3 headers
-    const audioBytes = new Uint8Array(audioBuffer);
+    const audioBytes = new Uint8Array(audioBufferNode);
     const hasValidHeaders = (audioBytes[0] === 0xFF && (audioBytes[1] & 0xE0) === 0xE0) ||
                            (audioBytes[0] === 0x49 && audioBytes[1] === 0x44 && audioBytes[2] === 0x33);
     
     if (!hasValidHeaders) {
+      console.error('Invalid MP3 headers detected:', {
+        firstByte: audioBytes[0].toString(16),
+        secondByte: audioBytes[1].toString(16),
+        thirdByte: audioBytes[2].toString(16),
+        size: audioBufferNode.length
+      });
       throw new Error('VoiceRSS returned corrupted audio data (invalid MP3 headers)');
     }
     
+    console.log('✅ VoiceRSS Audio Generated:', {
+      size: audioBufferNode.length,
+      validHeaders: hasValidHeaders,
+      firstBytes: Array.from(audioBytes.slice(0, 4)).map(b => b.toString(16)).join(' ')
+    });
+    
     // In a real implementation, you'd save this to a file storage service
     // For now, we'll create a data URL (not recommended for production)
-    const base64Audio = Buffer.from(audioBuffer).toString('base64');
+    const base64Audio = audioBufferNode.toString('base64');
     const voiceUrl = `data:audio/mp3;base64,${base64Audio}`;
 
     return NextResponse.json({

@@ -3,6 +3,26 @@ import { NextRequest, NextResponse } from 'next/server';
 const JAMENDO_CLIENT_ID = '3efca530';
 const JAMENDO_API_URL = 'https://api.jamendo.com/v3.0';
 
+// Initialize fetch for Node.js compatibility
+let fetch: any;
+async function initFetch() {
+  if (fetch) return fetch;
+  
+  try {
+    // Try to use global fetch first (Node 18+)
+    if (typeof globalThis.fetch !== 'undefined') {
+      fetch = globalThis.fetch;
+      return fetch;
+    }
+    throw new Error('Native fetch not available');
+  } catch (error) {
+    // Fallback to dynamic import for node-fetch
+    const { default: nodeFetch } = await import('node-fetch');
+    fetch = nodeFetch;
+    return fetch;
+  }
+}
+
 export async function POST(request: NextRequest) {
   let mood = '';
   let volume = 40;
@@ -33,6 +53,9 @@ export async function POST(request: NextRequest) {
       order: 'popularity_total'
     });
 
+    // Initialize fetch
+    await initFetch();
+    
     const response = await fetch(searchUrl);
     
     if (!response.ok) {
@@ -72,8 +95,50 @@ export async function POST(request: NextRequest) {
       throw new Error('No audio URL found for selected track');
     }
 
+    console.log(`🎼 Selected: "${selectedTrack.name}" by ${selectedTrack.artist_name}`);
+    
+    // Download the audio file - handle exactly like our working test script
+    const audioResponse = await fetch(audioUrl);
+    if (!audioResponse.ok) {
+      throw new Error(`Audio download failed: ${audioResponse.status}`);
+    }
+
+    const audioBuffer = await audioResponse.arrayBuffer();
+    const audioBufferNode = Buffer.from(audioBuffer);
+    
+    // Validate audio data
+    if (!audioBufferNode || audioBufferNode.length < 1000) {
+      throw new Error('Downloaded audio file is too small or empty');
+    }
+    
+    // Check for valid MP3 headers
+    const audioBytes = new Uint8Array(audioBufferNode);
+    const hasValidHeaders = (audioBytes[0] === 0xFF && (audioBytes[1] & 0xE0) === 0xE0) ||
+                           (audioBytes[0] === 0x49 && audioBytes[1] === 0x44 && audioBytes[2] === 0x33);
+    
+    if (!hasValidHeaders) {
+      console.error('Invalid MP3 headers detected in music:', {
+        firstByte: audioBytes[0].toString(16),
+        secondByte: audioBytes[1].toString(16),
+        thirdByte: audioBytes[2].toString(16),
+        size: audioBufferNode.length
+      });
+      throw new Error('Downloaded audio file has invalid MP3 headers');
+    }
+
+    console.log('✅ Jamendo Audio Downloaded:', {
+      size: audioBufferNode.length,
+      validHeaders: hasValidHeaders,
+      trackName: selectedTrack.name,
+      firstBytes: Array.from(audioBytes.slice(0, 4)).map(b => b.toString(16)).join(' ')
+    });
+
+    // Convert to base64 for data URL
+    const base64Audio = audioBufferNode.toString('base64');
+    const musicUrl = `data:audio/mp3;base64,${base64Audio}`;
+
     return NextResponse.json({
-      musicUrl: audioUrl,
+      musicUrl,
       metadata: {
         provider: 'Jamendo',
         trackName: selectedTrack.name,
