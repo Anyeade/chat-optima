@@ -443,56 +443,18 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     }
   }, []);
 
-  // Enhanced audio preprocessing function
+  // Simplified audio preprocessing function
   const preprocessAudio = useCallback(async (ffmpeg: any, inputFile: string, outputFile: string): Promise<boolean> => {
     try {
-      console.log(`Preprocessing audio file: ${inputFile}`);
+      console.log(`Pre-processing ${inputFile} to ensure compatibility...`);
       
-      // First try to probe the file
-      try {
-        await ffmpeg.exec(['-i', inputFile, '-t', '0', '-f', 'null', '-']);
-        console.log(`${inputFile} is valid, no preprocessing needed`);
-        return true;
-      } catch (err) {
-        console.warn(`${inputFile} validation failed, attempting preprocessing:`, err);
-      }
+      // Simple re-encoding to ensure compatibility
+      await ffmpeg.exec(['-i', inputFile, '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', outputFile]);
       
-      // Try multiple preprocessing approaches
-      const preprocessingAttempts = [
-        // Attempt 1: Basic MP3 conversion
-        ['-i', inputFile, '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', outputFile],
-        
-        // Attempt 2: Force format detection
-        ['-f', 'mp3', '-i', inputFile, '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', outputFile],
-        
-        // Attempt 3: Raw PCM conversion then MP3
-        ['-i', inputFile, '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', 'temp.pcm'],
-        ['-f', 's16le', '-ar', '44100', '-ac', '2', '-i', 'temp.pcm', '-acodec', 'mp3', '-ab', '128k', outputFile]
-      ];
-      
-      for (const attempt of preprocessingAttempts) {
-        try {
-          await ffmpeg.exec(attempt);
-          
-          // Verify the output file
-          try {
-            await ffmpeg.exec(['-i', outputFile, '-t', '0', '-f', 'null', '-']);
-            console.log(`Successfully preprocessed ${inputFile} using attempt:`, attempt);
-            return true;
-          } catch (verifyErr) {
-            console.warn(`Preprocessed file verification failed:`, verifyErr);
-            continue;
-          }
-        } catch (attemptErr) {
-          console.warn(`Preprocessing attempt failed:`, attemptErr);
-          continue;
-        }
-      }
-      
-      console.error(`All preprocessing attempts failed for ${inputFile}`);
-      return false;
+      console.log(`${inputFile} pre-processing completed`);
+      return true;
     } catch (error) {
-      console.error(`Error in audio preprocessing:`, error);
+      console.error(`${inputFile} pre-processing failed:`, error);
       return false;
     }
   }, []);
@@ -826,39 +788,42 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         console.log("Could not list FFmpeg filesystem files:", err);
       }
 
-      // Pre-process and validate audio files if they exist
+      // Since our audio validation is working, skip the complex preprocessing that might be causing issues
+      console.log("Validating voice audio file...");
       if (voiceData) {
-        const voiceValid = await preprocessAudio(ffmpeg, 'voice.mp3', 'voice_processed.mp3');
-        if (voiceValid) {
-            await ffmpeg.deleteFile('voice.mp3');
-            await ffmpeg.rename('voice_processed.mp3', 'voice.mp3');
-        } else {
-          console.warn('Voice audio preprocessing failed, attempting to regenerate...');
+        try {
+          await ffmpeg.exec(['-i', 'voice.mp3', '-t', '0.1', '-f', 'null', '-']);
+          console.log("Voice audio file is valid");
+        } catch (err) {
+          console.warn('Voice audio validation failed:', err);
           try {
-            const newVoiceUrl = await generateVoiceOver(currentScript, { language: 'en-us', voice: 'Linda', speed: 0 });
-            voiceData = await fetchFile(newVoiceUrl);
-            await ffmpeg.writeFile('voice.mp3', voiceData);
-          } catch (regenErr) {
-            console.error('Voice regeneration failed:', regenErr);
+            console.log("Attempting to fix voice audio...");
+            await ffmpeg.exec(['-i', 'voice.mp3', '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', 'voice_fixed.mp3']);
+            await ffmpeg.deleteFile('voice.mp3');
+            await ffmpeg.rename('voice_fixed.mp3', 'voice.mp3');
+            console.log("Voice audio fixed successfully");
+          } catch (fixErr) {
+            console.error('Voice audio fix failed:', fixErr);
             voiceData = null;
           }
         }
       }
 
+      console.log("Validating background music file...");
       if (musicData) {
-        const musicValid = await preprocessAudio(ffmpeg, 'background_music.mp3', 'music_processed.mp3');
-        if (musicValid) {
-            await ffmpeg.deleteFile('background_music.mp3');
-            await ffmpeg.rename('music_processed.mp3', 'background_music.mp3');
-        } else {
-          console.warn('Background music preprocessing failed, attempting to regenerate...');
+        try {
+          await ffmpeg.exec(['-i', 'background_music.mp3', '-t', '0.1', '-f', 'null', '-']);
+          console.log("Background music file is valid");
+        } catch (err) {
+          console.warn('Background music validation failed:', err);
           try {
-            const totalDuration = targetScenes.reduce((sum, scene) => sum + scene.duration, 0);
-            const newMusicUrl = await generateBackgroundMusic('uplifting', totalDuration, 30);
-            musicData = await fetchFile(newMusicUrl);
-            await ffmpeg.writeFile('background_music.mp3', musicData);
-          } catch (regenErr) {
-            console.error('Music regeneration failed:', regenErr);
+            console.log("Attempting to fix background music...");
+            await ffmpeg.exec(['-i', 'background_music.mp3', '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', 'music_fixed.mp3']);
+            await ffmpeg.deleteFile('background_music.mp3');
+            await ffmpeg.rename('music_fixed.mp3', 'background_music.mp3');
+            console.log("Background music fixed successfully");
+          } catch (fixErr) {
+            console.error('Background music fix failed:', fixErr);
             musicData = null;
           }
         }
