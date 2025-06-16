@@ -284,7 +284,9 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
           
           // Use the same approach as videos - fetchFile handles all URL types
           musicData = await fetchFile(musicUrl);
-          await ffmpeg.writeFile('music.mp3', musicData);
+          
+          // Write with different filename to avoid conflicts
+          await ffmpeg.writeFile('background_music.mp3', musicData);
           console.log("Background music downloaded successfully:", musicUrl.substring(0, 50) + '...');
           setProgress(25);
         } catch (err) {
@@ -296,7 +298,7 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             try {
               musicData = dataUriToUint8Array(musicUrl);
               if (musicData) {
-                await ffmpeg.writeFile('music.mp3', musicData);
+                await ffmpeg.writeFile('background_music.mp3', musicData);
                 console.log("Background music processed via data URI fallback");
                 setProgress(25);
               }
@@ -366,11 +368,9 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       if (voiceData) {
         commands.push('-i', 'voice.mp3');
         inputIndex++;
-      }
-
-      // Add background music input if available  
+      }      // Add background music input if available  
       if (musicData) {
-        commands.push('-i', 'music.mp3');
+        commands.push('-i', 'background_music.mp3');
         inputIndex++;
       }
 
@@ -399,7 +399,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         const scene = processedScenes[i];
         const inputIdx = videoInputStart + i;
         
-        // Basic video processing        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30`;
+        // Basic video processing - scale and prepare video input
+        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30`;
             // Add typewriter text overlay if scene has text
         let textToDisplay = scene.onScreenText || scene.voiceText;
         
@@ -461,23 +462,20 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       }
 
       // Concatenate video streams
-      filterComplex += processedScenes.map((_, i) => `[v${i}]`).join('') + `concat=n=${processedScenes.length}:v=1:a=0[outv]`;
-
-      // Handle audio mixing
+      filterComplex += processedScenes.map((_, i) => `[v${i}]`).join('') + `concat=n=${processedScenes.length}:v=1:a=0[outv]`;      // Handle audio mixing with proper input references
       if (voiceData && musicData) {
-        // Mix voice and background music
+        // Mix voice and background music - voice.mp3 is input 0, background_music.mp3 is input 1
         filterComplex += ';[0:a]volume=1.0[voice];[1:a]volume=0.3[music];[voice][music]amix=inputs=2:duration=shortest[audio]';
         commands.push('-filter_complex', filterComplex);
         commands.push('-map', '[outv]', '-map', '[audio]');
       } else if (voiceData) {
-        // Voice only
+        // Voice only - voice.mp3 is input 0
         filterComplex += ';[0:a]apad[audio]';
         commands.push('-filter_complex', filterComplex);
         commands.push('-map', '[outv]', '-map', '[audio]');
       } else if (musicData) {
-        // Music only
-        const musicIdx = 0;
-        filterComplex += `;[${musicIdx}:a]volume=0.5[audio]`;
+        // Music only - background_music.mp3 is input 0
+        filterComplex += ';[0:a]volume=0.5[audio]';
         commands.push('-filter_complex', filterComplex);
         commands.push('-map', '[outv]', '-map', '[audio]');
       } else {
