@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Download, Play } from 'lucide-react';
+import { VideoTiming } from '@/lib/video-timing';
 
 interface Scene {
   id: string;
@@ -486,47 +487,57 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       });      // Generate voice-over and music using APIs if not provided OR if existing ones are corrupted
       let finalVoiceUrl = voiceUrl;
       let finalMusicUrl = musicUrl;
-      let wordTimings: DeepgramWord[] = [];      // Always try to generate fresh voice-over if we have a script (to avoid corruption)
-      if (currentScript && currentScript.trim()) {
-        console.log("Generating fresh voice-over using VoiceRSS API to avoid corruption...");
+      let wordTimings: DeepgramWord[] = [];
+      
+      // Only generate voice-over if not provided or if existing one fails validation
+      if (!voiceUrl && currentScript && currentScript.trim()) {
+        console.log("Generating voice-over for new script...");
         setLoadingStatus("Generating voice-over...");
         try {
-          finalVoiceUrl = await generateVoiceOver(currentScript, { 
-            language: 'en-us', 
+          finalVoiceUrl = await generateVoiceOver(currentScript, {
+            language: 'en-us',
             voice: 'Linda',
             speed: 0 // Normal speed
           });
-          console.log("Fresh voice-over generated successfully");
+          console.log("Voice-over generated successfully");
           setProgress(5);
         } catch (error) {
-          console.warn("Voice generation failed, will try existing voice-over:", error);
-          // Keep the original voiceUrl as fallback
+          console.warn("Voice generation failed:", error);
+          finalMusicUrl = undefined;
         }
+      } else {
+        finalVoiceUrl = voiceUrl;
+        setProgress(5);
       }
 
-      // Always try to generate fresh background music (to avoid corruption)
-      console.log("Generating fresh background music using Jamendo API to avoid corruption...");
-      setLoadingStatus("Selecting background music...");
-      try {
-        const totalDuration = targetScenes.reduce((sum, scene) => sum + scene.duration, 0);
-        finalMusicUrl = await generateBackgroundMusic('uplifting', totalDuration, 30);
-        console.log("Fresh background music generated successfully");
+      // Only generate music if not provided or if existing one fails validation
+      if (!musicUrl) {
+        console.log("Generating background music...");
+        setLoadingStatus("Selecting background music...");
+        try {
+          const totalDuration = targetScenes.reduce((sum, scene) => sum + scene.duration, 0);
+          finalMusicUrl = await generateBackgroundMusic('uplifting', totalDuration, 30);
+          console.log("Background music generated successfully");
+          setProgress(8);
+        } catch (error) {
+          console.warn("Music generation failed:", error);
+          finalMusicUrl = undefined;
+        }
+      } else {
+        finalMusicUrl = musicUrl;
         setProgress(8);
-      } catch (error) {
-        console.warn("Music generation failed, will try existing music:", error);
-        // Keep the original musicUrl as fallback
       }
 
-      // Get word-level timing for synchronization
-      if (finalVoiceUrl) {
-        console.log("Extracting word timings using Deepgram...");
+      // **OPTIONAL**: Get word-level timing for enhanced synchronization (only if needed)
+      if (finalVoiceUrl && targetScenes.some(s => s.onScreenText)) {
+        console.log("🎯 Extracting word timings for enhanced synchronization...");
         setLoadingStatus("Analyzing speech timing...");
         try {
           wordTimings = await getWordTimings(finalVoiceUrl);
-          console.log(`Extracted ${wordTimings.length} word timings`);
+          console.log(`✅ Extracted ${wordTimings.length} word timings`);
           setProgress(12);
         } catch (error) {
-          console.warn("Word timing extraction failed, using fallback timing:", error);
+          console.warn("⚠️ Word timing extraction failed, using optimized fallback timing:", error);
         }
       }
 
@@ -784,20 +795,34 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             // Generate fallback image
             imageData = await generateFallbackImage(scene, index);
           }
-            // Calculate scene timing for synchronization
-          const sceneStartTime = targetScenes.slice(0, index).reduce((sum, s) => sum + s.duration, 0);
-          const synchronizedAnimations = scene.onScreenText && wordTimings.length > 0 
-            ? createSynchronizedAnimations(scene.onScreenText, wordTimings, sceneStartTime, scene.duration)
-            : scene.onScreenText ? [{
-                text: scene.onScreenText,
-                fontSize: 36,
-                color: 'white',
-                x: '(w-text_w)/2',
-                y: 'h-120',
-                enable: `between(n\\,0\\,${Math.floor(30 * scene.duration)})`,
-                start: sceneStartTime,
-                end: sceneStartTime + scene.duration
-              }] : [];
+            // **ENHANCED SYNCHRONIZATION**: Use VideoTiming utility for optimal text timing
+            const sceneStartTime = targetScenes.slice(0, index).reduce((sum, s) => sum + s.duration, 0);
+            
+            let synchronizedAnimations: TextAnimation[] = [];
+            if (scene.onScreenText) {
+              if (wordTimings.length > 0) {
+                // Use Deepgram timings if available
+                synchronizedAnimations = createSynchronizedAnimations(scene.onScreenText, wordTimings, sceneStartTime, scene.duration);
+              } else {
+                // **NEW**: Use VideoTiming utility for speech-rate-based timing
+                console.log(`🎯 Using VideoTiming for scene ${index} text synchronization`);
+                const textRevealTimings = VideoTiming.calculateWordReveals(
+                  scene.onScreenText,
+                  scene.duration
+                );
+                
+                synchronizedAnimations = textRevealTimings.map((timing, idx) => ({
+                  text: timing.text,
+                  fontSize: 36,
+                  color: 'white',
+                  x: `(w-text_w)/2 + ${idx * 20}`, // Slight offset for each word
+                  y: 'h-120',
+                  enable: `between(n\\,${Math.floor((timing.startTime + sceneStartTime) * 30)}\\,${Math.floor((timing.endTime + sceneStartTime) * 30)})`,
+                  start: timing.startTime + sceneStartTime,
+                  end: timing.endTime + sceneStartTime
+                }));
+              }
+            }
 
           return { 
             ...scene, 
@@ -989,39 +1014,22 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         }
         
         if (textToDisplay && textToDisplay.trim().length > 0) {
-          console.log(`Adding typewriter effect for scene ${i}:`, textToDisplay.substring(0, 50) + '...');
+          console.log(`🎬 Adding optimized typewriter effect for scene ${i}:`, textToDisplay.substring(0, 50) + '...');
           
-          // Create typewriter effect with word-by-word reveal
-          const words = textToDisplay.trim().split(/\s+/).filter(word => word.length > 0);
-          const timePerWord = Math.max(0.3, (scene.duration * 0.9) / words.length); // Min 0.3s per word, use 90% of scene duration
+          // **NEW**: Use VideoTiming utility for perfect speech-rate synchronization
+          const textReveals = VideoTiming.calculateTextReveals(textToDisplay, scene.duration);
+          const typewriterFilters = VideoTiming.generateTypewriterFilters(
+            textReveals,
+            40, // Font size
+            'white@0.9', // Font color
+            { x: '(w-text_w)/2', y: 'h-100' }, // Position
+            30 // FPS
+          );
           
-          console.log(`Scene ${i}: ${words.length} words, ${timePerWord.toFixed(2)}s per word`);
-          
-          let textFilter = '';
-          words.forEach((word, wordIndex) => {
-            const startTime = wordIndex * timePerWord;
-            const cumulativeText = words.slice(0, wordIndex + 1).join(' ');
-            
-            // Escape text for FFmpeg
-            const escapedText = cumulativeText
-              .replace(/'/g, "\\'")
-              .replace(/:/g, "\\:")
-              .replace(/\[/g, "\\[")
-              .replace(/\]/g, "\\]")
-              .replace(/,/g, "\\,")
-              .replace(/"/g, '\\"');
-            
-            const startFrame = Math.floor(startTime * 30); // 30 fps
-            const endFrame = Math.floor(scene.duration * 30);
-            
-            // Add typewriter text overlay with local Roboto font
-            textFilter += `,drawtext=text='${escapedText}':fontfile=roboto.ttf:fontsize=36:fontcolor=white:x=(w-text_w)/2:y=h-80:enable='between(n\\,${startFrame}\\,${endFrame})'`;
-          });
-          
-          filterComplex += textFilter;
-          console.log(`Scene ${i}: Added ${words.length} text animation steps with typewriter effect`);
+          filterComplex += typewriterFilters;
+          console.log(`✅ Scene ${i}: Added optimized typewriter effect with ${textReveals.length} reveal steps`);
         } else {
-          console.log(`Scene ${i}: No text to display`);
+          console.log(`⚠️ Scene ${i}: No text to display`);
         }
         
         filterComplex += `[v${i}];`;

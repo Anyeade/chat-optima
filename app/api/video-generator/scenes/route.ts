@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateText } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
+import { VideoTiming } from '@/lib/video-timing';
 
 // Pexels API Types
 interface PexelsVideoFile {
@@ -49,31 +50,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine scene duration rules based on video type
-    const sceneDurations = getSceneDurations(videoType, duration);
+    // Use improved timing system for better scene breaks
+    const sceneBreaks = VideoTiming.calculateSceneBreaks(script, duration);
     
-    // Split script into scenes using AI
-    const scenesPrompt = `You are a video editor. Split this voice-over script into ${sceneDurations.length} scenes based on natural breaks and content flow.
+    // Split script into scenes using AI with proper timing
+    const scenesPrompt = `You are a video editor. Split this voice-over script into ${sceneBreaks.length} scenes based on natural breaks and optimal timing.
 
 Voice-over Script: "${script}"
 
-Scene Durations: ${sceneDurations.map((d, i) => `Scene ${i + 1}: ${d} seconds`).join(', ')}
+Scene Information: ${sceneBreaks.map((s, i) =>
+  `Scene ${i + 1}: ${s.duration.toFixed(1)}s (${s.estimatedWords} words)`
+).join(', ')}
 
 For each scene, provide:
-1. The voice-over text for that scene
-2. A short on-screen text overlay (max 5 words)
-3. A visual description for background video search
+1. The voice-over text for that scene (should match estimated word count)
+2. A short on-screen text overlay (max 4 words, punchy and relevant)
+3. A visual description for background video search (specific and searchable)
 
 Format as JSON array:
 [
   {
     "voiceText": "exact voice-over text for this scene",
-    "onScreenText": "short overlay text",
-    "visualDescription": "description for video search"
+    "onScreenText": "short overlay",
+    "visualDescription": "specific video search description"
   }
 ]
 
-Make sure the voice-over text flows naturally and the total content matches the original script.`;
+IMPORTANT: Ensure the voice-over text flows naturally and matches the estimated speaking time. Each scene should have roughly the right amount of content for its duration.`;
 
     const scenesResult = await generateText({
       model: myProvider.languageModel('llama-4-scout-17b-16e-instruct-cerebras'),
@@ -92,38 +95,49 @@ Make sure the voice-over text flows naturally and the total content matches the 
         throw new Error('No JSON found in response');
       }
     } catch (parseError) {
-      // Fallback: manually split script
-      scenesData = await fallbackSceneSplit(script, sceneDurations.length);
+      // Fallback: use calculated scene breaks
+      scenesData = sceneBreaks.map((sceneBreak, index) => ({
+        voiceText: sceneBreak.text,
+        onScreenText: `Scene ${index + 1}`,
+        visualDescription: `Scene ${index + 1} visuals`
+      }));
     }
 
-    // Generate scenes with background videos
+    // Generate scenes with background videos using proper timing
     const scenes = await Promise.all(
       scenesData.map(async (sceneData: any, index: number) => {
         const backgroundVideo = await findBackgroundVideo(sceneData.visualDescription || script);
+        const sceneDuration = sceneBreaks[index]?.duration || 10; // Use calculated duration
         
         return {
           id: `scene-${index + 1}`,
-          duration: sceneDurations[index],
-          voiceText: sceneData.voiceText || `Scene ${index + 1} content`,
+          duration: Math.round(sceneDuration * 10) / 10, // Round to 1 decimal place
+          voiceText: sceneData.voiceText || sceneBreaks[index]?.text || `Scene ${index + 1} content`,
           onScreenText: sceneData.onScreenText || `Scene ${index + 1}`,
           backgroundVideo: backgroundVideo.url,
-          transition: getTransition(index, sceneDurations.length),
+          transition: getTransition(index, sceneBreaks.length),
           metadata: {
             visualDescription: sceneData.visualDescription,
             videoSource: backgroundVideo.source,
-            searchQuery: backgroundVideo.query
+            searchQuery: backgroundVideo.query,
+            estimatedWords: sceneBreaks[index]?.estimatedWords,
+            calculatedDuration: sceneDuration
           }
         };
       })
     );
 
+    const actualTotalDuration = scenes.reduce((sum, scene) => sum + scene.duration, 0);
+    
     return NextResponse.json({
       scenes,
       metadata: {
         videoType,
-        totalDuration: duration,
-        sceneDurations,
+        requestedDuration: duration,
+        actualTotalDuration: Math.round(actualTotalDuration * 10) / 10,
         sceneCount: scenes.length,
+        averageSceneDuration: Math.round((actualTotalDuration / scenes.length) * 10) / 10,
+        timingMethod: 'speech-rate-optimized',
         generatedAt: new Date().toISOString()
       }
     });
@@ -138,25 +152,41 @@ Make sure the voice-over text flows naturally and the total content matches the 
 }
 
 function getSceneDurations(videoType: string, totalDuration: number): number[] {
-  const maxSceneDuration = videoType === 'youtube-shorts' ? 15 : 30;
-  const minSceneDuration = 5;
+  // More flexible scene duration based on content length
+  const maxSceneDuration = videoType === 'youtube-shorts' ?
+    Math.min(30, totalDuration / 2) : // YouTube Shorts can have longer scenes if content is longer
+    Math.min(45, totalDuration / 2);  // Regular videos can have even longer scenes
   
-  // Calculate number of scenes needed
-  const idealSceneCount = Math.ceil(totalDuration / maxSceneDuration);
-  const sceneCount = Math.max(2, Math.min(idealSceneCount, 6)); // 2-6 scenes
+  const minSceneDuration = Math.min(8, totalDuration / 4); // Minimum scene length scales with total duration
   
-  // Distribute duration across scenes
+  // Calculate optimal number of scenes based on content length
+  let idealSceneCount;
+  if (totalDuration <= 30) {
+    idealSceneCount = 2; // Short videos: 2 scenes max
+  } else if (totalDuration <= 60) {
+    idealSceneCount = 3; // Medium videos: 3 scenes max
+  } else if (totalDuration <= 120) {
+    idealSceneCount = 4; // Longer videos: 4 scenes max
+  } else {
+    idealSceneCount = Math.min(6, Math.ceil(totalDuration / 30)); // Very long videos: up to 6 scenes
+  }
+  
+  const sceneCount = Math.max(2, idealSceneCount);
+  
+  // Distribute duration more intelligently
   const baseDuration = Math.floor(totalDuration / sceneCount);
   const remainder = totalDuration % sceneCount;
   
   const durations = Array(sceneCount).fill(baseDuration);
   
-  // Distribute remainder
+  // Distribute remainder to middle scenes (they often have the main content)
+  const middleStart = Math.floor(sceneCount / 3);
   for (let i = 0; i < remainder; i++) {
-    durations[i]++;
+    const targetIndex = (middleStart + i) % sceneCount;
+    durations[targetIndex]++;
   }
   
-  // Ensure minimum scene duration
+  // Ensure minimum scene duration but don't artificially limit
   return durations.map(d => Math.max(d, minSceneDuration));
 }
 
