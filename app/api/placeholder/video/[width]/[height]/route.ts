@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { width: string; height: string } }
+  { params }: { params: Promise<{ width: string; height: string }> }
 ) {
   try {
-    const { width, height } = params;
+    const { width, height } = await params;
     
     // Parse dimensions
     const w = parseInt(width);
