@@ -392,10 +392,11 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     return animations;
   }, []);
 
-  // Audio file validation function
+  // Enhanced audio file validation function
   const validateAudioFile = useCallback((audioData: Uint8Array): boolean => {
     try {
       if (!audioData || audioData.byteLength < 100) {
+        console.warn('Audio file too small or empty');
         return false;
       }
       
@@ -441,6 +442,61 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       return false;
     }
   }, []);
+
+  // Enhanced audio preprocessing function
+  const preprocessAudio = useCallback(async (ffmpeg: any, inputFile: string, outputFile: string): Promise<boolean> => {
+    try {
+      console.log(`Preprocessing audio file: ${inputFile}`);
+      
+      // First try to probe the file
+      try {
+        await ffmpeg.exec(['-i', inputFile, '-t', '0', '-f', 'null', '-']);
+        console.log(`${inputFile} is valid, no preprocessing needed`);
+        return true;
+      } catch (err) {
+        console.warn(`${inputFile} validation failed, attempting preprocessing:`, err);
+      }
+      
+      // Try multiple preprocessing approaches
+      const preprocessingAttempts = [
+        // Attempt 1: Basic MP3 conversion
+        ['-i', inputFile, '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', outputFile],
+        
+        // Attempt 2: Force format detection
+        ['-f', 'mp3', '-i', inputFile, '-acodec', 'mp3', '-ar', '44100', '-ac', '2', '-ab', '128k', outputFile],
+        
+        // Attempt 3: Raw PCM conversion then MP3
+        ['-i', inputFile, '-f', 's16le', '-acodec', 'pcm_s16le', '-ar', '44100', '-ac', '2', 'temp.pcm'],
+        ['-f', 's16le', '-ar', '44100', '-ac', '2', '-i', 'temp.pcm', '-acodec', 'mp3', '-ab', '128k', outputFile]
+      ];
+      
+      for (const attempt of preprocessingAttempts) {
+        try {
+          await ffmpeg.exec(attempt);
+          
+          // Verify the output file
+          try {
+            await ffmpeg.exec(['-i', outputFile, '-t', '0', '-f', 'null', '-']);
+            console.log(`Successfully preprocessed ${inputFile} using attempt:`, attempt);
+            return true;
+          } catch (verifyErr) {
+            console.warn(`Preprocessed file verification failed:`, verifyErr);
+            continue;
+          }
+        } catch (attemptErr) {
+          console.warn(`Preprocessing attempt failed:`, attemptErr);
+          continue;
+        }
+      }
+      
+      console.error(`All preprocessing attempts failed for ${inputFile}`);
+      return false;
+    } catch (error) {
+      console.error(`Error in audio preprocessing:`, error);
+      return false;
+    }
+  }, []);
+
   const generateVideo = useCallback(async (scenesData?: Scene[], script?: string, voiceUrl?: string, musicUrl?: string) => {
     if (!loaded || isGenerating) return;
 
@@ -772,59 +828,38 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
 
       // Pre-process and validate audio files if they exist
       if (voiceData) {
-        try {
-          console.log("Validating voice audio file...");
-          // Try to probe the voice file first
-          await ffmpeg.exec(['-i', 'voice.mp3', '-t', '0', '-f', 'null', '-']);
-          console.log("Voice audio file is valid");
-        } catch (err) {
-          console.warn("Voice audio validation failed, attempting re-encoding:", err);
-          try {
-            // Re-encode the voice to ensure compatibility
-            await ffmpeg.exec([
-              '-i', 'voice.mp3',
-              '-acodec', 'mp3',
-              '-ar', '44100',
-              '-ac', '2',
-              '-ab', '128k',
-              'voice_processed.mp3'
-            ]);
-            console.log("Voice audio re-encoded successfully");
-            // Replace the original with the processed version
+        const voiceValid = await preprocessAudio(ffmpeg, 'voice.mp3', 'voice_processed.mp3');
+        if (voiceValid) {
             await ffmpeg.deleteFile('voice.mp3');
             await ffmpeg.rename('voice_processed.mp3', 'voice.mp3');
-          } catch (reencodeErr) {
-            console.error("Voice audio re-encoding failed:", reencodeErr);
-            voiceData = null; // Disable voice if it can't be processed
+        } else {
+          console.warn('Voice audio preprocessing failed, attempting to regenerate...');
+          try {
+            const newVoiceUrl = await generateVoiceOver(currentScript, { language: 'en-us', voice: 'Linda', speed: 0 });
+            voiceData = await fetchFile(newVoiceUrl);
+            await ffmpeg.writeFile('voice.mp3', voiceData);
+          } catch (regenErr) {
+            console.error('Voice regeneration failed:', regenErr);
+            voiceData = null;
           }
         }
       }
 
       if (musicData) {
-        try {
-          console.log("Validating background music file...");
-          // Try to probe the music file first
-          await ffmpeg.exec(['-i', 'background_music.mp3', '-t', '0', '-f', 'null', '-']);
-          console.log("Background music file is valid");
-        } catch (err) {
-          console.warn("Background music validation failed, attempting re-encoding:", err);
-          try {
-            // Re-encode the music to ensure compatibility
-            await ffmpeg.exec([
-              '-i', 'background_music.mp3',
-              '-acodec', 'mp3',
-              '-ar', '44100',
-              '-ac', '2',
-              '-ab', '128k',
-              'music_processed.mp3'
-            ]);
-            console.log("Background music re-encoded successfully");
-            // Replace the original with the processed version
+        const musicValid = await preprocessAudio(ffmpeg, 'background_music.mp3', 'music_processed.mp3');
+        if (musicValid) {
             await ffmpeg.deleteFile('background_music.mp3');
             await ffmpeg.rename('music_processed.mp3', 'background_music.mp3');
-          } catch (reencodeErr) {
-            console.error("Background music re-encoding failed:", reencodeErr);
-            musicData = null; // Disable music if it can't be processed
+        } else {
+          console.warn('Background music preprocessing failed, attempting to regenerate...');
+          try {
+            const totalDuration = targetScenes.reduce((sum, scene) => sum + scene.duration, 0);
+            const newMusicUrl = await generateBackgroundMusic('uplifting', totalDuration, 30);
+            musicData = await fetchFile(newMusicUrl);
+            await ffmpeg.writeFile('background_music.mp3', musicData);
+          } catch (regenErr) {
+            console.error('Music regeneration failed:', regenErr);
+            musicData = null;
           }
         }
       }
@@ -961,47 +996,6 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         '-shortest',
         'output.mp4'
       );      setProgress(80);
-
-      // Pre-process audio files to fix potential corruption issues
-      try {        if (voiceData) {
-          console.log("Pre-processing voice audio to ensure compatibility...");
-          try {
-            await ffmpeg.exec([
-              '-i', 'voice.mp3',
-              '-acodec', 'mp3',
-              '-ar', '44100',
-              '-ac', '2',
-              '-ab', '128k',
-              '-f', 'mp3',
-              'voice_fixed.mp3'            ]);            // Overwrite original with fixed version
-            const fixedVoiceData = await ffmpeg.readFile('voice_fixed.mp3') as Uint8Array;
-            await ffmpeg.writeFile('voice.mp3', fixedVoiceData);
-            console.log("Voice audio pre-processing completed");
-          } catch (voiceError) {
-            console.warn("Voice audio pre-processing failed:", voiceError);
-          }
-        }
-          if (musicData) {
-          console.log("Pre-processing background music to ensure compatibility...");
-          try {
-            await ffmpeg.exec([
-              '-i', 'background_music.mp3',
-              '-acodec', 'mp3',
-              '-ar', '44100',
-              '-ac', '2',
-              '-ab', '128k',
-              '-f', 'mp3',
-              'music_fixed.mp3'            ]);            // Overwrite original with fixed version
-            const fixedMusicData = await ffmpeg.readFile('music_fixed.mp3') as Uint8Array;
-            await ffmpeg.writeFile('background_music.mp3', fixedMusicData);
-            console.log("Background music pre-processing completed");
-          } catch (musicError) {
-            console.warn("Background music pre-processing failed:", musicError);
-          }
-        }
-      } catch (preprocessError) {
-        console.warn("Audio pre-processing failed, continuing with original files:", preprocessError);
-      }
 
       console.log("Executing enhanced FFmpeg command:", commands.join(' '));
         try {
@@ -1229,7 +1223,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     getWordTimings, 
     createSynchronizedAnimations, 
     validateAudioFile, 
-    dataUriToUint8Array
+    dataUriToUint8Array,
+    preprocessAudio
   ]);
   const downloadVideo = useCallback(() => {
     if (!videoUrl) return;
@@ -1306,141 +1301,134 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     return textFilters;
   }, [calculateWordTimings]);
 
+  // Add test functions for APIs
+  const testVoiceRSSAPI = async () => {
+    try {
+      console.log("Testing VoiceRSS API...");
+      const testScript = "This is a test of the VoiceRSS API. If you can hear this, the API is working correctly.";
+      
+      const response = await fetch('/api/video-generator/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: testScript,
+          language: 'en-us',
+          voice: 'Linda',
+          speed: 0
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`VoiceRSS API test failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("VoiceRSS API test successful:", data);
+      return data.voiceUrl;
+    } catch (error) {
+      console.error("VoiceRSS API test failed:", error);
+      throw error;
+    }
+  };
+
+  const testJamendoAPI = async () => {
+    try {
+      console.log("Testing Jamendo API...");
+      const response = await fetch('/api/video-generator/music', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          mood: 'uplifting',
+          duration: 30,
+          volume: 40
+        })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Jamendo API test failed: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("Jamendo API test successful:", data);
+      return data.musicUrl;
+    } catch (error) {
+      console.error("Jamendo API test failed:", error);
+      throw error;
+    }
+  };
+
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-2">AI Video Generator</h2>
-        <p className="text-gray-600 mb-4">Powered by FFmpeg WebAssembly</p>
-        
-        {!loaded ? (
-          <Button
-            onClick={load}
-            disabled={isLoading}
-            className="bg-blue-500 hover:bg-blue-700 text-white"
-            size="lg"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                {loadingStatus || "Loading FFmpeg Core..."}
-              </>
-            ) : (
-              "Load FFmpeg Engine"
-            )}
-          </Button>
-        ) : (
-          <div className="space-y-4">
-            <Button
-              onClick={handleGenerateVideo}
-              disabled={isGenerating || scenes.length === 0}
-              className="bg-green-500 hover:bg-green-700 text-white"
-              size="lg"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating Video...
-                </>
-              ) : (
-                <>
-                  <Play className="mr-2 h-4 w-4" />
-                  Generate Video
-                </>
-              )}
-            </Button>
-            
-            {isGenerating && (
-              <div className="w-full max-w-md mx-auto">
-                <Progress value={progress} className="mb-2" />
-                <p className="text-sm text-gray-600">Progress: {progress}%</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <p className="text-red-600 font-medium">Error:</p>
-          <p className="text-red-500 text-sm mb-3">{error}</p>
-          {!loaded && (
-            <Button
-              onClick={load}
-              disabled={isLoading}
-              variant="outline"
-              size="sm"
-              className="border-red-300 text-red-600 hover:bg-red-100"
-            >
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
-                  Retrying...
-                </>
-              ) : (
-                "Retry Loading FFmpeg"
-              )}
-            </Button>
-          )}
-        </div>
-      )}
-
+    <div className="relative w-full h-full">
+      {/* Existing video player and controls */}
       {videoUrl && (
-        <div className="bg-white border rounded-lg p-6 shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-lg font-semibold">Generated Video</h3>
-            <Button
-              onClick={downloadVideo}
-              variant="outline"
-              size="sm"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Download
-            </Button>
-          </div>
-          
           <video
             ref={videoRef}
+          src={videoUrl}
+          className="w-full h-full object-contain"
             controls
-            className="w-full max-h-[400px] object-contain rounded"
-            onError={(e) => {
-              console.error("Video playback error:", e);
-              setError("Failed to play generated video");
-            }}
-          >
-            Your browser does not support the video tag.
-          </video>
-          
-          <div className="mt-4 text-sm text-gray-600">
-            <p><strong>Prompt:</strong> {prompt || 'AI Generated Video'}</p>
-            <p><strong>Scenes:</strong> {scenes.length}</p>
-            <p><strong>Total Duration:</strong> {(scenes || []).reduce((acc, scene) => acc + scene.duration, 0)}s</p>
+          playsInline
+        />
+      )}
+      
+      {/* Add test buttons */}
+      <div className="absolute bottom-4 right-4 flex gap-2">
+        <button
+          onClick={async () => {
+            try {
+              setLoadingStatus("Testing VoiceRSS API...");
+              const voiceUrl = await testVoiceRSSAPI();
+              console.log("VoiceRSS test completed:", voiceUrl);
+              setLoadingStatus("VoiceRSS API test completed");
+            } catch (error) {
+              console.error("VoiceRSS test failed:", error);
+              setLoadingStatus("VoiceRSS API test failed");
+            }
+          }}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Test VoiceRSS
+        </button>
+        
+        <button
+          onClick={async () => {
+            try {
+              setLoadingStatus("Testing Jamendo API...");
+              const musicUrl = await testJamendoAPI();
+              console.log("Jamendo test completed:", musicUrl);
+              setLoadingStatus("Jamendo API test completed");
+            } catch (error) {
+              console.error("Jamendo test failed:", error);
+              setLoadingStatus("Jamendo API test failed");
+            }
+          }}
+          className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+        >
+          Test Jamendo
+        </button>
+      </div>
+      
+      {/* Existing loading and error states */}
+      {isGenerating && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="text-white text-center">
+            <div className="mb-2">{loadingStatus}</div>
+            <div className="w-64 h-2 bg-gray-700 rounded-full">
+              <div
+                className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
         </div>
       )}
 
-      {messageRef.current && (
-        <div className="bg-gray-50 border rounded p-3">
-          <p className="text-xs text-gray-600 font-mono" ref={messageRef}></p>
+      {error && (
+        <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="bg-red-500 text-white p-4 rounded">
+            {error}
         </div>
-      )}      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-800 mb-2">Enhanced Video Generation Process:</h4>
-        <ol className="text-sm text-blue-700 space-y-1">
-          <li>1. Load FFmpeg WebAssembly engine from Cloudflare CDN</li>
-          <li>2. Convert audio data URIs directly to binary data (CSP-compliant)</li>
-          <li>3. Process voice-over audio and background music without network fetch</li>
-          <li>4. Download or generate background videos/images for each scene</li>
-          <li>5. Calculate word-by-word timing for typewriter text animation</li>
-          <li>6. Process and write all media files to FFmpeg filesystem</li>
-          <li>7. Combine videos/images with typewriter text overlays synced to voice</li>
-          <li>8. Mix audio tracks (voice + music) with proper volumes</li>
-          <li>9. Export as MP4 with full audio-visual composition and animated text</li>
-        </ol>
-        {loadingStatus && (
-          <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
-            <strong>Status:</strong> {loadingStatus}
           </div>
         )}
-      </div>
     </div>
   );
 });

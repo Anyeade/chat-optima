@@ -42,6 +42,20 @@ export async function POST(request: NextRequest) {
     // Get the audio data
     const audioBuffer = await response.arrayBuffer();
     
+    // Validate the audio data
+    if (!audioBuffer || audioBuffer.byteLength < 1000) {
+      throw new Error('VoiceRSS returned invalid or empty audio data');
+    }
+    
+    // Check for valid MP3 headers
+    const audioBytes = new Uint8Array(audioBuffer);
+    const hasValidHeaders = (audioBytes[0] === 0xFF && (audioBytes[1] & 0xE0) === 0xE0) ||
+                           (audioBytes[0] === 0x49 && audioBytes[1] === 0x44 && audioBytes[2] === 0x33);
+    
+    if (!hasValidHeaders) {
+      throw new Error('VoiceRSS returned corrupted audio data (invalid MP3 headers)');
+    }
+    
     // In a real implementation, you'd save this to a file storage service
     // For now, we'll create a data URL (not recommended for production)
     const base64Audio = Buffer.from(audioBuffer).toString('base64');

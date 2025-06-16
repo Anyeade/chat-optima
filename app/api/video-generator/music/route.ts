@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
       format: 'json',
       limit: '10',
       tags: moodTags,
-      audioformat: 'mp3',
+      audioformat: 'mp31',
       include: 'musicinfo',
       groupby: 'artist_id',
       order: 'popularity_total'
@@ -47,9 +47,9 @@ export async function POST(request: NextRequest) {
         client_id: JAMENDO_CLIENT_ID,
         format: 'json',
         limit: '5',
-        tags: 'instrumental',
-        audioformat: 'mp3',
-        include: 'musicinfo'
+        audioformat: 'mp31',
+        include: 'musicinfo',
+        order: 'popularity_total'
       });
 
       const fallbackResponse = await fetch(fallbackUrl);
@@ -90,17 +90,11 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Music generation error:', error);
-      // Return a fallback music URL or generate a silent track
-    return NextResponse.json({
-      musicUrl: 'data:audio/mp3;base64,', // Empty audio data
-      metadata: {
-        provider: 'Fallback',
-        mood: mood,
-        volume: volume,
-        error: 'Music API failed, using silent track',
-        generatedAt: new Date().toISOString()
-      }
-    });
+    // Don't return invalid empty audio data - instead throw an error
+    return NextResponse.json(
+      { error: 'Failed to generate background music', details: error instanceof Error ? error.message : 'Unknown error' },
+      { status: 500 }
+    );
   }
 }
 
