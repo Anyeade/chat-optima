@@ -39,7 +39,10 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
   
   const ffmpegRef = useRef(new FFmpeg());
   const videoRef = useRef<HTMLVideoElement | null>(null);
-  const messageRef = useRef<HTMLParagraphElement | null>(null);  const load = useCallback(async () => {    try {
+  const messageRef = useRef<HTMLParagraphElement | null>(null);
+
+  const load = useCallback(async () => {
+    try {
       setIsLoading(true);
       setError("");
       setLoadingStatus("Initializing...");
@@ -55,7 +58,9 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
 
       ffmpeg.on("progress", ({ progress }) => {
         setProgress(Math.round(progress * 100));
-      });      // Try different loading strategies - ONLY Cloudflare CDN
+      });
+
+      // Try different loading strategies - ONLY Cloudflare CDN
       const strategies = [
         {
           name: "Cloudflare CDN (Auto - Recommended)",
@@ -103,7 +108,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       
       let loaded = false;
       let lastError = null;
-        for (const strategy of strategies) {
+      
+      for (const strategy of strategies) {
         try {
           setLoadingStatus(`Trying ${strategy.name}...`);
           console.log(`Trying FFmpeg loading strategy: ${strategy.name}...`);
@@ -126,10 +132,13 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       setLoaded(true);
     } catch (err) {
       console.error("Failed to load FFmpeg:", err);
-      setError(`Failed to load FFmpeg: ${err instanceof Error ? err.message : 'Unknown error'}`);    } finally {
+      setError(`Failed to load FFmpeg: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    } finally {
       setIsLoading(false);
       setLoadingStatus("");
-    }}, []);
+    }
+  }, []);
+
   // Auto-load FFmpeg on component mount
   useEffect(() => {
     if (!loaded && !isLoading) {
@@ -147,6 +156,62 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       await generateVideo(scenesData, script, voiceUrl, musicUrl);
     }
   }), [loaded]);
+
+  const generateFallbackImage = useCallback(async (scene: Scene, index: number): Promise<Uint8Array> => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1280;
+    canvas.height = 720;
+    const ctx = canvas.getContext('2d')!;
+    
+    // Create gradient background
+    const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    gradient.addColorStop(0, `hsl(${(index * 60) % 360}, 70%, 60%)`);
+    gradient.addColorStop(1, `hsl(${(index * 60 + 30) % 360}, 70%, 40%)`);
+    
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add text
+    ctx.fillStyle = 'white';
+    ctx.font = 'bold 48px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    // Word wrap text
+    const text = scene.onScreenText || scene.voiceText || `Scene ${index + 1}`;
+    const words = text.split(' ');
+    const lines: string[] = [];
+    let currentLine = '';
+    
+    for (const word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      const metrics = ctx.measureText(testLine);
+      
+      if (metrics.width > canvas.width - 100 && currentLine) {
+        lines.push(currentLine);
+        currentLine = word;
+      } else {
+        currentLine = testLine;
+      }
+    }
+    if (currentLine) lines.push(currentLine);
+    
+    // Draw lines
+    const lineHeight = 60;
+    const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
+    
+    lines.forEach((line, lineIndex) => {
+      ctx.fillText(line, canvas.width / 2, startY + lineIndex * lineHeight);
+    });
+    
+    // Convert canvas to Uint8Array
+    const blob = await new Promise<Blob>((resolve) => {
+      canvas.toBlob((blob) => resolve(blob!), 'image/png');
+    });
+    
+    return new Uint8Array(await blob.arrayBuffer());
+  }, []);
+
   const generateVideo = useCallback(async (scenesData?: Scene[], script?: string, voiceUrl?: string, musicUrl?: string) => {
     if (!loaded || isGenerating) return;
 
@@ -163,118 +228,179 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       setProgress(0);
       
       const ffmpeg = ffmpegRef.current;
-      
-      // Generate images for each scene if not provided
+
+      console.log("Starting enhanced video generation with:", {
+        scenes: targetScenes.length,
+        hasVoiceUrl: !!voiceUrl,
+        hasMusicUrl: !!musicUrl,
+        script: script?.substring(0, 50) + "..."
+      });
+
+      // Download and process voice-over and music if provided
+      let voiceData: Uint8Array | null = null;
+      let musicData: Uint8Array | null = null;
+
+      if (voiceUrl) {
+        try {
+          console.log("Downloading voice-over audio...");
+          voiceData = await fetchFile(voiceUrl);
+          await ffmpeg.writeFile('voice.mp3', voiceData);
+          console.log("Voice-over audio downloaded successfully");
+          setProgress(15);
+        } catch (err) {
+          console.warn("Failed to download voice-over:", err);
+        }
+      }
+
+      if (musicUrl) {
+        try {
+          console.log("Downloading background music...");
+          musicData = await fetchFile(musicUrl);
+          await ffmpeg.writeFile('music.mp3', musicData);
+          console.log("Background music downloaded successfully");
+          setProgress(25);
+        } catch (err) {
+          console.warn("Failed to download background music:", err);
+        }
+      }
+        // Generate images for each scene with enhanced processing
       const processedScenes = await Promise.all(
         targetScenes.map(async (scene, index) => {
-          let imageData: Uint8Array;
-          
-          if (scene.imageUrl) {
-            // Fetch existing image
-            imageData = await fetchFile(scene.imageUrl);
-          } else {
-            // Generate a simple colored frame with text
-            const canvas = document.createElement('canvas');
-            canvas.width = 1280;
-            canvas.height = 720;
-            const ctx = canvas.getContext('2d')!;
-            
-            // Create gradient background
-            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            gradient.addColorStop(0, `hsl(${(index * 60) % 360}, 70%, 60%)`);
-            gradient.addColorStop(1, `hsl(${(index * 60 + 30) % 360}, 70%, 40%)`);
-            
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Add text
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 48px Arial';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-              // Word wrap text
-            const words = scene.voiceText.split(' ');
-            const lines: string[] = [];
-            let currentLine = '';
-            
-            for (const word of words) {
-              const testLine = currentLine ? `${currentLine} ${word}` : word;
-              const metrics = ctx.measureText(testLine);
-              
-              if (metrics.width > canvas.width - 100 && currentLine) {
-                lines.push(currentLine);
-                currentLine = word;
-              } else {
-                currentLine = testLine;
-              }
+          setProgress(25 + (index / targetScenes.length) * 35); // 25-60% for scene processing
+
+          let imageData: Uint8Array | undefined;
+          let videoData: Uint8Array | null = null;
+
+          // Try to download background video first
+          if (scene.backgroundVideo) {
+            try {
+              console.log(`Downloading background video for scene ${index}:`, scene.backgroundVideo);
+              videoData = await fetchFile(scene.backgroundVideo);
+              console.log(`Background video ${index} downloaded successfully`);
+            } catch (err) {
+              console.warn(`Failed to download background video for scene ${index}:`, err);
             }
-            if (currentLine) lines.push(currentLine);
-            
-            // Draw lines
-            const lineHeight = 60;
-            const startY = canvas.height / 2 - (lines.length - 1) * lineHeight / 2;
-            
-            lines.forEach((line, lineIndex) => {
-              ctx.fillText(line, canvas.width / 2, startY + lineIndex * lineHeight);
-            });
-            
-            // Convert canvas to blob and then to Uint8Array
-            const blob = await new Promise<Blob>((resolve) => {
-              canvas.toBlob((blob) => resolve(blob!), 'image/png');
-            });
-            
-            imageData = new Uint8Array(await blob.arrayBuffer());
           }
           
-          return { ...scene, imageData, index };
+          if (scene.imageUrl && !videoData) {
+            try {
+              // Fetch existing image
+              console.log(`Downloading background image for scene ${index}:`, scene.imageUrl);
+              imageData = await fetchFile(scene.imageUrl);
+            } catch (err) {
+              console.warn(`Failed to fetch image for scene ${index}, generating fallback:`, err);
+              imageData = await generateFallbackImage(scene, index);
+            }
+          } else if (!videoData) {
+            // Generate fallback image
+            imageData = await generateFallbackImage(scene, index);
+          }
+          
+          return { ...scene, imageData, videoData, index };
         })
       );
 
-      // Write images to FFmpeg filesystem
+      setProgress(60);
+
+      // Write media files to FFmpeg filesystem
       for (const scene of processedScenes) {
-        await ffmpeg.writeFile(`image_${scene.index}.png`, scene.imageData);
+        if (scene.videoData) {
+          await ffmpeg.writeFile(`video_${scene.index}.mp4`, scene.videoData);
+          console.log(`Written background video ${scene.index} to FFmpeg filesystem`);
+        } else if (scene.imageData) {
+          await ffmpeg.writeFile(`image_${scene.index}.png`, scene.imageData);
+          console.log(`Written background image ${scene.index} to FFmpeg filesystem`);
+        }
       }
 
-      // Create video from images
-      const commands = [
-        '-f', 'lavfi',
-        '-i', 'color=c=black:s=1280x720:d=0.1',
-        '-f', 'lavfi',
-        '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100',
-      ];
+      setProgress(70);
 
-      // Add each image as input with duration
-      for (let i = 0; i < processedScenes.length; i++) {
-        commands.push(
-          '-loop', '1',
-          '-t', processedScenes[i].duration.toString(),
-          '-i', `image_${i}.png`
-        );
+      // Build comprehensive FFmpeg command
+      const commands: string[] = [];
+      let inputIndex = 0;
+
+      // Add voice-over input if available
+      if (voiceData) {
+        commands.push('-i', 'voice.mp3');
+        inputIndex++;
       }
 
-      // Create filter complex for concatenation
+      // Add background music input if available  
+      if (musicData) {
+        commands.push('-i', 'music.mp3');
+        inputIndex++;
+      }
+
+      // Add video/image inputs for each scene
+      for (const scene of processedScenes) {
+        if (scene.videoData) {
+          commands.push(
+            '-i', `video_${scene.index}.mp4`,
+            '-t', scene.duration.toString()
+          );
+        } else {
+          commands.push(
+            '-loop', '1',
+            '-t', scene.duration.toString(),
+            '-i', `image_${scene.index}.png`
+          );
+        }
+        inputIndex++;
+      }
+
+      // Create comprehensive filter complex
       let filterComplex = '';
+      const videoInputStart = (voiceData ? 1 : 0) + (musicData ? 1 : 0);
+      
+      // Process video clips/images
       for (let i = 0; i < processedScenes.length; i++) {
-        filterComplex += `[${i + 2}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30[v${i}];`;
+        const inputIdx = videoInputStart + i;
+        filterComplex += `[${inputIdx}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30[v${i}];`;
       }
 
-      // Concatenate all video streams
+      // Concatenate video streams
       filterComplex += processedScenes.map((_, i) => `[v${i}]`).join('') + `concat=n=${processedScenes.length}:v=1:a=0[outv]`;
 
+      // Handle audio mixing
+      if (voiceData && musicData) {
+        // Mix voice and background music
+        filterComplex += ';[0:a]volume=1.0[voice];[1:a]volume=0.3[music];[voice][music]amix=inputs=2:duration=shortest[audio]';
+        commands.push('-filter_complex', filterComplex);
+        commands.push('-map', '[outv]', '-map', '[audio]');
+      } else if (voiceData) {
+        // Voice only
+        filterComplex += ';[0:a]apad[audio]';
+        commands.push('-filter_complex', filterComplex);
+        commands.push('-map', '[outv]', '-map', '[audio]');
+      } else if (musicData) {
+        // Music only
+        const musicIdx = 0;
+        filterComplex += `;[${musicIdx}:a]volume=0.5[audio]`;
+        commands.push('-filter_complex', filterComplex);
+        commands.push('-map', '[outv]', '-map', '[audio]');
+      } else {
+        // No audio - create silent track
+        commands.push('-filter_complex', filterComplex);
+        commands.push('-f', 'lavfi', '-i', 'anullsrc=channel_layout=stereo:sample_rate=44100');
+        commands.push('-map', '[outv]', '-map', `${inputIndex}:a`);
+      }
+
+      // Encoding settings
       commands.push(
-        '-filter_complex', filterComplex,
-        '-map', '[outv]',
-        '-map', '1:a',
         '-c:v', 'libx264',
-        '-preset', 'fast',
+        '-preset', 'fast', 
         '-crf', '23',
         '-c:a', 'aac',
         '-shortest',
         'output.mp4'
       );
 
-      console.log("Executing FFmpeg command:", commands.join(' '));
-      await ffmpeg.exec(commands);      // Read the output file
+      setProgress(80);
+
+      console.log("Executing enhanced FFmpeg command:", commands.join(' '));
+      await ffmpeg.exec(commands);
+
+      // Read the output file
       const data = await ffmpeg.readFile('output.mp4') as Uint8Array;
       const videoBlob = new Blob([data], { type: 'video/mp4' });
       const url = URL.createObjectURL(videoBlob);
@@ -294,8 +420,7 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       setIsGenerating(false);
       setProgress(0);
     }
-  }, [loaded, isGenerating, scenes, onVideoGenerated]);
-
+  }, [loaded, isGenerating, scenes, onVideoGenerated, generateFallbackImage]);
   const downloadVideo = useCallback(() => {
     if (!videoUrl) return;
     
@@ -310,7 +435,6 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
   const handleGenerateVideo = useCallback(() => {
     generateVideo();
   }, [generateVideo]);
-
   return (
     <div className="w-full max-w-4xl mx-auto p-6 space-y-6">
       <div className="text-center">
@@ -323,7 +447,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             disabled={isLoading}
             className="bg-blue-500 hover:bg-blue-700 text-white"
             size="lg"
-          >            {isLoading ? (
+          >
+            {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {loadingStatus || "Loading FFmpeg Core..."}
@@ -361,7 +486,9 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             )}
           </div>
         )}
-      </div>      {error && (
+      </div>
+
+      {error && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-600 font-medium">Error:</p>
           <p className="text-red-500 text-sm mb-3">{error}</p>
@@ -424,21 +551,26 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         <div className="bg-gray-50 border rounded p-3">
           <p className="text-xs text-gray-600 font-mono" ref={messageRef}></p>
         </div>
-      )}      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h4 className="font-medium text-blue-800 mb-2">Video Generation Process:</h4>
+      )}
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <h4 className="font-medium text-blue-800 mb-2">Enhanced Video Generation Process:</h4>
         <ol className="text-sm text-blue-700 space-y-1">
-          <li>1. Load FFmpeg WebAssembly engine</li>
-          <li>2. Generate or fetch images for each scene</li>
-          <li>3. Process images with text overlays</li>
-          <li>4. Combine images into video using FFmpeg</li>
-          <li>5. Export as MP4 with audio track</li>
+          <li>1. Load FFmpeg WebAssembly engine from Cloudflare CDN</li>
+          <li>2. Download voice-over audio and background music</li>
+          <li>3. Download or generate background videos/images for each scene</li>
+          <li>4. Process and write all media files to FFmpeg filesystem</li>
+          <li>5. Combine videos/images with comprehensive filter chains</li>
+          <li>6. Mix audio tracks (voice + music) with proper volumes</li>
+          <li>7. Export as MP4 with full audio-visual composition</li>
         </ol>
         {loadingStatus && (
           <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
             <strong>Status:</strong> {loadingStatus}
           </div>
         )}
-      </div></div>
+      </div>
+    </div>
   );
 });
 
