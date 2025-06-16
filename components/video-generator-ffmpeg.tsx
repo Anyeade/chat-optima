@@ -713,10 +713,61 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
           if (scene.backgroundVideo) {
             try {
               console.log(`Downloading background video for scene ${index}:`, scene.backgroundVideo);
+              
+              // First check if the URL is accessible
+              const videoResponse = await fetch(scene.backgroundVideo);
+              if (!videoResponse.ok) {
+                throw new Error(`Video URL returned ${videoResponse.status}: ${videoResponse.statusText}`);
+              }
+              
+              // Check if response is actually a video file
+              const contentType = videoResponse.headers.get('content-type');
+              if (contentType && !contentType.includes('video/') && !contentType.includes('application/octet-stream')) {
+                throw new Error(`Response is not a video file. Content-Type: ${contentType}`);
+              }
+              // Note: Many video services don't set content-type properly, so we'll validate file content below
+              
               videoData = await fetchFile(scene.backgroundVideo);
-              console.log(`Background video ${index} downloaded successfully`);
+              
+              // Validate video file size (should be at least 10KB for a real video)
+              if (!videoData || videoData.byteLength < 10240) {
+                throw new Error(`Video file too small (${videoData?.byteLength || 0} bytes), likely not a real video`);
+              }
+              
+              // Check for valid MP4 header (starts with ftyp box)
+              if (videoData.byteLength >= 12) {
+                const header = Array.from(videoData.slice(0, 12));
+                
+                // MP4 files can have ftyp box at different positions, check common positions
+                let hasValidMP4Header = false;
+                
+                // Check for ftyp box at offset 4-7 (most common)
+                if (header[4] === 0x66 && header[5] === 0x74 && header[6] === 0x79 && header[7] === 0x70) {
+                  hasValidMP4Header = true;
+                }
+                
+                // Alternative: Check for ftyp at beginning (some encoders)
+                if (header[0] === 0x66 && header[1] === 0x74 && header[2] === 0x79 && header[3] === 0x70) {
+                  hasValidMP4Header = true;
+                }
+                
+                // Alternative: Check for mdat box (media data) which is also valid
+                if (header[4] === 0x6D && header[5] === 0x64 && header[6] === 0x61 && header[7] === 0x74) {
+                  hasValidMP4Header = true;
+                }
+                
+                if (!hasValidMP4Header) {
+                  console.warn('Video file may not have standard MP4 header, but proceeding with validation...');
+                  console.warn('Header bytes:', header.slice(0, 8).map(b => b.toString(16).padStart(2, '0')).join(' '));
+                  // Don't throw error here - let FFmpeg validate the file instead
+                }
+              }
+              
+              console.log(`Background video ${index} downloaded and validated successfully (${videoData.byteLength} bytes)`);
             } catch (err) {
-              console.warn(`Failed to download background video for scene ${index}:`, err);
+              console.warn(`Failed to download/validate background video for scene ${index}:`, err);
+              console.log(`Will fall back to image generation for scene ${index}`);
+              videoData = null;
             }
           }
           
@@ -888,12 +939,20 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
             '-i', `video_${scene.index}.mp4`,
             '-t', scene.duration.toString()
           );
-        } else {
+        } else if (scene.imageData) {
           commands.push(
             '-loop', '1',
             '-t', scene.duration.toString(),
             '-i', `image_${scene.index}.png`
           );
+        } else {
+          // Fallback: generate a colored background if no media is available
+          commands.push(
+            '-f', 'lavfi',
+            '-i', `color=c=blue:s=1280x720:d=${scene.duration}`,
+            '-t', scene.duration.toString()
+          );
+          console.log(`Using color background for scene ${scene.index} (no video or image available)`);
         }
         inputIndex++;
       }      // Create comprehensive filter complex with typewriter text overlay

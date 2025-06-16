@@ -2,7 +2,41 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateText } from 'ai';
 import { myProvider } from '@/lib/ai/providers';
 
-const PEXELS_API_KEY = process.env.PEXELS_API_KEY || 'your-pexels-api-key';
+// Pexels API Types
+interface PexelsVideoFile {
+  id: number;
+  quality: string;
+  file_type: string;
+  width: number;
+  height: number;
+  link: string;
+}
+
+interface PexelsVideo {
+  id: number;
+  width: number;
+  height: number;
+  url: string;
+  image: string;
+  duration: number;
+  user: {
+    id: number;
+    name: string;
+    url: string;
+  };
+  video_files: PexelsVideoFile[];
+  video_pictures: any[];
+}
+
+interface PexelsResponse {
+  page: number;
+  per_page: number;
+  videos: PexelsVideo[];
+  total_results: number;
+  next_page?: string;
+}
+
+const PEXELS_API_KEY = process.env.PEXELS_API_KEY || 'sbelmCbU2CBEumLwvDAiTAEA5JyJJQWhaf4IXHdfeCHpNBjkUAjauGoC';
 
 export async function POST(request: NextRequest) {
   try {
@@ -132,23 +166,36 @@ async function findBackgroundVideo(visualDescription: string) {
     const searchQuery = extractKeywords(visualDescription);
     
     // Search Pexels for videos
-    const response = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(searchQuery)}&per_page=10`, {
+    const response = await fetch(`https://api.pexels.com/videos/search?query=${encodeURIComponent(searchQuery)}&per_page=10&orientation=landscape`, {
       headers: {
         'Authorization': PEXELS_API_KEY
       }
     });
     
     if (response.ok) {
-      const data = await response.json();
+      const data: PexelsResponse = await response.json();
       if (data.videos && data.videos.length > 0) {
         const video = data.videos[0];
-        return {
-          url: video.video_files[0]?.link || '',
-          source: 'Pexels',
-          query: searchQuery,
-          id: video.id
-        };
+        
+        // Try to get the best quality video file
+        let videoFile = video.video_files.find((f: PexelsVideoFile) => f.quality === 'hd') ||
+                       video.video_files.find((f: PexelsVideoFile) => f.quality === 'sd') ||
+                       video.video_files[0];
+        
+        if (videoFile && videoFile.link) {
+          console.log(`Found Pexels video: ${video.id} - ${videoFile.quality} (${videoFile.width}x${videoFile.height})`);
+          return {
+            url: videoFile.link,
+            source: 'Pexels',
+            query: searchQuery,
+            id: video.id,
+            quality: videoFile.quality,
+            dimensions: `${videoFile.width}x${videoFile.height}`
+          };
+        }
       }
+    } else {
+      console.warn(`Pexels API error: ${response.status} - ${response.statusText}`);
     }
     
     // Fallback to placeholder
