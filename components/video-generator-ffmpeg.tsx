@@ -1112,7 +1112,7 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
               videoOnlyCommands.push(...videoInputs);
               
               const filterComplex = processedScenes.map((scene, i) => {
-                return `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30${scene.textAnimations ? scene.textAnimations.map(anim => `,drawtext=text='${anim.text.replace(/'/g, "\\'")}':fontsize=${anim.fontSize}:fontcolor=${anim.color}:shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.7:boxborderw=15:x=${anim.x}:y=${anim.y}:enable='${anim.enable}'`).join('') : ''}[v${i}]`;
+                return `[${i}:v]scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30${scene.textAnimations ? scene.textAnimations.map(anim => `,drawtext=text='${anim.text.replace(/'/g, "\\'")}':fontsize=${anim.fontSize}:fontcolor=${anim.color}:x=${anim.x}:y=${anim.y}:enable='${anim.enable}'`).join('') : ''}[v${i}]`;
               }).join(';');
               
               const finalFilter = filterComplex + ';' + processedScenes.map((_, i) => `[v${i}]`).join('') + `concat=n=${processedScenes.length}:v=1:a=0[outv]`;
@@ -1125,8 +1125,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
               const scene = processedScenes[0];
               
               if (scene.textAnimations && scene.textAnimations.length > 0) {
-                const drawTextFilters = scene.textAnimations.map(anim => 
-                  `drawtext=text='${anim.text.replace(/'/g, "\\'")}':fontsize=${anim.fontSize}:fontcolor=${anim.color}:shadowcolor=black:shadowx=3:shadowy=3:box=1:boxcolor=black@0.7:boxborderw=15:x=${anim.x}:y=${anim.y}:enable='${anim.enable}'`
+                const drawTextFilters = scene.textAnimations.map(anim =>
+                  `drawtext=text='${anim.text.replace(/'/g, "\\'")}':fontsize=${anim.fontSize}:fontcolor=${anim.color}:x=${anim.x}:y=${anim.y}:enable='${anim.enable}'`
                 ).join(',');
                 
                 videoOnlyCommands.push('-vf', `scale=1280:720:force_original_aspect_ratio=decrease,pad=1280:720:(ow-iw)/2:(oh-ih)/2,setpts=PTS-STARTPTS,fps=30,${drawTextFilters}`);
@@ -1249,15 +1249,8 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         .replace(/,/g, "\\,");
       
       textFilters += `drawtext=text='${escapedText}':` +
-        `fontfile=/System/Library/Fonts/Helvetica.ttc:` + // Fallback font path
         `fontsize=48:` +
         `fontcolor=white:` +
-        `shadowcolor=black:` +
-        `shadowx=2:` +
-        `shadowy=2:` +
-        `box=1:` +
-        `boxcolor=black@0.5:` +
-        `boxborderw=10:` +
         `x=(w-text_w)/2:` +
         `y=h-150:` +
         `enable='between(n,${startFrame},${endFrame})':`;
