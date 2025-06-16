@@ -212,6 +212,42 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
     return new Uint8Array(await blob.arrayBuffer());
   }, []);
 
+  const dataUriToBlob = useCallback((dataUri: string): string | null => {
+    try {
+      if (!dataUri.startsWith('data:')) {
+        return dataUri; // Return as-is if it's already a regular URL
+      }
+      
+      const [header, data] = dataUri.split(',');
+      if (!header || !data) {
+        console.warn('Invalid data URI format');
+        return null;
+      }
+      
+      const mimeMatch = header.match(/data:([^;]+)/);
+      const mimeType = mimeMatch ? mimeMatch[1] : 'application/octet-stream';
+      const isBase64 = header.includes('base64');
+      
+      let bytes: Uint8Array;
+      if (isBase64) {
+        const binaryString = atob(data);
+        bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+      } else {
+        const decodedData = decodeURIComponent(data);
+        bytes = new TextEncoder().encode(decodedData);
+      }
+      
+      const blob = new Blob([bytes], { type: mimeType });
+      return URL.createObjectURL(blob);
+    } catch (err) {
+      console.warn('Failed to convert data URI to blob:', err);
+      return null;
+    }
+  }, []);
+
   const generateVideo = useCallback(async (scenesData?: Scene[], script?: string, voiceUrl?: string, musicUrl?: string) => {
     if (!loaded || isGenerating) return;
 
@@ -234,18 +270,28 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         hasVoiceUrl: !!voiceUrl,
         hasMusicUrl: !!musicUrl,
         script: script?.substring(0, 50) + "..."
-      });
-
-      // Download and process voice-over and music if provided
+      });      // Download and process voice-over and music if provided
       let voiceData: Uint8Array | null = null;
       let musicData: Uint8Array | null = null;
 
       if (voiceUrl) {
         try {
           console.log("Downloading voice-over audio...");
-          voiceData = await fetchFile(voiceUrl);
-          await ffmpeg.writeFile('voice.mp3', voiceData);
-          console.log("Voice-over audio downloaded successfully");
+          
+          // Convert data URI to blob URL if needed (CSP-friendly)
+          const processedVoiceUrl = dataUriToBlob(voiceUrl);
+          if (processedVoiceUrl) {
+            voiceData = await fetchFile(processedVoiceUrl);
+            await ffmpeg.writeFile('voice.mp3', voiceData);
+            console.log("Voice-over audio downloaded successfully");
+            
+            // Clean up blob URL if we created one
+            if (processedVoiceUrl !== voiceUrl) {
+              URL.revokeObjectURL(processedVoiceUrl);
+            }
+          } else {
+            console.warn("Failed to process voice-over URL");
+          }
           setProgress(15);
         } catch (err) {
           console.warn("Failed to download voice-over:", err);
@@ -255,9 +301,21 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
       if (musicUrl) {
         try {
           console.log("Downloading background music...");
-          musicData = await fetchFile(musicUrl);
-          await ffmpeg.writeFile('music.mp3', musicData);
-          console.log("Background music downloaded successfully");
+          
+          // Convert data URI to blob URL if needed (CSP-friendly)
+          const processedMusicUrl = dataUriToBlob(musicUrl);
+          if (processedMusicUrl) {
+            musicData = await fetchFile(processedMusicUrl);
+            await ffmpeg.writeFile('music.mp3', musicData);
+            console.log("Background music downloaded successfully");
+            
+            // Clean up blob URL if we created one
+            if (processedMusicUrl !== musicUrl) {
+              URL.revokeObjectURL(processedMusicUrl);
+            }
+          } else {
+            console.warn("Failed to process background music URL");
+          }
           setProgress(25);
         } catch (err) {
           console.warn("Failed to download background music:", err);
@@ -551,18 +609,17 @@ export const VideoGeneratorFFmpeg = forwardRef<VideoGeneratorFFmpegRef, VideoGen
         <div className="bg-gray-50 border rounded p-3">
           <p className="text-xs text-gray-600 font-mono" ref={messageRef}></p>
         </div>
-      )}
-
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      )}      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h4 className="font-medium text-blue-800 mb-2">Enhanced Video Generation Process:</h4>
         <ol className="text-sm text-blue-700 space-y-1">
           <li>1. Load FFmpeg WebAssembly engine from Cloudflare CDN</li>
-          <li>2. Download voice-over audio and background music</li>
-          <li>3. Download or generate background videos/images for each scene</li>
-          <li>4. Process and write all media files to FFmpeg filesystem</li>
-          <li>5. Combine videos/images with comprehensive filter chains</li>
-          <li>6. Mix audio tracks (voice + music) with proper volumes</li>
-          <li>7. Export as MP4 with full audio-visual composition</li>
+          <li>2. Convert audio data URIs to blob URLs (CSP-friendly)</li>
+          <li>3. Download voice-over audio and background music</li>
+          <li>4. Download or generate background videos/images for each scene</li>
+          <li>5. Process and write all media files to FFmpeg filesystem</li>
+          <li>6. Combine videos/images with comprehensive filter chains</li>
+          <li>7. Mix audio tracks (voice + music) with proper volumes</li>
+          <li>8. Export as MP4 with full audio-visual composition</li>
         </ol>
         {loadingStatus && (
           <div className="mt-3 p-2 bg-blue-100 rounded text-sm">
